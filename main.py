@@ -3,7 +3,6 @@ from settings import *
 from level import Level
 from support import draw_text
 from overworld import Pause, Main_Menu, Death_Scene
-from buttons import Return_Button, Exit_Button
 
 def print_mask():
     mask = pygame.Surface((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
