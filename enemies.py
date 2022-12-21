@@ -1,18 +1,20 @@
 import pygame
-from settings import ENEMY_SCELETON_HEALTH, ENEMY_NINJA_HEALTH, ENEMY_SIZE, GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH
+from settings import ENEMY_SCELETON_HEALTH, ENEMY_NINJA_HEALTH, ENEMY_SIZE, GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
+    ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH
 from support import import_folder
 import random
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, id, pos, type):
+    def __init__(self, enemy_id, pos, kind):
         super().__init__()
 
         # Select type and id of enemy:
-        self.type = type
-        self.id = id
+        self.type = kind
+        self.id = enemy_id
 
         # Load  images:
+        self.animations = None
         self.import_character_assets()
 
         # Enemy animation setup:
@@ -38,9 +40,12 @@ class Enemy(pygame.sprite.Sprite):
         self.speed = ENEMY_SPEED
         self.gravity = ENEMY_GRAVITY
 
-        # Get hitted:
-        self.just_hitted = False
-        self.just_hitted_time = 0
+        # Attacking:
+        self.combat = False
+
+        # Get hurt:
+        self.just_hurt = False
+        self.just_hurt_time = 0
         self.armor_ratio = 1
 
         # Properties:
@@ -53,10 +58,10 @@ class Enemy(pygame.sprite.Sprite):
 
         self.stunned = False
 
-
     def import_character_assets(self):
         character_path = f'content/graphics/enemies/{self.type}/'
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [], 'stun': []}
+        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
+                           'stun': []}
 
         for animation in self.animations.keys():
             full_path = character_path + animation
@@ -90,7 +95,7 @@ class Enemy(pygame.sprite.Sprite):
     def animate(self):
         if self.status != 'attack' and not self.dead:
 
-            if self.just_hitted:
+            if self.just_hurt:
                 animation = self.animations['hit']
             elif self.stunned:
                 animation = self.animations['stun']
@@ -129,7 +134,7 @@ class Enemy(pygame.sprite.Sprite):
 
             # Loop over frame index
             self.frame_index += animation_speed
-            if  self.frame_index >= len(animation):
+            if self.frame_index >= len(animation):
                 self.frame_index = len(animation) - 1
 
             image = animation[int(self.frame_index)]
@@ -145,25 +150,28 @@ class Enemy(pygame.sprite.Sprite):
                 self.rect.midbottom = self.collision_rect.midbottom
 
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-        
-    def check_if_hitted(self):
-        if self.just_hitted:
-            if pygame.time.get_ticks() - self.just_hitted_time > IMMUNITY_FROM_HIT:
-                self.just_hitted = False
+
+    def check_if_hurt(self):
+        if self.just_hurt:
+            if pygame.time.get_ticks() - self.just_hurt_time > IMMUNITY_FROM_HIT:
+                self.just_hurt = False
+
+    def combat_reset(self):
+        pass
 
     def draw_health_bar(self, screen, offset):
         if not self.dead:
-            max = pygame.Surface((self.collision_rect.width, 5))
-            max.fill(GREY)
+            hp_max = pygame.Surface((self.collision_rect.width, 5))
+            hp_max.fill(GREY)
             cur = pygame.Surface((self.health / self.max_health * self.collision_rect.width, 5))
             cur.fill(RED)
 
-            screen.blit(max, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
+            screen.blit(hp_max, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
             screen.blit(cur, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
 
     def update(self, offset):
         if not self.dead:
-            self.check_if_hitted()
+            self.check_if_hurt()
             self.animate()
         self.animate_dead()
 
@@ -182,11 +190,11 @@ class Enemy(pygame.sprite.Sprite):
             image_surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
             image_surface.set_alpha(30)
             surface.blit(image_surface, self.rect.topleft - offset)
-        
+
 
 class Sceleton(Enemy):
-    def __init__(self, id, pos, sword_attack):
-        super().__init__(id, pos, 'sceleton')
+    def __init__(self, enemy_id, pos, sword_attack):
+        super().__init__(enemy_id, pos, 'sceleton')
 
         # Stats:
         self.max_health = ENEMY_SCELETON_HEALTH
@@ -215,10 +223,11 @@ class Sceleton(Enemy):
             # Loop over frame index
             self.frame_index += animation_speed
             if self.frame_index > 4:
-                self.sword_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage, self.sword_can_attack, 80)
+                self.sword_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage,
+                                  self.sword_can_attack, 80)
                 self.sword_can_attack = False
 
-            if  self.frame_index >= len(animation):
+            if self.frame_index >= len(animation):
                 self.frame_index = 0
                 self.sword_can_attack = True
                 self.combat = False
@@ -241,7 +250,8 @@ class Sceleton(Enemy):
 
     def check_for_combat(self, who):
         player = who
-        is_close = abs(self.collision_rect.centerx - player.collision_rect.centerx) < SCELETON_TRIGGER_LENGTH and abs(self.collision_rect.centery - player.collision_rect.centery) < SCELETON_TRIGGER_LENGTH
+        is_close = abs(self.collision_rect.centerx - player.collision_rect.centerx) < SCELETON_TRIGGER_LENGTH \
+                   and abs(self.collision_rect.centery - player.collision_rect.centery) < SCELETON_TRIGGER_LENGTH
         if is_close and not self.combat and not player.dead:
             self.combat = True
             self.combat_start = pygame.time.get_ticks()
@@ -254,7 +264,8 @@ class Sceleton(Enemy):
             else:
                 self.facing_right = True
 
-        if abs(self.collision_rect.centerx - player.collision_rect.centerx) > SCELETON_TRIGGER_LENGTH and self.combat and not self.attacking:
+        if abs(self.collision_rect.centerx - player.collision_rect.centerx) > SCELETON_TRIGGER_LENGTH \
+                and self.combat and not self.attacking:
             self.combat_reset()
 
         if self.combat and pygame.time.get_ticks() - self.combat_start > self.preparing and not self.attacking:
@@ -271,6 +282,7 @@ class Sceleton(Enemy):
         self.sword_can_attack = True
         self.attacking = False
         self.status = 'run'
+
     def update(self, offset):
         super().update(offset)
         if not self.dead:
@@ -279,8 +291,8 @@ class Sceleton(Enemy):
 
 
 class Ninja(Enemy):
-    def __init__(self, id, pos, arch_attack):
-        super().__init__(id, pos, 'ninja')
+    def __init__(self, enemy_id, pos, arch_attack):
+        super().__init__(enemy_id, pos, 'ninja')
 
         # Stats:
         self.max_health = ENEMY_NINJA_HEALTH
@@ -335,7 +347,8 @@ class Ninja(Enemy):
 
     def check_for_combat(self, who):
         player = who
-        is_close = abs(self.collision_rect.centerx - player.collision_rect.centerx) < NINJA_TRIGGER_LENGTH and abs(self.collision_rect.centery - player.collision_rect.centery) < 100
+        is_close = abs(self.collision_rect.centerx - player.collision_rect.centerx) < NINJA_TRIGGER_LENGTH and abs(
+            self.collision_rect.centery - player.collision_rect.centery) < 100
         if is_close and not self.combat and not player.dead:
             self.combat = True
             self.combat_start = pygame.time.get_ticks()
@@ -348,7 +361,8 @@ class Ninja(Enemy):
             else:
                 self.facing_right = True
 
-        if abs(self.collision_rect.centerx - player.collision_rect.centerx) > NINJA_TRIGGER_LENGTH and self.combat and not self.attacking:
+        if abs(self.collision_rect.centerx - player.collision_rect.centerx) > NINJA_TRIGGER_LENGTH \
+                and self.combat and not self.attacking:
             self.combat = False
             self.arch_can_attack = True
             self.attacking = False
@@ -368,5 +382,3 @@ class Ninja(Enemy):
         if not self.dead:
             self.animate_attack()
             self.move()
-
-

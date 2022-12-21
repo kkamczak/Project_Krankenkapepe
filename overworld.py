@@ -1,5 +1,3 @@
-import pygame
-from game_data import levels
 from buttons import *
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED
 from support import draw_text
@@ -26,19 +24,27 @@ class Overworld:
         # Methods:
         self.exit_game = exit_game
 
-    def setup_buttons(self, list, font, space):
+    def setup_buttons(self, buttons_list, font, space):
         sprite_group = pygame.sprite.Group()
-        for id, button in enumerate(list):
+        button_sprite = None
+        x_pos = SCREEN_WIDTH / 2
+        y_pos = SCREEN_HEIGHT / 2 - 100
+        for button_id, button in enumerate(buttons_list):
             if button == 'Start':
-                button_sprite = Start_Button(BUTTON_SIZE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100 + BUTTONS_SPACE * id * 2 + space, button, font)
+                button_sprite = Start_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
+                                             button, font)
             if button == 'Return':
-                button_sprite = Return_Button(BUTTON_SIZE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100 + BUTTONS_SPACE * id * 2 + space, button, font)
+                button_sprite = Return_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
+                                              button, font)
             if button == 'Main Menu':
-                button_sprite = Menu_Button(BUTTON_SIZE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100 + BUTTONS_SPACE * id * 2 + space, button, font)
+                button_sprite = Menu_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
+                                            button, font)
             if button == 'Respawn':
-                button_sprite = Respawn(BUTTON_SIZE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100 + BUTTONS_SPACE * id * 2 + space, button, font)
+                button_sprite = Respawn(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
+                                        button, font)
             if button == 'Exit':
-                button_sprite = Exit_Button(BUTTON_SIZE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2 - 100 + BUTTONS_SPACE * id * 2 + space, button, font)
+                button_sprite = Exit_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
+                                            button, font)
 
             sprite_group.add(button_sprite)
 
@@ -52,7 +58,7 @@ class Overworld:
     def buttons_update(self):
         action = ''
         for button in self.buttons_sprite:
-            if button.check_click() and self.allow_click == True:
+            if button.check_click() and self.allow_click:
                 action = button.type
                 break
 
@@ -75,7 +81,7 @@ class Overworld:
         self.check_action()
 
 
-class Main_Menu(Overworld):
+class MainMenu(Overworld):
     def __init__(self, surface, buttons, create_level, font, exit_game, space):
         super().__init__(surface, buttons, font, exit_game, space)
 
@@ -102,7 +108,8 @@ class Pause(Overworld):
         if self.action == 'Return':
             self.stop_pause()
 
-class Death_Scene(Overworld):
+
+class DeathScene(Overworld):
     def __init__(self, surface, buttons, font, death_font, create_main_menu, create_level, exit_game, space):
         super().__init__(surface, buttons, font, exit_game, space)
         self.text = 'You Died'
@@ -122,7 +129,8 @@ class Death_Scene(Overworld):
 
     def run(self):
 
-        draw_text(self.image, self.text, self.death_font, RED, self.image.get_width() / 2, self.image.get_height() / 2 - 100)
+        draw_text(self.image, self.text, self.death_font, RED, self.image.get_width() / 2,
+                  self.image.get_height() / 2 - 100)
 
         self.image.set_alpha(self.alpha)
         self.display_surface.blit(self.image, (0, 0))
@@ -134,6 +142,3 @@ class Death_Scene(Overworld):
             self.draw_buttons()
             self.check_action()
             self.end = True
-
-
-
