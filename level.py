@@ -196,6 +196,19 @@ class Level:
         arrow_collisions_player = []
         source = 'default'
         dmg = 0
+
+        def player_got_hurt():
+            character = self.get_player()
+            character.just_hurt = True
+            character.just_hurt_time = pygame.time.get_ticks()
+            character.health -= dmg
+            if character.health <= 0:  # Death of player
+                character.dead = True
+                character.status = 'dead'
+                character.frame_index = 0
+                character.direction.x = 0
+                character.dead_time = pygame.time.get_ticks()
+
         for hit in self.sword_hits:  # Check any melee hits collisions
             for enemy in self.enemy_sprites:
                 if hit.rect.colliderect(enemy.collision_rect):
@@ -203,14 +216,21 @@ class Level:
             for player in self.player:
                 if hit.rect.colliderect(player.collision_rect) and not hit.shielded:
                     if player.shielding:
-                        self.shield_block_sound.play()
-                        hit.shielded = True
+
                         for enemy in self.enemy_sprites:
-                            if enemy.id == hit.source_id and not enemy.stunned:
-                                enemy.stunned = True
-                                enemy.status = 'stun'
-                                enemy.armor_ratio = 3
-                                break
+                            if enemy.id == hit.source_id:
+                                if ((player.facing_right and enemy.collision_rect.x > player.collision_rect.x) or
+                                    (not player.facing_right and enemy.collision_rect.x < player.collision_rect.x)):
+                                    self.shield_block_sound.play()
+                                    hit.shielded = True
+                                    if not enemy.stunned:
+                                        enemy.stunned = True
+                                        enemy.status = 'stun'
+                                        enemy.armor_ratio = 3
+                                        break
+                                else:
+                                    sword_collisions_player.append(player)
+
                     else:
                         sword_collisions_player.append(player)
 
@@ -233,16 +253,7 @@ class Level:
         if sword_collisions_player:  # If there is melee attack collision with player:
             player = self.get_player()
             if not player.just_hurt and source == 'enemy':
-                player.just_hurt = True
-                player.just_hurt_time = pygame.time.get_ticks()
-                player.health -= dmg
-                # player.status = 'hit'
-                if player.health <= 0:  # Death of player
-                    player.dead = True
-                    player.status = 'dead'
-                    player.frame_index = 0
-                    player.direction.x = 0
-                    player.dead_time = pygame.time.get_ticks()
+                player_got_hurt()
 
         for bullet in self.bullet_hits:  # Check any bullet hits collisions
             point = False
@@ -281,16 +292,7 @@ class Level:
         if arrow_collisions_player:  # If there is bullet collision with player:
             player = self.get_player()
             if not player.just_hurt and not player.shielding and source == 'enemy':
-                player.just_hurt = True
-                player.just_hurt_time = pygame.time.get_ticks()
-                player.health -= dmg
-                # player.status = 'hit'
-                if player.health <= 0:  # Death of player
-                    player.dead = True
-                    player.status = 'dead'
-                    player.frame_index = 0
-                    player.direction.x = 0
-                    player.dead_time = pygame.time.get_ticks()
+                player_got_hurt()
 
     def run(self):
         # Run the entire game / level
@@ -337,6 +339,9 @@ class Level:
 
         # Damages:
         self.check_damage()
+
+        # Show UI:
+        self.get_player().show_ui(self.display_surface, self.offset)
 
         # Show information for developer
         draw_text(self.display_surface, 'Player pos: ' + str(self.get_player().rect.center),

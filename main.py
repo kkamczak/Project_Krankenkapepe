@@ -13,15 +13,10 @@ def print_mask():
     SCREEN.blit(mask, (SCREEN_WIDTH / 2 - mask.get_width() / 2, SCREEN_HEIGHT / 2 - mask.get_height() / 2))
 
 
-def exit_game():
-    pygame.quit()
-    sys.exit()
-
-
 class Game:
     def __init__(self):
         # Overworld creation
-        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, BUTTON_FONT, exit_game, 0)
+        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, BUTTON_FONT, self.exit_game, 0)
         self.status = 'main_menu'
 
         self.level = None
@@ -42,12 +37,12 @@ class Game:
         self.level_bg_music.play(loops=-1)
 
     def create_main_menu(self):
-        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, BUTTON_FONT, exit_game, 0)
+        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, BUTTON_FONT, self.exit_game, 0)
         self.status = 'main_menu'
 
     def create_pause(self):
         self.pause = Pause(SCREEN, ['Return', 'Main Menu', 'Exit'], BUTTON_FONT,
-                           exit_game, self.stop_pause, self.create_main_menu, 0)
+                           self.exit_game, self.stop_pause, self.create_main_menu, 0)
         self.status = 'pause'
 
     def stop_pause(self):
@@ -55,7 +50,7 @@ class Game:
 
     def create_death_scene(self):
         self.death_scene = DeathScene(SCREEN, ['Respawn', 'Main Menu', 'Exit'], NORMAL_FONT, DEATH_FONT,
-                                      self.create_main_menu, self.create_level, exit_game, 70)
+                                      self.create_main_menu, self.create_level, self.exit_game, 70)
         self.status = 'dead'
 
     def run(self):
@@ -69,6 +64,11 @@ class Game:
             if not self.death_scene.end:
                 self.level.run()
             self.death_scene.run()
+
+    @staticmethod
+    def exit_game():
+        pygame.quit()
+        sys.exit()
 
 
 # Pygame setup
@@ -89,7 +89,7 @@ game = Game()
 while True:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            exit_game()
+            game.exit_game()
 
     if game.status == 'main_menu':
         SCREEN.fill(BLACK)

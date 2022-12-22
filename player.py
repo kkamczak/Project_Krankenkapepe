@@ -3,6 +3,8 @@ from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVIT
     SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, SHIELD_COOLDOWN
 from support import import_folder
 from ui import UI
+from game_data import items
+from items import Sword
 
 
 class Player(pygame.sprite.Sprite):
@@ -83,9 +85,22 @@ class Player(pygame.sprite.Sprite):
         self.player_sword_attack = sword_attack
         self.player_arch_attack = arch_attack
 
+        # Start items:
+        self.items = []
+        self.create_start_items()
+        self.outfit = self.items
+
         # Create in-level UI:
         self.ui = UI()
 
+    def create_start_items(self):
+        for item_id, item in enumerate(items):
+            print(item_id)
+            print(items[item_id])
+            #print(item[item_id]['name'])
+            xitem = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+                         # item_id, name, kind, owner, price, damage
+            self.items.append(xitem)
     def import_character_assets(self):  # Import all animations:
         character_path = 'content/graphics/character/'
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
@@ -164,7 +179,7 @@ class Player(pygame.sprite.Sprite):
         if not keys[pygame.K_d]:
             self.sword_just_attacked = False
         if keys[pygame.K_s] and not self.sword_attacking and not self.arch_attacking and not self.shielding \
-                and not self.just_shielded and self.can_shield:
+                and not self.just_shielded and self.can_shield and not self.just_hurt:
             self.shielding = True
             self.just_shielded = True
             self.can_shield = False
@@ -264,8 +279,11 @@ class Player(pygame.sprite.Sprite):
                                              self.collision_rect, offset)
 
             # Skeletons:
-            self.ui.show_skeletons(screen, self.experience, self.font)
+            self.ui.show_skeletons(screen, self.font)
             self.ui.update_experience()
+
+            # Outfit
+            self.ui.show_outfit(screen, self.font, self.outfit)
 
     def update(self, screen, offset):
         if not self.dead:
@@ -276,7 +294,7 @@ class Player(pygame.sprite.Sprite):
             self.check_arch_attack_cooldown()
             self.check_shield_cooldown()
         self.animate()
-        self.show_ui(screen, offset)
+
 
     def draw(self, surface, offset):
         pos = self.rect.topleft - offset

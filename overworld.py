@@ -24,7 +24,8 @@ class Overworld:
         # Methods:
         self.exit_game = exit_game
 
-    def setup_buttons(self, buttons_list, font, space):
+    @staticmethod
+    def setup_buttons(buttons_list, font, space):
         sprite_group = pygame.sprite.Group()
         button_sprite = None
         x_pos = SCREEN_WIDTH / 2
