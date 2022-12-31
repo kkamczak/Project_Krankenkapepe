@@ -325,7 +325,7 @@ class Level:
                 enemy.kill()
 
         # Attacks:
-        self.sword_hits.update()
+        self.sword_hits.update("HALO")
         for hit in self.sword_hits:
             hit.draw(self.display_surface, self.offset)
             if pygame.time.get_ticks() - hit.attack_time > hit.attack_duration:
