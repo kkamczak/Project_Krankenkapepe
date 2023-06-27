@@ -1,7 +1,8 @@
 import pygame
 from settings import ENEMY_SCELETON_HEALTH, ENEMY_NINJA_HEALTH, ENEMY_SIZE, GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
-    ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH
-from support import import_folder
+    ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH, \
+    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE
+from support import import_folder, draw_text
 import random
 
 
@@ -190,6 +191,17 @@ class Enemy(pygame.sprite.Sprite):
             image_surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
             image_surface.set_alpha(30)
             surface.blit(image_surface, self.rect.topleft - offset)
+
+        if SHOW_ENEMY_STATUS:
+            # Show information for developer
+            draw_text(surface, self.type,
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
+
+            draw_text(surface, 'Pos: ' + str(self.rect.center),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+
+            draw_text(surface, 'Frame index: ' + str(int(self.frame_index)),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
 
 
 class Sceleton(Enemy):

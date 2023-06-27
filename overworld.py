@@ -1,17 +1,17 @@
 from buttons import *
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED
+from settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED, BUTTON_FONT, DEATH_FONT
 from support import draw_text
 
 
 class Overworld:
-    def __init__(self, surface, buttons, font, exit_game, space):
+    def __init__(self, surface, buttons, exit_game, space):
 
         # Setup
         self.display_surface = surface
 
         # Buttons:
 
-        self.buttons_sprite = self.setup_buttons(buttons, font, space)
+        self.buttons_sprite = self.setup_buttons(buttons, space)
 
         # Time to allow clicking
         self.start_time = pygame.time.get_ticks()
@@ -25,7 +25,7 @@ class Overworld:
         self.exit_game = exit_game
 
     @staticmethod
-    def setup_buttons(buttons_list, font, space):
+    def setup_buttons(buttons_list, space):
         sprite_group = pygame.sprite.Group()
         button_sprite = None
         x_pos = SCREEN_WIDTH / 2
@@ -33,19 +33,19 @@ class Overworld:
         for button_id, button in enumerate(buttons_list):
             if button == 'Start':
                 button_sprite = Start_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                             button, font)
+                                             button, BUTTON_FONT)
             if button == 'Return':
                 button_sprite = Return_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                              button, font)
+                                              button, BUTTON_FONT)
             if button == 'Main Menu':
                 button_sprite = Menu_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                            button, font)
+                                            button, BUTTON_FONT)
             if button == 'Respawn':
                 button_sprite = Respawn(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                        button, font)
+                                        button, BUTTON_FONT)
             if button == 'Exit':
                 button_sprite = Exit_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                            button, font)
+                                            button, BUTTON_FONT)
 
             sprite_group.add(button_sprite)
 
@@ -83,8 +83,8 @@ class Overworld:
 
 
 class MainMenu(Overworld):
-    def __init__(self, surface, buttons, create_level, font, exit_game, space):
-        super().__init__(surface, buttons, font, exit_game, space)
+    def __init__(self, surface, buttons, create_level, exit_game, space):
+        super().__init__(surface, buttons, exit_game, space)
 
         self.create_level = create_level
 
@@ -95,8 +95,8 @@ class MainMenu(Overworld):
 
 
 class Pause(Overworld):
-    def __init__(self, surface, buttons, font, exit_game, stop_pause, create_main_menu, space):
-        super().__init__(surface, buttons, font, exit_game, space)
+    def __init__(self, surface, buttons, exit_game, stop_pause, create_main_menu, space):
+        super().__init__(surface, buttons, exit_game, space)
 
         self.pause = True
         self.stop_pause = stop_pause
@@ -111,14 +111,13 @@ class Pause(Overworld):
 
 
 class DeathScene(Overworld):
-    def __init__(self, surface, buttons, font, death_font, create_main_menu, create_level, exit_game, space):
-        super().__init__(surface, buttons, font, exit_game, space)
+    def __init__(self, surface, buttons, create_main_menu, create_level, exit_game, space):
+        super().__init__(surface, buttons, exit_game, space)
         self.text = 'You Died'
         self.alpha = 0
         self.end = False
         self.create_main_menu = create_main_menu
         self.create_level = create_level
-        self.death_font = death_font
         self.image = pygame.Surface((self.display_surface.get_width(), self.display_surface.get_height()))
 
     def check_action(self):
@@ -130,7 +129,7 @@ class DeathScene(Overworld):
 
     def run(self):
 
-        draw_text(self.image, self.text, self.death_font, RED, self.image.get_width() / 2,
+        draw_text(self.image, self.text, DEATH_FONT, RED, self.image.get_width() / 2,
                   self.image.get_height() / 2 - 100)
 
         self.image.set_alpha(self.alpha)

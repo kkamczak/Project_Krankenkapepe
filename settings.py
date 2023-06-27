@@ -1,3 +1,13 @@
+import pygame.font
+pygame.font.init()
+
+# Fonts:font isocp
+NORMAL_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
+SMALL_STATUS_FONT = pygame.font.SysFont('arial', 15)
+DEATH_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 70)
+FPS_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
+BUTTON_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
+
 # Colors:
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
@@ -39,6 +49,7 @@ BUTTONS_SPACE = 40
 # Attacking:
 ATTACK_SIZE = [40, 57]
 ATTACK_SPACE = 25
+ENEMY_SPACE = 5
 SWORD_ATTACKING_COOLDOWN = 1000
 SHIELD_COOLDOWN = 1000
 IMMUNITY_FROM_HIT = 300
@@ -50,3 +61,7 @@ NINJA_TRIGGER_LENGTH = 350
 SHOW_IMAGE_RECTANGLES = False
 SHOW_COLLISION_RECTANGLES = False
 SHOW_HIT_RECTANGLES = True
+
+SHOW_PLAYER_STATUS = True
+SHOW_ENEMY_STATUS = True
+SHOW_STATUS_SPACE = 6

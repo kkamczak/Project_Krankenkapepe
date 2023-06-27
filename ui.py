@@ -1,6 +1,6 @@
 import pygame
 from support import create_bar, draw_text
-from settings import GREY, RED, YELLOW, BLACK, WHITE
+from settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT
 
 
 class UI:
@@ -32,7 +32,7 @@ class UI:
 
         surface.blit(cd_max, (collision_rect.left - offset.x, collision_rect.top - 15 - offset.y))
 
-    def show_skeletons(self, surface, font):
+    def show_skeletons(self, surface):
         x = surface.get_width() - 120
         y = surface.get_height() - 50
         background = pygame.Surface((110, 45))
@@ -40,9 +40,9 @@ class UI:
         background.set_alpha(180)
         surface.blit(background, (x, y - 5))
         surface.blit(self.skeletons_image, (x, y))
-        draw_text(surface, str(int(self.exp_visible)), font, GREY, x + 80, y + 20)
+        draw_text(surface, str(int(self.exp_visible)), NORMAL_FONT, GREY, x + 80, y + 20)
 
-    def show_outfit(self, surface, font, outfit):
+    def show_outfit(self, surface, outfit):
         pos_x = surface.get_width() / 10
         pos_y = surface.get_height() - 120
         width = 80

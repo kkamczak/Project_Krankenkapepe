@@ -1,6 +1,6 @@
 import pygame
 import sys
-from settings import *
+from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, SKY, FPS, FPS_FONT, FPS_SHOW_POS
 from level import Level
 from support import draw_text
 from overworld import Pause, MainMenu, DeathScene
@@ -14,46 +14,44 @@ def print_mask():
 
 
 class Game:
-    def __init__(self):
+    def __init__(self) -> None:
         # Overworld creation
-        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, BUTTON_FONT, self.exit_game, 0)
-        self.status = 'main_menu'
+        self.main_menu: object = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
+        self.status: str = 'main_menu'
 
-        self.level = None
-        self.pause = None
+        self.level: object = None
+        self.pause: object = None
 
-        self.paused = False
-        self.death_scene = None
+        self.paused: bool = False
+        self.death_scene: object = None
 
         # Sounds:
         self.level_bg_music = pygame.mixer.Sound('content/sounds/background.mp3')
         self.level_bg_music.set_volume(0.03)
-        
+
         self.player_run_music = pygame.mixer.Sound('content/sounds/character/run.ogg')
 
-    def create_level(self):
-        self.level = Level(SCREEN, self.create_pause, self.create_main_menu, self.create_death_scene, NORMAL_FONT)
+    def create_level(self) -> None:
+        self.level = Level(SCREEN, self.create_pause, self.create_main_menu, self.create_death_scene)
         self.status = 'level'
         self.level_bg_music.play(loops=-1)
 
-    def create_main_menu(self):
-        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, BUTTON_FONT, self.exit_game, 0)
+    def create_main_menu(self) -> None:
+        self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
         self.status = 'main_menu'
 
-    def create_pause(self):
-        self.pause = Pause(SCREEN, ['Return', 'Main Menu', 'Exit'], BUTTON_FONT,
-                           self.exit_game, self.stop_pause, self.create_main_menu, 0)
+    def create_pause(self) -> None:
+        self.pause = Pause(SCREEN, ['Return', 'Main Menu', 'Exit'], self.exit_game, self.stop_pause, self.create_main_menu, 0)
         self.status = 'pause'
 
-    def stop_pause(self):
+    def stop_pause(self) -> None:
         self.status = 'level'
 
-    def create_death_scene(self):
-        self.death_scene = DeathScene(SCREEN, ['Respawn', 'Main Menu', 'Exit'], NORMAL_FONT, DEATH_FONT,
-                                      self.create_main_menu, self.create_level, self.exit_game, 70)
+    def create_death_scene(self) -> None:
+        self.death_scene = DeathScene(SCREEN, ['Respawn', 'Main Menu', 'Exit'], self.create_main_menu, self.create_level, self.exit_game, 70)
         self.status = 'dead'
 
-    def run(self):
+    def run_loop(self) -> None:
         if self.status == 'level':
             self.level.run()
         elif self.status == 'main_menu':
@@ -66,21 +64,19 @@ class Game:
             self.death_scene.run()
 
     @staticmethod
-    def exit_game():
+    def exit_game() -> None:
         pygame.quit()
         sys.exit()
+
+    @staticmethod
+    def show_fps() -> None:
+        draw_text(SCREEN, 'FPS: ' + str(int(CLOCK.get_fps())), FPS_FONT, GREY, FPS_SHOW_POS[0], FPS_SHOW_POS[1])
 
 
 # Pygame setup
 pygame.init()
 SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 CLOCK = pygame.time.Clock()
-
-# Fonts:
-NORMAL_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
-DEATH_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 70)
-FPS_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
-BUTTON_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
 
 # Start game:
 game = Game()
@@ -102,12 +98,11 @@ while True:
         game.paused = True
     elif game.status == 'dead':
         SCREEN.fill(SKY)
-    #     print_mask()
-    #     game.paused = True
-    game.run()
 
-    draw_text(SCREEN, 'FPS: ' + str(int(CLOCK.get_fps())), FPS_FONT, GREY, FPS_SHOW_POS[0], FPS_SHOW_POS[1])
+    game.run_loop()
+
+    game.show_fps()
 
     pygame.display.update()
+
     CLOCK.tick(FPS)
-    print('Hello')

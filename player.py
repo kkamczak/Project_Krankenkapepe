@@ -1,17 +1,16 @@
 import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
-    SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, SHIELD_COOLDOWN
-from support import import_folder
+    SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
+    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE
+from support import import_folder, draw_text
 from ui import UI
 from game_data import items
 from items import Sword
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, font, create_pause, sword_attack, arch_attack):
+    def __init__(self, pos, create_pause, sword_attack, arch_attack):
         super().__init__()
-
-        self.font = font
 
         # Player images:
         self.animations = None
@@ -30,6 +29,7 @@ class Player(pygame.sprite.Sprite):
         self.collision_rect = pygame.Rect((self.rect.centerx, self.rect.top - PLAYER_SIZE[0] / 2), PLAYER_SIZE)
 
         # Player status:
+        self.type = 'Player'
         self.status = 'idle'
         self.facing_right = True
         self.on_ground = False
@@ -66,6 +66,7 @@ class Player(pygame.sprite.Sprite):
         # Properties:
         self.max_health = PLAYER_MAX_HEALTH
         self.health = self.max_health
+        self.armor_ratio = 1
 
         # Experience:
         self.player_level = 1
@@ -95,8 +96,6 @@ class Player(pygame.sprite.Sprite):
 
     def create_start_items(self):
         for item_id, item in enumerate(items):
-            print(item_id)
-            print(items[item_id])
             #print(item[item_id]['name'])
             xitem = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
                          # item_id, name, kind, owner, price, damage
@@ -267,6 +266,10 @@ class Player(pygame.sprite.Sprite):
             if pygame.time.get_ticks() - self.just_hurt_time > IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
+    def add_experience(self, experience):
+        self.ui.add_experience(self.experience, experience)
+        self.experience += experience
+
     def show_ui(self, screen, offset):
 
         if not self.dead:
@@ -279,11 +282,11 @@ class Player(pygame.sprite.Sprite):
                                              self.collision_rect, offset)
 
             # Skeletons:
-            self.ui.show_skeletons(screen, self.font)
+            self.ui.show_skeletons(screen)
             self.ui.update_experience()
 
             # Outfit
-            self.ui.show_outfit(screen, self.font, self.outfit)
+            self.ui.show_outfit(screen, self.outfit)
 
     def update(self, screen, offset):
         if not self.dead:
@@ -300,6 +303,9 @@ class Player(pygame.sprite.Sprite):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
 
+
+
+        # ------- FOR DEVELOPING:------------------------------------------------------------------------------------
         # Show collision rectangles:
         if SHOW_COLLISION_RECTANGLES:
             collide_surface = pygame.Surface(PLAYER_SIZE)
@@ -311,3 +317,13 @@ class Player(pygame.sprite.Sprite):
             image_surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
             image_surface.set_alpha(30)
             surface.blit(image_surface, self.rect.topleft - offset)
+
+        if SHOW_PLAYER_STATUS:
+            # Show information for developer
+            draw_text(surface, 'Pos: ' + str(self.rect.center),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
+            # draw_text(self.display_surface, 'Status: ' + str(self.get_player().status),
+            # self.normal_font, BLACK,SCREEN_WIDTH / 2, 70)
+            draw_text(surface, 'Frame index: ' + str(int(self.frame_index)),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+        # -----------------------------------------------------------------------------------------------------------
