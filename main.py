@@ -110,3 +110,4 @@ while True:
 
     pygame.display.update()
     CLOCK.tick(FPS)
+    print('Hello')
