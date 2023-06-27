@@ -1,11 +1,11 @@
 import pygame
 from support import import_csv_file, import_cut_graphics
 from game_data import levels
-from settings import TILE_SIZE, ATTACK_SPACE, ENEMY_SPACE
+from settings import TILE_SIZE
 from tiles import StaticTile
 from player import Player
 from enemies import Sceleton, Ninja
-from fighting import Hit, Bullet
+from fighting import Fight_Manager
 
 
 class Level:
@@ -17,8 +17,6 @@ class Level:
         self.pause = False
         self.game_over = False
 
-        # Sounds:
-        self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
 
         # Load level data:
         level_data = levels[self.current_level]
@@ -30,6 +28,9 @@ class Level:
 
         # Check for game loading time
         loading_counter = pygame.time.get_ticks()
+
+        # Fighting:
+        self.fight_manager = Fight_Manager()
 
         # Player import:
         player_layout = import_csv_file(level_data['player'])
@@ -53,10 +54,6 @@ class Level:
         self.border_right = len(terrain_layout[0]) * TILE_SIZE
         self.border_top = 0
         self.border_bottom = len(terrain_layout) * TILE_SIZE
-
-        # Fighting:
-        self.sword_hits = pygame.sprite.Group()
-        self.bullet_hits = pygame.sprite.Group()
 
     def create_tile_group(self, layout, kind):
         sprite_group = pygame.sprite.Group()
@@ -82,10 +79,10 @@ class Level:
 
                     if kind == 'enemies':
                         if val == '0':
-                            sprite = Sceleton(enemy_id, (x, y), self.sword_attack)
+                            sprite = Sceleton(enemy_id, (x, y), self.fight_manager.sword_attack)
                             enemy_id += 1
                         if val == '1':
-                            sprite = Ninja(enemy_id, (x, y), self.arch_attack)
+                            sprite = Ninja(enemy_id, (x, y), self.fight_manager.arch_attack)
                             enemy_id += 1
                     sprite_group.add(sprite)
         return sprite_group
@@ -97,7 +94,7 @@ class Level:
                 y = row_index * TILE_SIZE
                 if val == '0':
                     sprite = Player((x, y), self.create_pause,
-                                    self.sword_attack, self.arch_attack)
+                                    self.fight_manager.sword_attack, self.fight_manager.arch_attack)
                     self.player.add(sprite)
 
     def get_player(self):
@@ -164,105 +161,6 @@ class Level:
         if character.on_ground and character.direction.y < 0 or character.direction.y > 1:
             character.on_ground = False
 
-    def sword_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack, width):
-        if can_attack:
-
-            if source == 'player':
-                space = ATTACK_SPACE
-            else:
-                space = ENEMY_SPACE
-
-            if facing_right:
-                position = (collision_rect.centerx + space, collision_rect.top)
-            else:
-                position = (collision_rect.centerx - width - space, collision_rect.top)
-
-            hit = Hit(position, damage, source, source_id, width)
-            self.sword_hits.add(hit)
-
-    def arch_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack):
-        if can_attack:
-
-            if facing_right:
-                position = (collision_rect.right, collision_rect.top + collision_rect.height / 3)
-            else:
-                position = (collision_rect.left + 20, collision_rect.top + collision_rect.height / 3)
-
-            bullet = Bullet(position, damage, source, source_id, facing_right)
-            self.bullet_hits.add(bullet)
-
-    def check_damage(self):
-        # Hit groups:
-        sword_collisions = []
-        arrow_collisions = []
-        source = 'default'
-        damage = 0
-
-        def character_kill(character) -> None:
-            character.dead = True
-            character.status = 'dead'
-            character.frame_index = 0
-            character.direction.x = 0
-            character.dead_time = pygame.time.get_ticks()
-
-            if character.type != 'Player':
-                self.get_player().add_experience(character.experience)
-
-        def character_hurt(character, damage) -> None:
-            character.just_hurt = True
-            character.just_hurt_time = pygame.time.get_ticks()
-            character.health -= damage * character.armor_ratio
-            if character.health <= 0:  # Death of player
-                character_kill(character)
-
-        def character_search_hit_collisions(kind, hits, player, enemies, collisions_group) -> None:
-            for hit in hits:  # Check for any hits collisions
-                point = False # if kind of hits is 'bullets'
-                for enemy in enemies:
-                    if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player' and enemy.dead == False: # If enemy get hit by player
-                        collisions_group.append((enemy, hit.damage, hit.source))
-                        if kind == 'bullet': point = True
-
-                if hit.rect.colliderect(player.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
-                    if player.shielding:
-                        for enemy in enemies:
-                            if enemy.id == hit.source_id:
-                                if ((player.facing_right and enemy.collision_rect.x > player.collision_rect.x) or
-                                    (not player.facing_right and enemy.collision_rect.x < player.collision_rect.x)):
-                                    self.shield_block_sound.play()
-                                    hit.shielded = True
-                                    if not enemy.stunned and kind == 'sword':
-                                        enemy.stunned = True
-                                        enemy.status = 'stun'
-                                        enemy.armor_ratio = 3
-                                        break
-                                else:
-                                    collisions_group.append((player, hit.damage, hit.source))
-                    else:
-                        collisions_group.append((player, hit.damage, hit.source))
-
-                    if kind == 'bullet': point = True
-
-                if point and kind == 'bullet': # Destroy bullet after collision with anyone
-                    hit.kill()
-        def character_hit_collisions(collisions) -> None:
-            if collisions:  # If there is melee attack collision with enemies:
-                for collision in collisions:
-                    character = collision[0]
-                    damage = collision[1]
-                    source = collision[2].lower()
-
-                    if not character.just_hurt and character.type.lower() != 'player' and source == 'player':
-                        character_hurt(character, damage)
-                    if not character.just_hurt and character.type.lower() == 'player' and source != 'player':
-                        character_hurt(character, damage)
-
-        character_search_hit_collisions('sword', self.sword_hits, self.get_player(), self.enemy_sprites, sword_collisions)
-        character_hit_collisions(sword_collisions)
-
-        character_search_hit_collisions('bullet', self.bullet_hits, self.get_player(), self.enemy_sprites, arrow_collisions)
-        character_hit_collisions(arrow_collisions)
-
     def run(self):
         # Run the entire game / level
         self.terrain_sprite.update(self.offset)
@@ -294,21 +192,9 @@ class Level:
             if enemy.dead and pygame.time.get_ticks() - enemy.dead_time > 3000:
                 enemy.kill()
 
-        # Attacks:
-        self.sword_hits.update()
-        for hit in self.sword_hits:
-            hit.draw(self.display_surface, self.offset)
-            if pygame.time.get_ticks() - hit.attack_time > hit.attack_duration:
-                hit.kill()
-
-        self.bullet_hits.update()
-        for bullet in self.bullet_hits:
-            bullet.draw(self.display_surface, self.offset)
-            if pygame.time.get_ticks() - bullet.attack_time > bullet.attack_duration:
-                bullet.kill()
-
-        # Damages:
-        self.check_damage()
+        # Fighting:
+        self.fight_manager.attack_update(self.display_surface, self.offset)
+        self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
 
         # Show UI:
         self.get_player().show_ui(self.display_surface, self.offset)

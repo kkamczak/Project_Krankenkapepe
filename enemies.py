@@ -211,6 +211,7 @@ class Sceleton(Enemy):
         self.combat_start = 0
         self.preparing = 400
         self.sword_can_attack = True
+        self.sword_attack_finish = False
 
         # Sceleton sword attack animation:
         self.attack_animation_start = 0
@@ -226,10 +227,8 @@ class Sceleton(Enemy):
 
             # Loop over frame index
             self.frame_index += animation_speed
-            if self.frame_index > 4:
-                self.sword_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage,
-                                  self.sword_can_attack, 80)
-                self.sword_can_attack = False
+            if self.frame_index > 4 and self.sword_can_attack:
+                self.sword_attack_finish = True
 
             if self.frame_index >= len(animation):
                 self.frame_index = 0
@@ -281,6 +280,13 @@ class Sceleton(Enemy):
         self.attacking = True
         self.frame_index = 0
 
+    def check_attack_finish(self):
+        if self.sword_attack_finish:
+            self.sword_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage,
+                              self.sword_can_attack, 80)
+            self.sword_can_attack = False
+            self.sword_attack_finish = False
+
     def combat_reset(self):
         self.combat = False
         self.sword_can_attack = True
@@ -291,6 +297,7 @@ class Sceleton(Enemy):
         super().update(offset)
         if not self.dead:
             self.animate_attack()
+            self.check_attack_finish()
             self.move()
 
 
@@ -309,6 +316,7 @@ class Ninja(Enemy):
         self.combat_start = 0
         self.preparing = 400
         self.arch_can_attack = True
+        self.arch_attack_finish = False
 
         # Attack animation:
         self.attack_animation_start = 0
@@ -324,9 +332,8 @@ class Ninja(Enemy):
 
             # Loop over frame index
             self.frame_index += animation_speed
-            if self.frame_index > 4:
-                self.arch_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage, self.arch_can_attack)
-                self.arch_can_attack = False
+            if self.frame_index > 4 and self.arch_can_attack:
+                self.arch_attack_finish = True
 
             if self.frame_index >= len(animation):
                 self.frame_index = 0
@@ -381,8 +388,15 @@ class Ninja(Enemy):
         self.attacking = True
         self.frame_index = 0
 
+    def check_attack_finish(self):
+        if self.arch_attack_finish:
+            self.arch_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage, self.arch_can_attack)
+            self.arch_can_attack = False
+            self.arch_attack_finish = False
+
     def update(self, offset):
         super().update(offset)
         if not self.dead:
             self.animate_attack()
+            self.check_attack_finish()
             self.move()
