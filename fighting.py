@@ -50,10 +50,10 @@ class Bullet(pygame.sprite.Sprite):
             flipped_image = pygame.transform.flip(self.image, True, False)
             self.image = flipped_image
 
-        self.speed = 10
+        self.speed = 30
 
         self.attack_time = pygame.time.get_ticks()
-        self.attack_duration = 1500
+        self.attack_duration = 500
 
         self.damage = damage
         self.shielded = False

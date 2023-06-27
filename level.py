@@ -219,11 +219,11 @@ class Level:
             for hit in hits:  # Check for any hits collisions
                 point = False # if kind of hits is 'bullets'
                 for enemy in enemies:
-                    if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player': # If enemy get hit by player
+                    if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player' and enemy.dead == False: # If enemy get hit by player
                         collisions_group.append((enemy, hit.damage, hit.source))
                         if kind == 'bullet': point = True
 
-                if hit.rect.colliderect(player.collision_rect) and not hit.shielded and hit.source != 'player': # If player get hit by enemy
+                if hit.rect.colliderect(player.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
                     if player.shielding:
                         for enemy in enemies:
                             if enemy.id == hit.source_id:

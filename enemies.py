@@ -1,8 +1,8 @@
 import pygame
 from settings import ENEMY_SCELETON_HEALTH, ENEMY_NINJA_HEALTH, ENEMY_SIZE, GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH, \
-    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE
-from support import import_folder, draw_text
+    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH
+from support import import_folder, draw_text, import_character_assets
 import random
 
 
@@ -15,8 +15,9 @@ class Enemy(pygame.sprite.Sprite):
         self.id = enemy_id
 
         # Load  images:
-        self.animations = None
-        self.import_character_assets()
+        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
+                           'stun': []}
+        import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/')
 
         # Enemy animation setup:
         self.status = 'run'
@@ -58,15 +59,6 @@ class Enemy(pygame.sprite.Sprite):
         self.dead_time = 0
 
         self.stunned = False
-
-    def import_character_assets(self):
-        character_path = f'content/graphics/enemies/{self.type}/'
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
-                           'stun': []}
-
-        for animation in self.animations.keys():
-            full_path = character_path + animation
-            self.animations[animation] = import_folder(full_path)
 
     def move(self):
         self.current_position = self.collision_rect.x

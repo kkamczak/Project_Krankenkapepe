@@ -27,6 +27,15 @@ def import_cut_graphics(path):
 
     return cut_tiles
 
+def import_character_assets(animations, path):  # Import all animations:
+    character_path = path
+
+    for animation in animations.keys():
+        full_path = character_path + animation
+        animations[animation] = import_folder(full_path)
+
+    return animations
+
 def import_folder(path):
     surface_list = []
 

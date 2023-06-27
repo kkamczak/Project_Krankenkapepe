@@ -1,8 +1,8 @@
 import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
-    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE
-from support import import_folder, draw_text
+    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, PLAYER_DEATH_ANIMATION_SPEED
+from support import draw_text, import_character_assets
 from ui import UI
 from game_data import items
 from items import Sword
@@ -13,12 +13,14 @@ class Player(pygame.sprite.Sprite):
         super().__init__()
 
         # Player images:
-        self.animations = None
-        self.import_character_assets()
+        self.animations_names = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
+                                 'shield': [], 'arch': []}
+        self.animations = import_character_assets(self.animations_names, PLAYER_ANIMATIONS_PATH)
         self.frame_index = 0
         self.animation_speed = 0.2
         self.image = self.animations['idle'][self.frame_index]
         self.rect = self.image.get_rect(topleft=pos)
+
 
 
         # Player movement:
@@ -44,14 +46,13 @@ class Player(pygame.sprite.Sprite):
         self.sword_attack_time = 0  # When did player attack?
         self.sword_attack_cooldown = SWORD_ATTACKING_COOLDOWN  # What is cooldown for sword attack?
         self.sword_can_attack = True  # Can player attack?
-        self.sword_just_attacked = False  # Did player just attack? (for not multiple 'D' key pressing)
 
         # Attacking with Arch
         self.arch_attacking = False
         self.arch_attack_time = 0
         self.arch_attack_cooldown = SWORD_ATTACKING_COOLDOWN
         self.arch_can_attack = True
-        self.arch_just_attacked = False
+        self.arch_attack_finish = False
 
         # Taking hits:
         self.just_hurt = False
@@ -59,7 +60,6 @@ class Player(pygame.sprite.Sprite):
 
         # Shielding:
         self.shielding = False
-        self.just_shielded = False
         self.can_shield = True
         self.shield_time = 0
         self.shield_cooldown = SHIELD_COOLDOWN
@@ -101,19 +101,11 @@ class Player(pygame.sprite.Sprite):
             xitem = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
                          # item_id, name, kind, owner, price, damage
             self.items.append(xitem)
-    def import_character_assets(self):  # Import all animations:
-        character_path = 'content/graphics/character/'
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
-                           'shield': [], 'arch': []}
-
-        for animation in self.animations.keys():
-            full_path = character_path + animation
-            self.animations[animation] = import_folder(full_path)
 
     def animate(self):  # Animate method
 
         if self.status == 'dead':
-            animation_speed = 0.15
+            animation_speed = PLAYER_DEATH_ANIMATION_SPEED
         else:
             animation_speed = self.animation_speed
 
@@ -126,15 +118,11 @@ class Player(pygame.sprite.Sprite):
                 self.frame_index = len(animation) - 1
             else:
                 self.frame_index = 0
-
             if self.status == 'attack':  # Is that attack animation?
                 self.status = 'idle'
                 self.sword_attacking = False
             if self.status == 'arch':  # Is that attack animation?
-                self.player_arch_attack('player', self.id, self.collision_rect, self.facing_right, self.arch_damage,
-                                        self.arch_can_attack)
-                self.arch_can_attack = False
-                self.arch_attacking = False
+                self.arch_attack_finish = True
                 self.status = 'idle'
             if self.status == 'hit':  # Is that hit animation?
                 self.status = 'idle'
@@ -157,40 +145,33 @@ class Player(pygame.sprite.Sprite):
     def get_input(self):
         keys = pygame.key.get_pressed()
 
-        if keys[pygame.K_RIGHT] and not self.sword_attacking and not self.shielding and not self.arch_attacking:
+        if keys[pygame.K_RIGHT] and not self.sword_attacking and not self.shielding and not self.arch_attacking: # Player move LEFT
             self.direction.x = 1
             self.facing_right = True
-        elif keys[pygame.K_LEFT] and not self.sword_attacking and not self.shielding and not self.arch_attacking:
+        elif keys[pygame.K_LEFT] and not self.sword_attacking and not self.shielding and not self.arch_attacking: # Player move RIGHT
             self.direction.x = -1
             self.facing_right = False
         else:
-            self.direction.x = 0
+            self.direction.x = 0 # Player stay
         if keys[pygame.K_SPACE] and self.on_ground and not self.just_jumped and not self.sword_attacking \
-                and not self.arch_attacking:
+                and not self.arch_attacking: # Player jump
             self.jump()
             self.just_jumped = True
-        if not keys[pygame.K_SPACE]:
+        if not keys[pygame.K_SPACE]: # Player isn't jumping anymore
             self.just_jumped = False
-        if keys[pygame.K_ESCAPE]:
+        if keys[pygame.K_ESCAPE]: # Pause game
             self.create_pause()
         if keys[pygame.K_d] and not self.sword_attacking and not self.arch_attacking and not self.shielding \
-                and not self.sword_just_attacked and self.sword_can_attack:
+                and not self.sword_attacking and self.sword_can_attack: # Player attack with sword
             self.sword_attack()
-        if not keys[pygame.K_d]:
-            self.sword_just_attacked = False
         if keys[pygame.K_s] and not self.sword_attacking and not self.arch_attacking and not self.shielding \
-                and not self.just_shielded and self.can_shield and not self.just_hurt:
+                and self.can_shield and not self.just_hurt: # Player use SHIELD
             self.shielding = True
-            self.just_shielded = True
             self.can_shield = False
             self.shield_time = pygame.time.get_ticks()
-        if not keys[pygame.K_s]:
-            self.just_shielded = False
         if keys[pygame.K_a] and not self.sword_attacking and not self.arch_attacking and not self.shielding \
-                and not self.arch_just_attacked and self.arch_can_attack:
+                and self.arch_can_attack: # Player shot arrow
             self.arch_attack()
-        if not keys[pygame.K_a]:
-            self.arch_just_attacked = False
 
     def get_status(self):
         if self.direction.y < 0 and not self.sword_attacking and not self.shielding:
@@ -235,13 +216,11 @@ class Player(pygame.sprite.Sprite):
                                  self.sword_can_attack, 40)
         self.sword_attack_time = pygame.time.get_ticks()
         self.sword_attacking = True
-        self.sword_just_attacked = True
         self.sword_can_attack = False
 
     def arch_attack(self):
         self.arch_attack_time = pygame.time.get_ticks()
         self.arch_attacking = True
-        self.arch_just_attacked = True
 
     def check_sword_attack_cooldown(self):
         if not self.sword_can_attack:
@@ -249,11 +228,18 @@ class Player(pygame.sprite.Sprite):
                 self.sword_can_attack = True
                 self.sword_attacking = False
 
+
     def check_arch_attack_cooldown(self):
         if not self.arch_can_attack:
             if (pygame.time.get_ticks() - self.arch_attack_time) > self.arch_attack_cooldown:
                 self.arch_can_attack = True
                 self.arch_attacking = False
+        if self.arch_attack_finish:
+            self.player_arch_attack('player', self.id, self.collision_rect, self.facing_right, self.arch_damage,
+                                    self.arch_can_attack)
+            self.arch_can_attack = False
+            self.arch_attacking = False
+            self.arch_attack_finish = False
 
     def check_shield_cooldown(self):
         if not self.can_shield:
@@ -323,8 +309,12 @@ class Player(pygame.sprite.Sprite):
             # Show information for developer
             draw_text(surface, 'Pos: ' + str(self.rect.center),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
-            # draw_text(self.display_surface, 'Status: ' + str(self.get_player().status),
-            # self.normal_font, BLACK,SCREEN_WIDTH / 2, 70)
             draw_text(surface, 'Frame index: ' + str(int(self.frame_index)),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+            draw_text(surface, 'arch_attacking= ' + str(self.arch_attacking),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
+                      self.rect.bottom + SHOW_STATUS_SPACE * 5 - offset[1])
+            draw_text(surface, 'arch_can_attack= ' + str(self.arch_can_attack),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
+                      self.rect.bottom + SHOW_STATUS_SPACE * 7 - offset[1])
         # -----------------------------------------------------------------------------------------------------------
