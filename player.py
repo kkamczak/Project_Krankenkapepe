@@ -29,7 +29,8 @@ class Player(pygame.sprite.Sprite):
         self.collision_rect = pygame.Rect((self.rect.centerx, self.rect.top - PLAYER_SIZE[0] / 2), PLAYER_SIZE)
 
         # Player status:
-        self.type = 'Player'
+        self.type = 'player'
+        self.id = 999
         self.status = 'idle'
         self.facing_right = True
         self.on_ground = False
@@ -130,7 +131,7 @@ class Player(pygame.sprite.Sprite):
                 self.status = 'idle'
                 self.sword_attacking = False
             if self.status == 'arch':  # Is that attack animation?
-                self.player_arch_attack('player', self.collision_rect, self.facing_right, self.arch_damage,
+                self.player_arch_attack('player', self.id, self.collision_rect, self.facing_right, self.arch_damage,
                                         self.arch_can_attack)
                 self.arch_can_attack = False
                 self.arch_attacking = False

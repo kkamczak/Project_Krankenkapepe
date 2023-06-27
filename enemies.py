@@ -333,7 +333,7 @@ class Ninja(Enemy):
             # Loop over frame index
             self.frame_index += animation_speed
             if self.frame_index > 4:
-                self.arch_attack('enemy', self.collision_rect, self.facing_right, self.damage, self.arch_can_attack)
+                self.arch_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage, self.arch_can_attack)
                 self.arch_can_attack = False
 
             if self.frame_index >= len(animation):

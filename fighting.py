@@ -31,10 +31,11 @@ class Hit(pygame.sprite.Sprite):
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, pos, damage, source, facing_right):
+    def __init__(self, pos, damage, source, source_id, facing_right):
         super().__init__()
 
         self.source = source
+        self.source_id = source_id
 
         self.image = pygame.image.load('content/graphics/weapons/arrow.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=pos)

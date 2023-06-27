@@ -5,7 +5,7 @@ from settings import TILE_SIZE, ATTACK_SPACE, ENEMY_SPACE
 from tiles import StaticTile
 from player import Player
 from enemies import Sceleton, Ninja
-from attack import Hit, Bullet
+from fighting import Hit, Bullet
 
 
 class Level:
@@ -180,7 +180,7 @@ class Level:
             hit = Hit(position, damage, source, source_id, width)
             self.sword_hits.add(hit)
 
-    def arch_attack(self, source, collision_rect, facing_right, damage, can_attack):
+    def arch_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack):
         if can_attack:
 
             if facing_right:
@@ -188,19 +188,17 @@ class Level:
             else:
                 position = (collision_rect.left + 20, collision_rect.top + collision_rect.height / 3)
 
-            bullet = Bullet(position, damage, source, facing_right)
+            bullet = Bullet(position, damage, source, source_id, facing_right)
             self.bullet_hits.add(bullet)
 
     def check_damage(self):
         # Hit groups:
-        sword_collisions_enemy = []
-        sword_collisions_player = []
-        arrow_collisions_enemy = []
-        arrow_collisions_player = []
+        sword_collisions = []
+        arrow_collisions = []
         source = 'default'
         damage = 0
 
-        def kill_character(character):
+        def character_kill(character) -> None:
             character.dead = True
             character.status = 'dead'
             character.frame_index = 0
@@ -210,78 +208,60 @@ class Level:
             if character.type != 'Player':
                 self.get_player().add_experience(character.experience)
 
-        def character_got_hurt(character, damage):
+        def character_hurt(character, damage) -> None:
             character.just_hurt = True
             character.just_hurt_time = pygame.time.get_ticks()
             character.health -= damage * character.armor_ratio
             if character.health <= 0:  # Death of player
-                kill_character(character)
+                character_kill(character)
 
-        for hit in self.sword_hits:  # Check any melee hits collisions
-            for enemy in self.enemy_sprites:
-                if hit.rect.colliderect(enemy.collision_rect):
-                    sword_collisions_enemy.append(enemy)
-            for player in self.player:
-                if hit.rect.colliderect(player.collision_rect) and not hit.shielded:
+        def character_search_hit_collisions(kind, hits, player, enemies, collisions_group) -> None:
+            for hit in hits:  # Check for any hits collisions
+                point = False # if kind of hits is 'bullets'
+                for enemy in enemies:
+                    if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player': # If enemy get hit by player
+                        collisions_group.append((enemy, hit.damage, hit.source))
+                        if kind == 'bullet': point = True
+
+                if hit.rect.colliderect(player.collision_rect) and not hit.shielded and hit.source != 'player': # If player get hit by enemy
                     if player.shielding:
-                        for enemy in self.enemy_sprites:
+                        for enemy in enemies:
                             if enemy.id == hit.source_id:
                                 if ((player.facing_right and enemy.collision_rect.x > player.collision_rect.x) or
                                     (not player.facing_right and enemy.collision_rect.x < player.collision_rect.x)):
                                     self.shield_block_sound.play()
                                     hit.shielded = True
-                                    if not enemy.stunned:
+                                    if not enemy.stunned and kind == 'sword':
                                         enemy.stunned = True
                                         enemy.status = 'stun'
                                         enemy.armor_ratio = 3
                                         break
                                 else:
-                                    sword_collisions_player.append(player)
+                                    collisions_group.append((player, hit.damage, hit.source))
                     else:
-                        sword_collisions_player.append(player)
+                        collisions_group.append((player, hit.damage, hit.source))
 
-            damage = hit.damage
-            source = hit.source
+                    if kind == 'bullet': point = True
 
-        if sword_collisions_enemy:  # If there is melee attack collision with enemies:
-            for enemy in sword_collisions_enemy:
-                if not enemy.just_hurt and source == 'player':
-                    character_got_hurt(enemy, damage)
+                if point and kind == 'bullet': # Destroy bullet after collision with anyone
+                    hit.kill()
+        def character_hit_collisions(collisions) -> None:
+            if collisions:  # If there is melee attack collision with enemies:
+                for collision in collisions:
+                    character = collision[0]
+                    damage = collision[1]
+                    source = collision[2].lower()
 
-        if sword_collisions_player:  # If there is melee attack collision with player:
-            player = self.get_player()
-            if not player.just_hurt and source == 'enemy':
-                character_got_hurt(player, damage)
+                    if not character.just_hurt and character.type.lower() != 'player' and source == 'player':
+                        character_hurt(character, damage)
+                    if not character.just_hurt and character.type.lower() == 'player' and source != 'player':
+                        character_hurt(character, damage)
 
-        for bullet in self.bullet_hits:  # Check any bullet hits collisions
-            point = False
-            if bullet.source == 'player':
-                for enemy in self.enemy_sprites:
-                    if bullet.rect.colliderect(enemy.collision_rect):
-                        arrow_collisions_enemy.append(enemy)
-                        point = True
-            if bullet.source == 'enemy':
-                for player in self.player:
-                    if bullet.rect.colliderect(player.collision_rect) and not bullet.shielded:
-                        if player.shielding:
-                            self.shield_block_sound.play()
-                            bullet.shielded = True
-                        else:
-                            arrow_collisions_player.append(player)
-                        point = True
-            damage = bullet.damage
-            source = bullet.source
-            if point:
-                bullet.kill()
+        character_search_hit_collisions('sword', self.sword_hits, self.get_player(), self.enemy_sprites, sword_collisions)
+        character_hit_collisions(sword_collisions)
 
-        if arrow_collisions_enemy:  # If there is bullet collision with enemies:
-            for enemy in arrow_collisions_enemy:
-                if not enemy.just_hurt and source == 'player':
-                    character_got_hurt(enemy, damage)
-        if arrow_collisions_player:  # If there is bullet collision with player:
-            player = self.get_player()
-            if not player.just_hurt and not player.shielding and source == 'enemy':
-                character_got_hurt(player, damage)
+        character_search_hit_collisions('bullet', self.bullet_hits, self.get_player(), self.enemy_sprites, arrow_collisions)
+        character_hit_collisions(arrow_collisions)
 
     def run(self):
         # Run the entire game / level

@@ -1,7 +1,7 @@
 import pygame.font
 pygame.font.init()
 
-# Fonts:font isocp
+# Fonts:
 NORMAL_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
 SMALL_STATUS_FONT = pygame.font.SysFont('arial', 15)
 DEATH_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 70)
