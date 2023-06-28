@@ -228,7 +228,6 @@ class Player(pygame.sprite.Sprite):
                 self.sword_can_attack = True
                 self.sword_attacking = False
 
-
     def check_arch_attack_cooldown(self):
         if not self.arch_can_attack:
             if (pygame.time.get_ticks() - self.arch_attack_time) > self.arch_attack_cooldown:
@@ -256,24 +255,6 @@ class Player(pygame.sprite.Sprite):
     def add_experience(self, experience):
         self.ui.add_experience(self.experience, experience)
         self.experience += experience
-
-    def show_ui(self, screen, offset):
-
-        if not self.dead:
-            # Health bar:
-            self.ui.show_health(screen, self.max_health, self.health)
-
-            # Sword cooldown:
-            if not self.sword_can_attack:
-                self.ui.show_attack_cooldown(screen, self.sword_attack_time, self.sword_attack_cooldown,
-                                             self.collision_rect, offset)
-
-            # Skeletons:
-            self.ui.show_skeletons(screen)
-            self.ui.update_experience()
-
-            # Outfit
-            self.ui.show_outfit(screen, self.outfit)
 
     def update(self, screen, offset):
         if not self.dead:

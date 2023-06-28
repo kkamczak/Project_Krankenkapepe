@@ -2,7 +2,7 @@ import pygame
 from support import import_csv_file, import_cut_graphics
 from game_data import levels
 from settings import TILE_SIZE
-from tiles import StaticTile
+from tiles import StaticTile, AnimatedTile
 from player import Player
 from enemies import Sceleton, Ninja
 from fighting import Fight_Manager
@@ -41,6 +41,10 @@ class Level:
         terrain_layout = import_csv_file(level_data['terrain'])
         self.terrain_sprite = self.create_tile_group(terrain_layout, 'terrain')
 
+        # Terrain elements import
+        terrain_elements_layout = import_csv_file(level_data['terrain_elements'])
+        self.terrain_elements_sprite = self.create_tile_group(terrain_elements_layout, 'terrain_elements')
+
         # Enemy
         enemy_layout = import_csv_file(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
@@ -76,6 +80,11 @@ class Level:
                         tile_surface = terrain_tile_list[int(val)]
                         sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
                         tile_id += 1
+
+                    if kind == 'terrain_elements':
+                        if val == '0':
+                            sprite = AnimatedTile(tile_id, TILE_SIZE, x, y, 'content/graphics/terrain/fireplace/')
+                            tile_id += 1
 
                     if kind == 'enemies':
                         if val == '0':
@@ -165,6 +174,10 @@ class Level:
         # Run the entire game / level
         self.terrain_sprite.update(self.offset)
         for sprite in self.terrain_sprite:
+            sprite.update(self.offset)
+            sprite.draw(self.display_surface, self.offset)
+        for sprite in self.terrain_elements_sprite:
+            sprite.update(self.offset)
             sprite.draw(self.display_surface, self.offset)
 
         # Draw player
@@ -197,6 +210,9 @@ class Level:
         self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
 
         # Show UI:
-        self.get_player().show_ui(self.display_surface, self.offset)
+        player = self.get_player()
+        player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
+        player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), player.outfit)
+
 
 

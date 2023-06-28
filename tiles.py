@@ -1,5 +1,6 @@
 import pygame
 from settings import GREY
+from support import import_folder
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, id, size, x, y):
@@ -23,8 +24,8 @@ class StaticTile(Tile):
         self.image = surface
 
 class AnimatedTile(Tile):
-    def __init__(self, size, x, y, path):
-        super().__init__(size, x, y)
+    def __init__(self, id, size, x, y, path):
+        super().__init__(id, size, x, y)
         self.frames = import_folder(path)
         self.frame_index = 0
         self.image = self.frames[self.frame_index]
@@ -35,9 +36,8 @@ class AnimatedTile(Tile):
             self.frame_index = 0
         self.image = self.frames[int(self.frame_index)]
 
-    def update(self, shift, shift_y):
+    def update(self, shift):
         self.animate()
-        self.rect.x += shift
-        self.rect.y += shift_y
+
         
 

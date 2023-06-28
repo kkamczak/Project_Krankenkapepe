@@ -1,12 +1,12 @@
 import pygame
 from support import create_bar, draw_text
-from settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT
+from settings import GREY, RED, YELLOW, BLACK, WHITE, NORMAL_FONT, SMALL_STATUS_FONT
 
 
 class UI:
     def __init__(self):
         # Health bar size:
-        self.health_bar_size = [300, 15]
+        self.health_bar_size = [300, 2]
 
         # Experience:
         self.exp_max = 0
@@ -63,12 +63,24 @@ class UI:
         for item in outfit:
             if item.kind == 'sword':
                 surface.blit(item.image, positions['sword_pos'])  # Square nr 1 - Sword
+                draw_text(surface, 'Sword',
+                          SMALL_STATUS_FONT, WHITE, positions['sword_pos'][0] + width / 4,
+                          positions['sword_pos'][1] + height - 10)
             if item.kind == 'bow':
                 surface.blit(item.image, positions['arch_pos']) # Square nr 2 - Bow
+                draw_text(surface, 'Bow',
+                          SMALL_STATUS_FONT, WHITE, positions['arch_pos'][0] + width / 4,
+                          positions['arch_pos'][1] + height - 10)
             if item.kind == 'shield':
                 surface.blit(item.image, positions['shield_pos']) # Square nr 3 - Shield
+                draw_text(surface, 'Shield',
+                          SMALL_STATUS_FONT, WHITE, positions['shield_pos'][0] + width / 4,
+                          positions['shield_pos'][1] + height - 10)
             if item.kind == 'item':
                 surface.blit(item.image, positions['item_pos'])  # Square nr 4 - Item
+                draw_text(surface, 'Item',
+                          SMALL_STATUS_FONT, WHITE, positions['item_pos'][0] + width / 4,
+                          positions['item_pos'][1] + height - 10)
 
 
     def add_experience(self, current, amount):
@@ -80,3 +92,19 @@ class UI:
             self.exp_visible += 0.5
         else:
             self.exp_visible = int(self.exp_max)
+    def show_ui(self, screen, offset, hp: tuple[int, int], sword_cd: tuple[bool, float, int, list], outfit):
+
+        # Health bar:
+        self.show_health(screen, hp[0], hp[1])
+
+        # Sword cooldown:
+        if not sword_cd[0]:
+            self.show_attack_cooldown(screen, sword_cd[1], sword_cd[2],
+                                         sword_cd[3], offset)
+
+        # Skeletons:
+        self.show_skeletons(screen)
+        self.update_experience()
+
+        # Outfit
+        self.show_outfit(screen, outfit)
