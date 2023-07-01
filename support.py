@@ -47,6 +47,12 @@ def import_folder(path):
 
     return surface_list
 
+def import_image(path: str) -> pygame.image:
+    return pygame.image.load(path).convert_alpha()
+
+def scale_image(image: pygame.image, size: tuple[int, int]) -> pygame.image:
+    return pygame.transform.scale(image, size)
+
 def create_bar(size, color):
     max = pygame.Surface(size)
     max.fill(color)

@@ -1,8 +1,9 @@
 import pygame
 from settings import ENEMY_SCELETON_HEALTH, ENEMY_NINJA_HEALTH, ENEMY_SIZE, GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH, \
-    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH
-from support import import_folder, draw_text, import_character_assets
+    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, SCELETON_ATTACK_SPEED, \
+    NINJA_ATTACK_SPEED
+from support import draw_text, import_character_assets
 import random
 
 
@@ -207,6 +208,7 @@ class Sceleton(Enemy):
         self.experience = 20
 
         # Sceleton sword attacking:
+        self.attack_speed = SCELETON_ATTACK_SPEED
         self.combat = False
         self.combat_start = 0
         self.preparing = 400
@@ -222,7 +224,7 @@ class Sceleton(Enemy):
 
     def animate_attack(self):
         if self.status == 'attack' and self.attacking and not self.dead:
-            animation_speed = 0.3
+            animation_speed = self.attack_speed
             animation = self.animations['attack']
 
             # Loop over frame index
@@ -312,6 +314,7 @@ class Ninja(Enemy):
         self.experience = 20
 
         # Attacking:
+        self.attack_speed = NINJA_ATTACK_SPEED
         self.combat = False
         self.combat_start = 0
         self.preparing = 400
@@ -327,7 +330,7 @@ class Ninja(Enemy):
 
     def animate_attack(self):
         if self.status == 'attack' and self.attacking and not self.dead:
-            animation_speed = 0.15
+            animation_speed = self.attack_speed
             animation = self.animations['attack']
 
             # Loop over frame index

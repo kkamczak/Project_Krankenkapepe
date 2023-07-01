@@ -211,8 +211,9 @@ class Level:
 
         # Show UI:
         player = self.get_player()
-        player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
-        player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), player.outfit)
+        if player.dead == False:
+            player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
+            player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), player.active_equipment)
 
 
 

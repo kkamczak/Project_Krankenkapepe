@@ -4,6 +4,7 @@ pygame.font.init()
 # Fonts:
 NORMAL_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
 SMALL_STATUS_FONT = pygame.font.SysFont('arial', 15)
+UI_FRAME_FONT = pygame.font.SysFont('arial', 11)
 DEATH_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 70)
 FPS_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
 BUTTON_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
@@ -19,8 +20,9 @@ BUTTON_BASIC_COLOR = (105, 77, 86)
 BUTTON_ACTIVE_COLOR = (181, 11, 65)
 
 # Game settings:
-SCREEN_WIDTH = 1200
-SCREEN_HEIGHT = 700
+SCREEN_WIDTH = 1600
+SCREEN_HEIGHT = 900
+RESOLUTION_SCALE = 2
 TILE_SIZE = 32
 
 # Player settings:
@@ -52,6 +54,7 @@ BUTTON_SIZE = (200, 40)
 BUTTONS_SPACE = 40
 
 # Attacking:
+PLAYER_ATTACK_SPEED = 0.3
 ATTACK_SIZE = [40, 57]
 ATTACK_SPACE = 25
 ENEMY_ATTACK_SPACE = 5
@@ -59,7 +62,16 @@ SWORD_ATTACKING_COOLDOWN = 1000
 SHIELD_COOLDOWN = 1000
 IMMUNITY_FROM_HIT = 300
 SCELETON_TRIGGER_LENGTH = 100
+SCELETON_ATTACK_SPEED = 0.25
 NINJA_TRIGGER_LENGTH = 350
+NINJA_ATTACK_SPEED = 0.15
+
+# UI:
+UI_ACTIVE_EQUIPMENT_POSITION = (SCREEN_WIDTH / 10, SCREEN_HEIGHT - 90)
+UI_FRAME_SIZE = (80, 90)
+UI_ITEM_IMAGE_SIZE = (60, 70)
+UI_HP_BAR_POSITION = (20, 50)
+
 
 # Developing:
 

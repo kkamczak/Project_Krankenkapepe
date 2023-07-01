@@ -1,11 +1,11 @@
 import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
-    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, PLAYER_DEATH_ANIMATION_SPEED
+    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED
 from support import draw_text, import_character_assets
 from ui import UI
-from game_data import items
-from items import Sword
+from game_data import START_ITEMS_LIST
+from items import Sword, Bow, Shield, Potion
 
 
 class Player(pygame.sprite.Sprite):
@@ -42,10 +42,12 @@ class Player(pygame.sprite.Sprite):
         self.just_jumped = False
 
         # Attacking with Sword:
+        self.attack_speed = PLAYER_ATTACK_SPEED
         self.sword_attacking = False  # Is player on sword attack animation?
         self.sword_attack_time = 0  # When did player attack?
         self.sword_attack_cooldown = SWORD_ATTACKING_COOLDOWN  # What is cooldown for sword attack?
         self.sword_can_attack = True  # Can player attack?
+        self.sword_hit = False
 
         # Attacking with Arch
         self.arch_attacking = False
@@ -88,24 +90,35 @@ class Player(pygame.sprite.Sprite):
         self.player_arch_attack = arch_attack
 
         # Start items:
-        self.items = []
+        self.start_items = []
         self.create_start_items()
-        self.outfit = self.items
+        self.active_equipment = self.start_items
 
         # Create in-level UI:
         self.ui = UI()
 
     def create_start_items(self):
-        for item_id, item in enumerate(items):
+        for item_id, item in enumerate(START_ITEMS_LIST):
             #print(item[item_id]['name'])
-            xitem = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            if item['kind'] == 'sword':
+                item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            elif item['kind'] == 'bow':
+                item_x = Bow(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            elif item['kind'] == 'shield':
+                item_x = Shield(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            elif item['kind'] == 'potion':
+                item_x = Potion(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
                          # item_id, name, kind, owner, price, damage
-            self.items.append(xitem)
+            else:
+                continue
+            self.start_items.append(item_x)
 
     def animate(self):  # Animate method
 
         if self.status == 'dead':
             animation_speed = PLAYER_DEATH_ANIMATION_SPEED
+        elif self.status == 'attack':
+            animation_speed = self.attack_speed
         else:
             animation_speed = self.animation_speed
 
@@ -121,6 +134,7 @@ class Player(pygame.sprite.Sprite):
             if self.status == 'attack':  # Is that attack animation?
                 self.status = 'idle'
                 self.sword_attacking = False
+                self.sword_hit = True
             if self.status == 'arch':  # Is that attack animation?
                 self.arch_attack_finish = True
                 self.status = 'idle'
@@ -295,7 +309,7 @@ class Player(pygame.sprite.Sprite):
             draw_text(surface, 'arch_attacking= ' + str(self.arch_attacking),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
                       self.rect.bottom + SHOW_STATUS_SPACE * 5 - offset[1])
-            draw_text(surface, 'arch_can_attack= ' + str(self.arch_can_attack),
+            draw_text(surface, 'sword_hit= ' + str(self.sword_hit),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
                       self.rect.bottom + SHOW_STATUS_SPACE * 7 - offset[1])
         # -----------------------------------------------------------------------------------------------------------
