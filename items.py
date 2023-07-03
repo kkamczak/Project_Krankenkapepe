@@ -1,7 +1,7 @@
 import pygame
 from settings import UI_ITEM_IMAGE_SIZE
 from support import scale_image
-
+from game_data import START_ITEMS_LIST
 class Item:
     def __init__(self, item_id, name, kind, owner, price):
         self.item_id = item_id
@@ -58,3 +58,21 @@ class Potion(Item):
 
         # Properties:
         self.damage = damage
+
+def create_start_items() -> list:
+        start_items = []
+        for item_id, item in enumerate(START_ITEMS_LIST):
+            #print(item[item_id]['name'])
+            if item['kind'] == 'sword':
+                item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            elif item['kind'] == 'bow':
+                item_x = Bow(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            elif item['kind'] == 'shield':
+                item_x = Shield(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+            elif item['kind'] == 'potion':
+                item_x = Potion(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
+                         # item_id, name, kind, owner, price, damage
+            else:
+                continue
+            start_items.append(item_x)
+        return start_items

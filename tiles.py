@@ -1,5 +1,4 @@
 import pygame
-from settings import GREY
 from support import import_folder
 
 class Tile(pygame.sprite.Sprite):

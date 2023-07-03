@@ -4,8 +4,7 @@ from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVIT
     SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED
 from support import draw_text, import_character_assets
 from ui import UI
-from game_data import START_ITEMS_LIST
-from items import Sword, Bow, Shield, Potion
+from items import Sword, Bow, Shield, Potion, create_start_items
 
 
 class Player(pygame.sprite.Sprite):
@@ -90,28 +89,10 @@ class Player(pygame.sprite.Sprite):
         self.player_arch_attack = arch_attack
 
         # Start items:
-        self.start_items = []
-        self.create_start_items()
-        self.active_equipment = self.start_items
+        self.active_equipment = create_start_items()
 
         # Create in-level UI:
         self.ui = UI()
-
-    def create_start_items(self):
-        for item_id, item in enumerate(START_ITEMS_LIST):
-            #print(item[item_id]['name'])
-            if item['kind'] == 'sword':
-                item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
-            elif item['kind'] == 'bow':
-                item_x = Bow(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
-            elif item['kind'] == 'shield':
-                item_x = Shield(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
-            elif item['kind'] == 'potion':
-                item_x = Potion(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'])
-                         # item_id, name, kind, owner, price, damage
-            else:
-                continue
-            self.start_items.append(item_x)
 
     def animate(self):  # Animate method
 
@@ -248,7 +229,7 @@ class Player(pygame.sprite.Sprite):
                 self.arch_can_attack = True
                 self.arch_attacking = False
         if self.arch_attack_finish:
-            self.player_arch_attack('player', self.id, self.collision_rect, self.facing_right, self.arch_damage,
+            self.player_arch_attack('arrow', 'player', self.id, self.collision_rect, self.facing_right, self.arch_damage,
                                     self.arch_can_attack)
             self.arch_can_attack = False
             self.arch_attacking = False

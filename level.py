@@ -1,10 +1,10 @@
 import pygame
 from support import import_csv_file, import_cut_graphics
 from game_data import levels
-from settings import TILE_SIZE
+from settings import TILE_SIZE, SCREEN_WIDTH
 from tiles import StaticTile, AnimatedTile
 from player import Player
-from enemies import Sceleton, Ninja
+from enemies import Sceleton, Ninja, Wizard
 from fighting import Fight_Manager
 
 
@@ -13,7 +13,7 @@ class Level:
         # General setup
         self.display_surface = surface
         self.offset = pygame.math.Vector2(0, 0)
-        self.current_level = 0
+        self.current_level = 1
         self.pause = False
         self.game_over = False
 
@@ -93,6 +93,9 @@ class Level:
                         if val == '1':
                             sprite = Ninja(enemy_id, (x, y), self.fight_manager.arch_attack)
                             enemy_id += 1
+                        if val == '2':
+                            sprite = Wizard(enemy_id, (x, y), self.fight_manager.arch_attack, self.fight_manager.thunder_attack)
+                            enemy_id += 1
                     sprite_group.add(sprite)
         return sprite_group
 
@@ -171,23 +174,30 @@ class Level:
             character.on_ground = False
 
     def run(self):
+
+        # Fighting:
+        self.fight_manager.attack_update(self.display_surface, self.offset)
+        self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
+
+        player_pos = self.get_player().collision_rect.centerx
         # Run the entire game / level
-        self.terrain_sprite.update(self.offset)
         for sprite in self.terrain_sprite:
-            sprite.update(self.offset)
-            sprite.draw(self.display_surface, self.offset)
+            if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
+                sprite.update(self.offset)
+                sprite.draw(self.display_surface, self.offset)
         for sprite in self.terrain_elements_sprite:
-            sprite.update(self.offset)
-            sprite.draw(self.display_surface, self.offset)
+            if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
+                sprite.update(self.offset)
+                sprite.draw(self.display_surface, self.offset)
 
         # Draw player
+        player = self.get_player()
         if not self.game_over:
             self.player.update(self.display_surface, self.offset)
             self.horizontal_movement_collision(self.player.sprite)
             self.vertical_movement_collision(self.player.sprite)
             self.scroll_camera()
 
-            player = self.get_player()
             player.draw(self.display_surface, self.offset)
             if player.dead and pygame.time.get_ticks() - player.dead_time > 2000:
                 self.create_death_scene()
@@ -196,21 +206,17 @@ class Level:
         # Enemy
         self.enemy_sprites.update(self.offset)
         for enemy in self.enemy_sprites:
-            self.horizontal_movement_collision(enemy)
-            self.vertical_movement_collision(enemy)
-            if not enemy.dead:
-                enemy.draw_health_bar(self.display_surface, self.offset)
-                enemy.check_for_combat(self.get_player())
-            enemy.draw(self.display_surface, self.offset)
+            if abs(enemy.rect.centerx - player_pos) < SCREEN_WIDTH:
+                self.horizontal_movement_collision(enemy)
+                self.vertical_movement_collision(enemy)
+                if not enemy.dead:
+                    enemy.draw_health_bar(self.display_surface, self.offset)
+                    enemy.check_for_combat(self.get_player())
+                enemy.draw(self.display_surface, self.offset)
             if enemy.dead and pygame.time.get_ticks() - enemy.dead_time > 3000:
                 enemy.kill()
 
-        # Fighting:
-        self.fight_manager.attack_update(self.display_surface, self.offset)
-        self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
-
         # Show UI:
-        player = self.get_player()
         if player.dead == False:
             player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
             player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), player.active_equipment)

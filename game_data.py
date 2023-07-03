@@ -5,10 +5,18 @@ level_0 = {
         'player': 'content/levels/0/level_0._player.csv',
         'unlock': 1
 }
+level_1 = {
+        'terrain': 'content/levels/1/level_1._terrain.csv',
+        'terrain_elements': 'content/levels/1/level_1._terrain_elements.csv',
+        'enemies': 'content/levels/1/level_1._enemies.csv',
+        'player': 'content/levels/1/level_1._player.csv',
+        'unlock': 1
+}
 
 
 levels = {
-    0: level_0
+    0: level_0,
+    1: level_1
 }
 
 straight_sword_1 = {

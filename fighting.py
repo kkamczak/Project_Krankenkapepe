@@ -1,5 +1,6 @@
 import pygame
-from settings import RED, ATTACK_SIZE, SHOW_HIT_RECTANGLES, ATTACK_SPACE, ENEMY_ATTACK_SPACE
+from settings import YELLOW, RED, ATTACK_SIZE, SHOW_HIT_RECTANGLES, ATTACK_SPACE, ENEMY_ATTACK_SPACE, BULLET_DEFAULT_SPEED, \
+    SCREEN_HEIGHT
 
 class Hit(pygame.sprite.Sprite):
     def __init__(self, pos, damage, source, source_id, width):
@@ -22,6 +23,7 @@ class Hit(pygame.sprite.Sprite):
 
         self.damage = damage
         self.shielded = False
+        self.character_collided = []
 
     def update(self):
         pass
@@ -30,13 +32,14 @@ class Hit(pygame.sprite.Sprite):
         surface.blit(self.image, pos)
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, pos, damage, source, source_id, facing_right):
+    def __init__(self, kind, pos, damage, source, source_id, facing_right):
         super().__init__()
 
+        self.kind = kind
         self.source = source
         self.source_id = source_id
 
-        self.image = pygame.image.load('content/graphics/weapons/arrow.png').convert_alpha()
+        self.image = pygame.image.load(f'content/graphics/weapons/{self.kind}.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=pos)
         self.collision_rect = pygame.Rect((pos), (5, 5))
 
@@ -49,13 +52,14 @@ class Bullet(pygame.sprite.Sprite):
             flipped_image = pygame.transform.flip(self.image, True, False)
             self.image = flipped_image
 
-        self.speed = 30
+        self.speed = BULLET_DEFAULT_SPEED[self.kind]
 
         self.attack_time = pygame.time.get_ticks()
-        self.attack_duration = 500
+        self.attack_duration = 1500
 
         self.damage = damage
         self.shielded = False
+        self.character_collided = []
 
     def update(self):
         self.collision_rect.x += self.direction.x * self.speed
@@ -71,11 +75,63 @@ class Bullet(pygame.sprite.Sprite):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
 
+class Thunder(pygame.sprite.Sprite):
+    def __init__(self, pos, damage, source, source_id):
+        super().__init__()
+        self.source = source
+        self.source_id = source_id
+
+        self.width = 60
+        self.height = 1500
+        self.position = [pos.centerx - self.width/2, pos.bottom-SCREEN_HEIGHT]
+
+        self.image = pygame.Surface((self.width, self.height))
+        self.image.fill(YELLOW)
+        self.image.set_alpha(30)
+
+        #self.rect = self.image.get_rect(midbottom=pos)
+        self.collision_rect = pygame.Rect(self.position, (self.width, self.height))
+        self.rect = self.collision_rect
+
+        self.speed = 1.5
+
+        self.attack = False
+        self.attack_time = pygame.time.get_ticks()
+        self.attack_duration = 600
+
+        self.damage = damage
+        self.shielded = False
+        self.character_collided = []
+
+    def update(self):
+        if self.width > 10:
+            self.width -= self.speed
+            self.position[0] += (self.speed / 2)
+            self.image = pygame.Surface((self.width, self.height))
+            self.image.fill(YELLOW)
+            self.image.set_alpha(30)
+            self.collision_rect = pygame.Rect((self.position), (self.width, self.height))
+            self.rect = self.collision_rect
+        else:
+            self.image = pygame.Surface((self.width, self.height))
+            self.image.fill(RED)
+            self.image.set_alpha(80)
+            self.collision_rect = pygame.Rect(self.position, (self.width, self.height))
+            self.rect = self.collision_rect
+            if not self.attack:
+                self.attack = True
+                self.attack_time = pygame.time.get_ticks()
+
+    def draw(self, surface, offset):
+        pos = self.rect.topleft - offset
+        surface.blit(self.image, pos)
+
 class Fight_Manager():
     def __init__(self):
         # Fighting:
         self.sword_hits = pygame.sprite.Group()
         self.bullet_hits = pygame.sprite.Group()
+        self.thunder_hits = pygame.sprite.Group()
 
         # Sounds:
         self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
@@ -95,7 +151,7 @@ class Fight_Manager():
             hit = Hit(position, damage, source, source_id, width)
             self.sword_hits.add(hit)
 
-    def arch_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack):
+    def arch_attack(self, kind, source, source_id, collision_rect, facing_right, damage, can_attack):
         if can_attack:
 
             if facing_right:
@@ -103,8 +159,13 @@ class Fight_Manager():
             else:
                 position = (collision_rect.left + 20, collision_rect.top + collision_rect.height / 3)
 
-            bullet = Bullet(position, damage, source, source_id, facing_right)
+            bullet = Bullet(kind, position, damage, source, source_id, facing_right)
             self.bullet_hits.add(bullet)
+
+    def thunder_attack(self, source, source_id, position, damage, can_attack):
+        if can_attack:
+            thunder = Thunder(position, damage, source, source_id)
+            self.thunder_hits.add(thunder)
 
     def attack_update(self, surface, offset):
         # Attacks:
@@ -120,10 +181,17 @@ class Fight_Manager():
             if pygame.time.get_ticks() - bullet.attack_time > bullet.attack_duration:
                 bullet.kill()
 
+        self.thunder_hits.update()
+        for thunder in self.thunder_hits:
+            thunder.draw(surface, offset)
+            if pygame.time.get_ticks() - thunder.attack_time > thunder.attack_duration and thunder.attack == True:
+                thunder.kill()
+
     def check_damage(self, player, enemies):
         # Hit groups:
         sword_collisions = []
         arrow_collisions = []
+        thunder_collisions = []
         def character_kill(character) -> None:
             character.dead = True
             character.status = 'dead'
@@ -146,13 +214,27 @@ class Fight_Manager():
                 point = False # if kind of hits is 'bullets'
                 for enemy in enemies:
                     if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player' and enemy.dead == False: # If enemy get hit by player
-                        collisions_group.append((enemy, hit.damage, hit.source))
-                        if kind == 'bullet': point = True
+                        if kind == 'thunder' and hit.attack == False: break
+                        elif kind == 'thunder' and hit.attack == True and player.id in hit.character_collided: break
+                        else:
+                            collisions_group.append((enemy, hit.damage, hit.source))
+                            hit.character_collided.append(enemy.id)
+                            if kind == 'bullet': point = True
+
 
                 if hit.rect.colliderect(player.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
-                    if player.shielding:
-                        for enemy in enemies:
-                            if enemy.id == hit.source_id:
+                    for enemy in enemies:
+                        if enemy.id == hit.source_id:
+                            if kind == 'thunder':
+                                if hit.attack == False:
+                                    break
+                                elif hit.attack == True and player.id in hit.character_collided:
+                                    break
+                                elif hit.attack == True and player.id not in hit.character_collided:
+                                    hit.character_collided.append(player.id)
+                                    collisions_group.append((player, hit.damage, hit.source))
+                                    break
+                            if player.shielding:
                                 if ((player.facing_right and enemy.collision_rect.x > player.collision_rect.x) or
                                     (not player.facing_right and enemy.collision_rect.x < player.collision_rect.x)):
                                     self.shield_block_sound.play()
@@ -163,16 +245,17 @@ class Fight_Manager():
                                         enemy.armor_ratio = 3
                                         break
                                 else:
+                                    hit.character_collided.append(player.id)
                                     collisions_group.append((player, hit.damage, hit.source))
-                    else:
-                        collisions_group.append((player, hit.damage, hit.source))
-
+                            else:
+                                hit.character_collided.append(player.id)
+                                collisions_group.append((player, hit.damage, hit.source))
                     if kind == 'bullet': point = True
 
                 if point and kind == 'bullet': # Destroy bullet after collision with anyone
                     hit.kill()
         def character_hit_collisions(collisions) -> None:
-            if collisions:  # If there is melee attack collision with enemies:
+            if collisions:  # If there is attack collision with enemies:
                 for collision in collisions:
                     character = collision[0]
                     damage = collision[1]
@@ -188,3 +271,6 @@ class Fight_Manager():
 
         character_search_hit_collisions('bullet', self.bullet_hits, player, enemies, arrow_collisions)
         character_hit_collisions(arrow_collisions)
+
+        character_search_hit_collisions('thunder', self.thunder_hits, player, enemies, thunder_collisions)
+        character_hit_collisions(thunder_collisions)
