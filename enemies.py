@@ -1,8 +1,9 @@
 import pygame
-from settings import ENEMY_SCELETON_HEALTH, ENEMY_NINJA_HEALTH, ENEMY_SIZE, GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
-    ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SCELETON_TRIGGER_LENGTH, NINJA_TRIGGER_LENGTH, \
-    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, SCELETON_ATTACK_SPEED, \
-    NINJA_ATTACK_SPEED, ENEMY_WIZARD_HEALTH, WIZARD_ATTACK_SPEED, WIZARD_TRIGGER_LENGTH, ENEMY_ANIMATION_SPEED
+from settings import GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
+    ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, \
+    SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, ENEMY_ANIMATION_SPEED, ENEMY_SIZE, ENEMY_HEALTH, ENEMY_ATTACK_SPEED, \
+    ENEMY_TRIGGER_LENGTH, ENEMY_ATTACK_SPACE, ENEMY_ATTACK_RANGE, ENEMY_ULTIMATE_ATTACK_COOLDOWN, ENEMY_DAMAGE, \
+    ENEMY_EXPERIENCE
 from support import draw_text, import_character_assets
 import random
 
@@ -16,14 +17,20 @@ class Enemy(pygame.sprite.Sprite):
         self.id = enemy_id
 
         # Load  images:
+
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
                            'stun': []}
-        import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/')
+        if self.type == 'dark_knight':
+            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/', scale=0.2, flip=True)
+        else:
+            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/')
+           
+
 
         # Enemy animation setup:
         self.status = 'run'
         self.frame_index = 0
-        self.animation_speed = ENEMY_ANIMATION_SPEED
+        self.animation_speed = ENEMY_ANIMATION_SPEED[self.type]
         self.image = self.animations['idle'][self.frame_index]
         self.rect = self.image.get_rect(topleft=pos)
         self.collision_rect = pygame.Rect((self.rect.centerx, self.rect.top - ENEMY_SIZE[self.type][1] / 2), ENEMY_SIZE[self.type])
@@ -40,13 +47,15 @@ class Enemy(pygame.sprite.Sprite):
         self.facing_right = random.choice([True, False])
         self.on_ground = False
         self.direction = pygame.math.Vector2(0, 0)
-        self.speed = ENEMY_SPEED
+        self.speed = ENEMY_SPEED[self.type]
         self.gravity = ENEMY_GRAVITY
 
         # Attacking:
-        self.attack_speed = 0.15
-        self.trigger_length = 100
-        self.attack_range = 100
+        self.attack_speed = ENEMY_ATTACK_SPEED[self.type]
+        self.trigger_length = ENEMY_TRIGGER_LENGTH[self.type]
+        self.attack_range = ENEMY_ATTACK_RANGE[self.type]
+        self.attack_space = ENEMY_ATTACK_SPACE[self.type]
+        self.trigger = False
         self.combat = False
         self.combat_start = 0
         self.preparing = 400
@@ -63,8 +72,10 @@ class Enemy(pygame.sprite.Sprite):
         self.armor_ratio = 1
 
         # Properties:
-        self.max_health = 150
+        self.max_health = ENEMY_HEALTH[self.type]
         self.health = self.max_health
+        self.damage = ENEMY_DAMAGE[self.type]
+        self.experience = ENEMY_EXPERIENCE[self.type]
 
         # Death:
         self.dead = False
@@ -75,12 +86,13 @@ class Enemy(pygame.sprite.Sprite):
     def move(self):
         self.current_position = self.collision_rect.x
 
-        if not self.combat and not self.dead and not self.stunned:
+        if not self.trigger and not self.combat and not self.dead and not self.stunned:
             # Check if actually collided with wall or walked away too far from spawn position:
+            delta = self.current_position - self.start_position
             if abs(self.current_position - self.start_position) > self.max_position_range:
-                if self.facing_right:
+                if self.facing_right and delta > 0:
                     self.facing_right = False
-                else:
+                elif not self.facing_right and delta < 0:
                     self.facing_right = True
             if self.facing_right:
                 self.direction.x = 1
@@ -194,18 +206,30 @@ class Enemy(pygame.sprite.Sprite):
         player = who
         is_close = abs(self.collision_rect.centerx - player.collision_rect.centerx) < self.trigger_length \
                    and abs(self.collision_rect.centery - player.collision_rect.centery) < self.trigger_length
-        if is_close and not self.combat and not player.dead:
+        is_close_to_attack = abs(self.collision_rect.centerx - player.collision_rect.centerx) < self.attack_range \
+                   and abs(self.collision_rect.centery - player.collision_rect.centery) < self.attack_range
+        if is_close_to_attack and not self.combat and not player.dead:
             self.combat = True
             self.combat_start = pygame.time.get_ticks()
             self.status = 'idle'
             self.direction.x = 0
-
-
-        if is_close and not self.attacking and not player.dead:
             if self.collision_rect.centerx > player.collision_rect.centerx:
                 self.facing_right = False
             else:
                 self.facing_right = True
+
+
+
+        if is_close and not is_close_to_attack and not self.attacking and not player.dead:
+            self.trigger = True
+            if self.collision_rect.centerx > player.collision_rect.centerx:
+                self.facing_right = False
+                self.direction.x = -1
+            else:
+                self.facing_right = True
+                self.direction.x = 1
+        else:
+            self.trigger = False
 
         if abs(self.collision_rect.centerx - player.collision_rect.centerx) > self.trigger_length \
                 and self.combat and not self.attacking:
@@ -217,6 +241,7 @@ class Enemy(pygame.sprite.Sprite):
             self.attack(player.collision_rect)
 
     def combat_reset(self):
+        self.trigger = False
         self.combat = False
         self.can_attack = True
         self.attacking = False
@@ -267,7 +292,7 @@ class Enemy(pygame.sprite.Sprite):
             draw_text(surface, 'Pos: ' + str(self.rect.center),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
 
-            draw_text(surface, 'Frame index: ' + str(int(self.frame_index)),
+            draw_text(surface, 'Combat: ' + str(int(self.combat)),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
 
 
@@ -275,24 +300,13 @@ class Sceleton(Enemy):
     def __init__(self, enemy_id, pos, sword_attack):
         super().__init__(enemy_id, pos, 'sceleton')
 
-        # Stats:
-        self.max_health = ENEMY_SCELETON_HEALTH
-        self.health = self.max_health
-        self.damage = 60
-        self.experience = 20
-
-        # Sceleton sword attacking:
-        self.trigger_length = SCELETON_TRIGGER_LENGTH
-        self.attack_range = 100
-        self.attack_speed = SCELETON_ATTACK_SPEED
-
         # Methods:
         self.sword_attack = sword_attack
 
     def check_attack_finish(self):
         if self.attack_finish:
-            self.sword_attack('enemy', self.id, self.collision_rect, self.facing_right, self.damage,
-                              self.can_attack, 80)
+            self.sword_attack(self.type, self.id, self.collision_rect, self.facing_right, self.damage,
+                              self.can_attack, self.collision_rect.width, self.attack_space)
             self.can_attack = False
             self.attack_finish = False
 
@@ -308,23 +322,12 @@ class Ninja(Enemy):
     def __init__(self, enemy_id, pos, arch_attack):
         super().__init__(enemy_id, pos, 'ninja')
 
-        # Stats:
-        self.max_health = ENEMY_NINJA_HEALTH
-        self.health = self.max_health
-        self.damage = 60
-        self.experience = 20
-
-        # Attacking:
-        self.trigger_length = NINJA_TRIGGER_LENGTH
-        self.attack_range = NINJA_TRIGGER_LENGTH
-        self.attack_speed = NINJA_ATTACK_SPEED
-
         # Methods:
         self.arch_attack = arch_attack
 
     def check_attack_finish(self):
         if self.attack_finish:
-            self.arch_attack('arrow', 'enemy', self.id, self.collision_rect, self.facing_right, self.damage, self.can_attack)
+            self.arch_attack('arrow', self.type, self.id, self.collision_rect, self.facing_right, self.damage, self.can_attack)
             self.can_attack = False
             self.attack_finish = False
 
@@ -340,25 +343,15 @@ class Wizard(Enemy):
     def __init__(self, enemy_id, pos, arch_attack, thunder_attack):
         super().__init__(enemy_id, pos, 'wizard')
 
-        # Stats:
-        self.max_health = ENEMY_WIZARD_HEALTH
-        self.health = self.max_health
-        self.damage = 200
-        self.experience = 50
-
-        # Attacking:
-        self.trigger_length = WIZARD_TRIGGER_LENGTH
-        self.attack_range = WIZARD_TRIGGER_LENGTH
-        self.attack_speed = WIZARD_ATTACK_SPEED
         self.thunder_attack_time = pygame.time.get_ticks()
 
         # Methods:
         self.arch_attack = arch_attack
         self.thunder_attack = thunder_attack
-        self.cooldown = 3000
+        self.cooldown = ENEMY_ULTIMATE_ATTACK_COOLDOWN[self.type]
     def check_attack_finish(self):
         if self.attack_finish:
-            self.arch_attack('death_bullet', 'enemy', self.id, self.collision_rect, self.facing_right, self.damage, self.can_attack)
+            self.arch_attack('death_bullet', self.type, self.id, self.collision_rect, self.facing_right, self.damage, self.can_attack)
             self.can_attack = False
             self.attack_finish = False
 
@@ -367,6 +360,29 @@ class Wizard(Enemy):
         if pygame.time.get_ticks() - self.thunder_attack_time > self.cooldown:
             self.thunder_attack('enemy', self.id, player_pos, 1000, self.can_attack)
             self.thunder_attack_time = pygame.time.get_ticks()
+
+    def update(self, offset):
+        super().update(offset)
+        if not self.dead:
+            self.animate_attack()
+            self.check_attack_finish()
+            self.move()
+
+
+
+class Dark_Knight(Enemy):
+    def __init__(self, enemy_id, pos, sword_attack):
+        super().__init__(enemy_id, pos, 'dark_knight')
+
+        # Methods:
+        self.sword_attack = sword_attack
+
+    def check_attack_finish(self):
+        if self.attack_finish:
+            self.sword_attack(self.type, self.id, self.collision_rect, self.facing_right, self.damage,
+                              self.can_attack, self.collision_rect.width, self.attack_space)
+            self.can_attack = False
+            self.attack_finish = False
 
     def update(self, offset):
         super().update(offset)

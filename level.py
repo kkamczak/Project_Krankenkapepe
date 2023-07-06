@@ -4,7 +4,7 @@ from game_data import levels
 from settings import TILE_SIZE, SCREEN_WIDTH
 from tiles import StaticTile, AnimatedTile
 from player import Player
-from enemies import Sceleton, Ninja, Wizard
+from enemies import Sceleton, Ninja, Wizard, Dark_Knight
 from fighting import Fight_Manager
 
 
@@ -68,7 +68,7 @@ class Level:
 
         # Load tile sets:
         if kind == 'terrain':
-            terrain_tile_list = import_cut_graphics('content/graphics/terrain/terrain_tiles.png')
+            terrain_tile_list = import_cut_graphics('content/graphics/terrain/terrain_tiles.png', (TILE_SIZE, TILE_SIZE))
 
         for row_index, row in enumerate(layout):
             for col_index, val in enumerate(row):
@@ -95,6 +95,9 @@ class Level:
                             enemy_id += 1
                         if val == '2':
                             sprite = Wizard(enemy_id, (x, y), self.fight_manager.arch_attack, self.fight_manager.thunder_attack)
+                            enemy_id += 1
+                        if val == '3':
+                            sprite = Dark_Knight(enemy_id, (x, y), self.fight_manager.sword_attack)
                             enemy_id += 1
                     sprite_group.add(sprite)
         return sprite_group

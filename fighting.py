@@ -1,6 +1,6 @@
 import pygame
-from settings import YELLOW, RED, ATTACK_SIZE, SHOW_HIT_RECTANGLES, ATTACK_SPACE, ENEMY_ATTACK_SPACE, BULLET_DEFAULT_SPEED, \
-    SCREEN_HEIGHT
+from settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, PLAYER_ATTACK_SPACE, ENEMY_ATTACK_SPACE, BULLET_DEFAULT_SPEED, \
+    SCREEN_HEIGHT, ENEMY_ATTACK_SIZE
 
 class Hit(pygame.sprite.Sprite):
     def __init__(self, pos, damage, source, source_id, width):
@@ -8,8 +8,13 @@ class Hit(pygame.sprite.Sprite):
         # Create surface
         self.source = source
         self.source_id = source_id
-        size = ATTACK_SIZE
+        if self.source == 'player':
+            size = PLAYER_ATTACK_SIZE
+        else:
+            size = ENEMY_ATTACK_SIZE[self.source]
+
         size[0] = width
+
 
         self.image = pygame.Surface(size)
         self.image.fill(RED)
@@ -135,14 +140,9 @@ class Fight_Manager():
 
         # Sounds:
         self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
-    def sword_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack, width):
+        self.shield_block_sound.set_volume(0.05)
+    def sword_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack, width, space):
         if can_attack:
-
-            if source == 'player':
-                space = ATTACK_SPACE
-            else:
-                space = ENEMY_ATTACK_SPACE
-
             if facing_right:
                 position = (collision_rect.centerx + space, collision_rect.top)
             else:
@@ -199,7 +199,7 @@ class Fight_Manager():
             character.direction.x = 0
             character.dead_time = pygame.time.get_ticks()
 
-            if character.type != 'Player':
+            if character.type != 'player':
                 player.add_experience(character.experience)
 
         def character_hurt(character, damage) -> None:

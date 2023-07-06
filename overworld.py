@@ -1,6 +1,6 @@
 from buttons import *
 from settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED, BUTTON_FONT, DEATH_FONT
-from support import draw_text
+from support import draw_text, scale_image
 
 
 class Overworld:
@@ -8,6 +8,8 @@ class Overworld:
 
         # Setup
         self.display_surface = surface
+        self.wallpaper = pygame.image.load('content/graphics/ui/wallpaper.png').convert_alpha()
+        self.wallpaper = scale_image(self.wallpaper, (SCREEN_WIDTH, SCREEN_HEIGHT))
 
         # Buttons:
 
@@ -51,6 +53,8 @@ class Overworld:
 
         return sprite_group
 
+    def draw_wallpaper(self):
+        self.display_surface.blit(self.wallpaper, (0, 0))
     def draw_buttons(self):
         self.buttons_sprite.draw(self.display_surface)
         for button in self.buttons_sprite:
@@ -78,6 +82,7 @@ class Overworld:
 
     def run(self):
         self.click_timer()
+        self.draw_wallpaper()
         self.draw_buttons()
         self.check_action()
 

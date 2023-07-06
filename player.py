@@ -1,7 +1,8 @@
 import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
-    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED
+    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
+    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE
 from support import draw_text, import_character_assets
 from ui import UI
 from items import Sword, Bow, Shield, Potion, create_start_items
@@ -208,7 +209,7 @@ class Player(pygame.sprite.Sprite):
 
     def sword_attack(self):
         self.player_sword_attack('player', -1, self.collision_rect, self.facing_right, self.sword_damage,
-                                 self.sword_can_attack, 40)
+                                 self.sword_can_attack, self.collision_rect.width, PLAYER_ATTACK_SPACE)
         self.sword_attack_time = pygame.time.get_ticks()
         self.sword_attacking = True
         self.sword_can_attack = False
