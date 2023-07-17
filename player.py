@@ -1,7 +1,7 @@
 import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
-    PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
+    PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
     PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE
 from support import draw_text, import_character_assets
 from ui import UI
@@ -95,6 +95,9 @@ class Player(pygame.sprite.Sprite):
         for item in create_start_items():
             self.equipment.add_item(item)
 
+        # Object integration
+        self.can_use_object = [False, None]
+
         # Create in-level UI:
         self.ui = UI()
 
@@ -177,6 +180,9 @@ class Player(pygame.sprite.Sprite):
                     self.equipment.show = False
                 else: self.equipment.show = True
                 self.equipment.show_cooldown = pygame.time.get_ticks()
+        if keys[pygame.K_e]: # Use element:
+            if self.can_use_object[0]:
+                self.can_use_object[1].collected = True
 
     def get_status(self):
         if self.direction.y < 0 and not self.sword_attacking and not self.shielding:
@@ -276,7 +282,11 @@ class Player(pygame.sprite.Sprite):
     def draw(self, surface, offset):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
-
+        if self.can_use_object[0] == True:
+            frame = pygame.Surface(self.collision_rect.size)
+            frame.fill(YELLOW)
+            frame.set_alpha(70)
+            surface.blit(frame, self.collision_rect.topleft - offset)
 
         # ------- FOR DEVELOPING:------------------------------------------------------------------------------------
         # Show collision rectangles:

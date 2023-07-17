@@ -52,32 +52,29 @@ class Equipment():
             if frame.kind == 'active' and frame.name.lower() == item.kind.lower():
                 frame.item = item
                 break
+    def deactivate_item(self, item: items.Item, frame) -> None:
+        if self.active_items[item.kind] == item:
+            item.active = False
+            self.items.append(item)
+            frame.item = item
+            self.active_items[item.kind] = None
     def transfer_item(self, frame) -> None:
         if self.selected_frame != frame: # If selected frame is not same that before.
             if self.selected_frame != None:# If there was already selected frame
                 self.selected_frame.change_frame_status() # Change it status.
-                #puts(str(self.selected_frame.item))
                 if self.selected_frame.item != None: # If there was item on selected frame
-                    is_ok = False
-                    item_to_transfer = self.selected_frame.item
+                    item_to_transfer = self.selected_frame.item # Create copy of item to transfer
                     if frame.item == None:
                         if self.selected_frame.kind == 'regular' and frame.kind == 'active':
                             if frame.name.lower() == self.selected_frame.item.kind:
-                                item_to_transfer.active = True
-                                self.items.remove(item_to_transfer)
-                                frame.item = item_to_transfer
-                                self.active_items[frame.name.lower()] = item_to_transfer
+                                self.delete_item(item_to_transfer)
+                                self.active_item(item_to_transfer)
                                 self.selected_frame.item = None
                                 puts('Item was succesfully transfered.')
                             else:
-                                puts(f'frame: {frame.name.lower()} ? item: {self.selected_frame.item.kind}')
                                 puts('This is not the same kind frame!')
                         elif self.selected_frame.kind == 'active' and frame.kind == 'regular':
-                            item_to_transfer.active = False
-                            self.items.append(item_to_transfer)
-                            frame.item = item_to_transfer
-                            puts(frame.name.lower())
-                            self.active_items[self.selected_frame.name.lower()] = None
+                            self.deactivate_item(item_to_transfer, frame)
                             self.selected_frame.item = None
                             puts('Item was succesfully transfered.')
                         elif self.selected_frame.kind == 'regular' and frame.kind == 'regular':

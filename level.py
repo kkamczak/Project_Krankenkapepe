@@ -2,7 +2,7 @@ import pygame
 from support import import_csv_file, import_cut_graphics
 from game_data import levels
 from settings import TILE_SIZE, SCREEN_WIDTH
-from tiles import StaticTile, AnimatedTile
+from tiles import StaticTile, AnimatedTile, Chest, check_for_usable_elements
 from player import Player
 from enemies import Sceleton, Ninja, Wizard, Dark_Knight
 from fighting import Fight_Manager
@@ -84,6 +84,8 @@ class Level:
                         if val == '0':
                             sprite = AnimatedTile(tile_id, TILE_SIZE, x, y, 'content/graphics/terrain/fireplace/')
                             tile_id += 1
+                        if val == '1':
+                            sprite = Chest(tile_id, TILE_SIZE, x, y, 'content/graphics/terrain/chest/')
 
                     if kind == 'enemies':
                         if val == '0':
@@ -199,6 +201,8 @@ class Level:
             self.horizontal_movement_collision(self.player.sprite)
             self.vertical_movement_collision(self.player.sprite)
             self.scroll_camera()
+
+            player.can_use_object = check_for_usable_elements(player, self.terrain_elements_sprite)
 
             player.draw(self.display_surface, self.offset)
             if player.dead and pygame.time.get_ticks() - player.dead_time > 2000:
