@@ -1,6 +1,6 @@
 import pygame
 import sys
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, SKY, FPS, FPS_FONT, FPS_SHOW_POS
+from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, WHITE, SKY, FPS, FPS_FONT, FPS_SHOW_POS, SOUND_PLAY_MUSIC, BIG_FONT
 from level import Level
 from support import draw_text
 from overworld import Pause, MainMenu, DeathScene
@@ -29,12 +29,12 @@ class Game:
         self.level_bg_music = pygame.mixer.Sound('content/sounds/background.mp3')
         self.level_bg_music.set_volume(0.03)
 
-        self.player_run_music = pygame.mixer.Sound('content/sounds/character/run.ogg')
-
     def create_level(self) -> None:
+        SCREEN.fill(BLACK)
+        draw_text(SCREEN, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
         self.level = Level(SCREEN, self.create_pause, self.create_main_menu, self.create_death_scene)
         self.status = 'level'
-        self.level_bg_music.play(loops=-1)
+        if SOUND_PLAY_MUSIC: self.level_bg_music.play(loops=-1)
 
     def create_main_menu(self) -> None:
         self.main_menu = MainMenu(SCREEN, ['Start', 'Exit'], self.create_level, self.exit_game, 0)

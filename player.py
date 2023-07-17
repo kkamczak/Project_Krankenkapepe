@@ -1,11 +1,12 @@
 import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
-    SWORD_ATTACKING_COOLDOWN, IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
-    SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
+    PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
+    PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
     PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE
 from support import draw_text, import_character_assets
 from ui import UI
-from items import Sword, Bow, Shield, Potion, create_start_items
+from items import create_start_items
+from equipment import Equipment
 
 
 class Player(pygame.sprite.Sprite):
@@ -45,14 +46,14 @@ class Player(pygame.sprite.Sprite):
         self.attack_speed = PLAYER_ATTACK_SPEED
         self.sword_attacking = False  # Is player on sword attack animation?
         self.sword_attack_time = 0  # When did player attack?
-        self.sword_attack_cooldown = SWORD_ATTACKING_COOLDOWN  # What is cooldown for sword attack?
+        self.sword_attack_cooldown = PLAYER_SWORD_COOLDOWN  # What is cooldown for sword attack?
         self.sword_can_attack = True  # Can player attack?
         self.sword_hit = False
 
         # Attacking with Arch
         self.arch_attacking = False
         self.arch_attack_time = 0
-        self.arch_attack_cooldown = SWORD_ATTACKING_COOLDOWN
+        self.arch_attack_cooldown = PLAYER_SWORD_COOLDOWN
         self.arch_can_attack = True
         self.arch_attack_finish = False
 
@@ -64,7 +65,7 @@ class Player(pygame.sprite.Sprite):
         self.shielding = False
         self.can_shield = True
         self.shield_time = 0
-        self.shield_cooldown = SHIELD_COOLDOWN
+        self.shield_cooldown = PLAYER_SHIELD_COOLDOWN
 
         # Properties:
         self.max_health = PLAYER_MAX_HEALTH
@@ -90,7 +91,9 @@ class Player(pygame.sprite.Sprite):
         self.player_arch_attack = arch_attack
 
         # Start items:
-        self.active_equipment = create_start_items()
+        self.equipment = Equipment(self.id)
+        for item in create_start_items():
+            self.equipment.add_item(item)
 
         # Create in-level UI:
         self.ui = UI()
@@ -168,6 +171,12 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_a] and not self.sword_attacking and not self.arch_attacking and not self.shielding \
                 and self.arch_can_attack: # Player shot arrow
             self.arch_attack()
+        if keys[pygame.K_i]: # Show Equipment
+            if pygame.time.get_ticks() - self.equipment.show_cooldown > 400:
+                if self.equipment.show:
+                    self.equipment.show = False
+                else: self.equipment.show = True
+                self.equipment.show_cooldown = pygame.time.get_ticks()
 
     def get_status(self):
         if self.direction.y < 0 and not self.sword_attacking and not self.shielding:
@@ -208,8 +217,8 @@ class Player(pygame.sprite.Sprite):
         self.direction.y = self.jump_speed
 
     def sword_attack(self):
-        self.player_sword_attack('player', -1, self.collision_rect, self.facing_right, self.sword_damage,
-                                 self.sword_can_attack, self.collision_rect.width, PLAYER_ATTACK_SPACE)
+        self.player_sword_attack(self.type, self.id, self.collision_rect, self.facing_right, self.sword_damage,
+                                 self.sword_can_attack, self.collision_rect.width, PLAYER_ATTACK_SPACE, PLAYER_ATTACK_SIZE[1])
         self.sword_attack_time = pygame.time.get_ticks()
         self.sword_attacking = True
         self.sword_can_attack = False
@@ -245,7 +254,7 @@ class Player(pygame.sprite.Sprite):
     def check_if_hurt(self):
         if self.just_hurt and not self.sword_attacking and not self.arch_attacking and not self.shielding:
             self.status = 'hit'
-            if pygame.time.get_ticks() - self.just_hurt_time > IMMUNITY_FROM_HIT:
+            if pygame.time.get_ticks() - self.just_hurt_time > PLAYER_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
     def add_experience(self, experience):
@@ -255,6 +264,7 @@ class Player(pygame.sprite.Sprite):
     def update(self, screen, offset):
         if not self.dead:
             self.get_input()
+            self.equipment.update()
             self.get_status()
             self.check_if_hurt()
             self.check_sword_attack_cooldown()
@@ -266,7 +276,6 @@ class Player(pygame.sprite.Sprite):
     def draw(self, surface, offset):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
-
 
 
         # ------- FOR DEVELOPING:------------------------------------------------------------------------------------

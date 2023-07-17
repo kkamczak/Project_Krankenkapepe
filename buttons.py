@@ -1,5 +1,5 @@
 import pygame, sys
-from support import draw_text, scale_image
+from support import draw_text, scale_image, import_image
 from settings import WHITE, BUTTON_BASIC_COLOR, BUTTON_ACTIVE_COLOR, BUTTON_SIZE
 
 
@@ -22,9 +22,9 @@ class Button(pygame.sprite.Sprite):
 
     def set_image(self, active):
         if not active:
-            self.image = pygame.image.load('content/graphics/ui/button.png').convert_alpha()
+            self.image = import_image('content/graphics/ui/button.png')
         else:
-            self.image = pygame.image.load('content/graphics/ui/button_active.png').convert_alpha()
+            self.image = import_image('content/graphics/ui/button_active.png')
         self.image = scale_image(self.image, BUTTON_SIZE)
         self.rect = self.image.get_rect(center=self.position)
 

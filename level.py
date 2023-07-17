@@ -17,7 +17,6 @@ class Level:
         self.pause = False
         self.game_over = False
 
-
         # Load level data:
         level_data = levels[self.current_level]
 
@@ -186,11 +185,11 @@ class Level:
         # Run the entire game / level
         for sprite in self.terrain_sprite:
             if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
-                sprite.update(self.offset)
+                sprite.update()
                 sprite.draw(self.display_surface, self.offset)
         for sprite in self.terrain_elements_sprite:
             if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
-                sprite.update(self.offset)
+                sprite.update()
                 sprite.draw(self.display_surface, self.offset)
 
         # Draw player
@@ -222,7 +221,8 @@ class Level:
         # Show UI:
         if player.dead == False:
             player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
-            player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), player.active_equipment)
+            player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), \
+                              player.equipment.active_items, player.equipment)
 
 
 

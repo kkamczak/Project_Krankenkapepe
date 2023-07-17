@@ -1,5 +1,7 @@
 import pygame
-from support import create_bar, draw_text, import_image, scale_image
+
+import player
+from support import create_bar, draw_text, import_image, scale_image, puts
 from settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT, UI_ACTIVE_EQUIPMENT_POSITION, \
     UI_FRAME_SIZE, UI_FRAME_FONT, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION
 
@@ -72,19 +74,20 @@ class UI:
         def get_active_item_position(position: tuple[int, int]) -> list[int, int]:
             new_position = [position[0]+width/2-UI_ITEM_IMAGE_SIZE[0]/2, position[1]+height/2-UI_ITEM_IMAGE_SIZE[1]/2]
             return new_position
+        for kind in active_equipment:
+            #puts(str(active_equipment))
 
-        for item in active_equipment:
-            if item.kind == 'sword':
-                surface.blit(item.image, get_active_item_position(active_items_frames_positions['sword_pos']))  # Square nr 1 - Sword
+            if kind == 'sword' and active_equipment[kind] != None:
+                surface.blit(active_equipment[kind].image, get_active_item_position(active_items_frames_positions['sword_pos']))  # Square nr 1 - Sword
                 show_item_name('sword_pos', 'Sword')
-            if item.kind == 'bow':
-                surface.blit(item.image, get_active_item_position(active_items_frames_positions['arch_pos'])) # Square nr 2 - Bow
+            if kind == 'bow' and active_equipment[kind] != None:
+                surface.blit(active_equipment[kind].image, get_active_item_position(active_items_frames_positions['arch_pos'])) # Square nr 2 - Bow
                 show_item_name('arch_pos', 'Bow')
-            if item.kind == 'shield':
-                surface.blit(item.image, get_active_item_position(active_items_frames_positions['shield_pos'])) # Square nr 3 - Shield
+            if kind == 'shield' and active_equipment[kind] != None:
+                surface.blit(active_equipment[kind].image, get_active_item_position(active_items_frames_positions['shield_pos'])) # Square nr 3 - Shield
                 show_item_name('shield_pos', 'Shield')
-            if item.kind == 'potion':
-                surface.blit(item.image, get_active_item_position(active_items_frames_positions['item_pos']))  # Square nr 4 - Item
+            if kind == 'item' and active_equipment[kind] != None:
+                surface.blit(active_equipment[kind].image, get_active_item_position(active_items_frames_positions['item_pos']))  # Square nr 4 - Item
                 show_item_name('item_pos', 'Item')
 
 
@@ -97,7 +100,7 @@ class UI:
             self.exp_visible += 0.5
         else:
             self.exp_visible = int(self.exp_max)
-    def show_ui(self, screen, offset, hp: tuple[int, int], sword_cd: tuple[bool, float, int, list], active_equipment):
+    def show_ui(self, screen, offset, hp: tuple[int, int], sword_cd: tuple[bool, float, int, list], active_equipment, equipment):
 
         # Health bar:
         self.show_health(screen, hp[0], hp[1])
@@ -113,3 +116,7 @@ class UI:
 
         # Outfit
         self.show_active_equipment(screen, active_equipment)
+
+        #Show equipment:
+        if equipment.show:
+            equipment.show_equipment(screen)

@@ -1,9 +1,9 @@
 import pygame
-from settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, PLAYER_ATTACK_SPACE, ENEMY_ATTACK_SPACE, BULLET_DEFAULT_SPEED, \
+from settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, BULLET_DEFAULT_SPEED, \
     SCREEN_HEIGHT, ENEMY_ATTACK_SIZE
 
 class Hit(pygame.sprite.Sprite):
-    def __init__(self, pos, damage, source, source_id, width):
+    def __init__(self, pos, damage, source, source_id):
         super().__init__()
         # Create surface
         self.source = source
@@ -12,9 +12,6 @@ class Hit(pygame.sprite.Sprite):
             size = PLAYER_ATTACK_SIZE
         else:
             size = ENEMY_ATTACK_SIZE[self.source]
-
-        size[0] = width
-
 
         self.image = pygame.Surface(size)
         self.image.fill(RED)
@@ -141,14 +138,14 @@ class Fight_Manager():
         # Sounds:
         self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
         self.shield_block_sound.set_volume(0.05)
-    def sword_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack, width, space):
+    def sword_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack, width, space, hit_height):
         if can_attack:
             if facing_right:
-                position = (collision_rect.centerx + space, collision_rect.top)
+                position = (collision_rect.centerx + space, collision_rect.bottom - hit_height)
             else:
-                position = (collision_rect.centerx - width - space, collision_rect.top)
+                position = (collision_rect.centerx - width - space, collision_rect.bottom - hit_height)
 
-            hit = Hit(position, damage, source, source_id, width)
+            hit = Hit(position, damage, source, source_id)
             self.sword_hits.add(hit)
 
     def arch_attack(self, kind, source, source_id, collision_rect, facing_right, damage, can_attack):
@@ -239,7 +236,11 @@ class Fight_Manager():
                                     (not player.facing_right and enemy.collision_rect.x < player.collision_rect.x)):
                                     self.shield_block_sound.play()
                                     hit.shielded = True
+                                    print('Zablokowano')
                                     if not enemy.stunned and kind == 'sword':
+                                        print('Zestunowano')
+                                        enemy.frame_index = 0
+                                        enemy.direction.x = 0
                                         enemy.stunned = True
                                         enemy.status = 'stun'
                                         enemy.armor_ratio = 3

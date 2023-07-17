@@ -42,7 +42,7 @@ wooden_shield_1 = {
 
 small_potion_1 = {
             'name': 'Mała Mikstura Leczenia',
-            'kind': 'potion',
+            'kind': 'item',
             'damage': 0,
             'price': 67
         }
@@ -51,5 +51,7 @@ START_ITEMS_LIST = [
     straight_sword_1,
     short_bow_1,
     wooden_shield_1,
+    small_potion_1,
+    straight_sword_1,
     small_potion_1
 ]

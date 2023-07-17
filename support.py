@@ -1,7 +1,9 @@
 import pygame
 from csv import reader
 from os import walk
-from settings import TILE_SIZE
+import time
+from datetime import datetime
+
 
 def import_csv_file(path):
     terrain_map = []
@@ -46,7 +48,6 @@ def import_folder(path: str, scale: float = 1.0, flip: bool = False):
             image_surf = pygame.image.load(full_path).convert_alpha()
             if flip: image_surf = pygame.transform.flip(image_surf, True, False)
             image_surf = scale_image(image_surf, (int(image_surf.get_width()*scale), int(image_surf.get_height()*scale)))
-            print(path, image_surf.get_width(), image_surf.get_height())
             surface_list.append(image_surf)
 
     return surface_list
@@ -69,3 +70,24 @@ def create_bar(size, color):
 def draw_text(surface, text, font, text_col, x, y):
     img = font.render(text, True, text_col)
     surface.blit(img, (x - img.get_width() / 2, y - img.get_height() / 2))
+
+def logs_wrapper(func):
+    def func_with_wrapper(*args, **kwargs):
+        file = open(r'D:\GitHub\Gladiatus_Bot\logs.txt', "a")
+        file.write("-" * 30 + "\n")
+        file.write(f'Function "{func.__name__}" started at {datetime.now().strftime("%Y/%m/%d, %H:%M:%S")}')
+        file.write("\n")
+        file.write('Following arguments were used:')
+        file.write("\n")
+        file.write(" ".join("{}".format(str(x)) for x in args))
+        file.write("\n")
+        result = func(*args, **kwargs)
+        file.write('Function returned {}\n'.format(result))
+        file.close()
+        return result
+    return func_with_wrapper
+
+def puts (text):
+    date_time = datetime.now()
+    message = '['+str(date_time.strftime("%Y/%m/%d, %H:%M:%S"))+'] '+ text
+    print(message)

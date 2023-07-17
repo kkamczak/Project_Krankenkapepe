@@ -1,9 +1,9 @@
 import pygame
-from settings import GREY, RED, IMMUNITY_FROM_HIT, ENEMY_SPEED, \
+from settings import GREY, RED, ENEMY_IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, \
     SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, ENEMY_ANIMATION_SPEED, ENEMY_SIZE, ENEMY_HEALTH, ENEMY_ATTACK_SPEED, \
     ENEMY_TRIGGER_LENGTH, ENEMY_ATTACK_SPACE, ENEMY_ATTACK_RANGE, ENEMY_ULTIMATE_ATTACK_COOLDOWN, ENEMY_DAMAGE, \
-    ENEMY_EXPERIENCE
+    ENEMY_EXPERIENCE, ENEMY_ATTACK_SIZE
 from support import draw_text, import_character_assets
 import random
 
@@ -111,16 +111,18 @@ class Enemy(pygame.sprite.Sprite):
 
     def animate(self):
         if self.status != 'attack' and not self.dead:
-
+            animation_speed = self.animation_speed
             if self.just_hurt:
                 animation = self.animations['hit']
             elif self.stunned:
                 animation = self.animations['stun']
+                animation_speed = 0.1
+
             else:
                 animation = self.animations[self.status]
 
             # Loop over frame index
-            self.frame_index += self.animation_speed
+            self.frame_index += animation_speed
             if self.frame_index >= len(animation):
                 self.frame_index = 0
                 if self.status == 'stun':
@@ -141,13 +143,13 @@ class Enemy(pygame.sprite.Sprite):
 
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
     def animate_attack(self):
-        if self.status == 'attack' and self.attacking and not self.dead:
+        if self.status == 'attack' and self.attacking and not self.dead and not self.stunned:
             animation_speed = self.attack_speed
             animation = self.animations['attack']
 
             # Loop over frame index
             self.frame_index += animation_speed
-            if self.frame_index > 4 and self.can_attack:
+            if self.frame_index > (len(animation)-1) and self.can_attack:
                 self.attack_finish = True
 
             if self.frame_index >= len(animation):
@@ -199,7 +201,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def check_if_hurt(self):
         if self.just_hurt:
-            if pygame.time.get_ticks() - self.just_hurt_time > IMMUNITY_FROM_HIT:
+            if pygame.time.get_ticks() - self.just_hurt_time > ENEMY_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
     def check_for_combat(self, who):
@@ -306,7 +308,7 @@ class Sceleton(Enemy):
     def check_attack_finish(self):
         if self.attack_finish:
             self.sword_attack(self.type, self.id, self.collision_rect, self.facing_right, self.damage,
-                              self.can_attack, self.collision_rect.width, self.attack_space)
+                              self.can_attack, self.collision_rect.width, self.attack_space, ENEMY_ATTACK_SIZE[self.type][1])
             self.can_attack = False
             self.attack_finish = False
 
@@ -380,7 +382,7 @@ class Dark_Knight(Enemy):
     def check_attack_finish(self):
         if self.attack_finish:
             self.sword_attack(self.type, self.id, self.collision_rect, self.facing_right, self.damage,
-                              self.can_attack, self.collision_rect.width, self.attack_space)
+                              self.can_attack, self.collision_rect.width, self.attack_space, ENEMY_ATTACK_SIZE[self.type][1])
             self.can_attack = False
             self.attack_finish = False
 
