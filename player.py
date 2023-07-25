@@ -2,11 +2,12 @@ import pygame
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
-    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE
+    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE
 from support import draw_text, import_character_assets
 from ui import UI
-from items import create_start_items
+from items import create_items
 from equipment import Equipment
+from game_data import START_ITEMS_LIST
 
 
 class Player(pygame.sprite.Sprite):
@@ -16,7 +17,7 @@ class Player(pygame.sprite.Sprite):
         # Player images:
         self.animations_names = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
                                  'shield': [], 'arch': []}
-        self.animations = import_character_assets(self.animations_names, PLAYER_ANIMATIONS_PATH)
+        self.animations = import_character_assets(self.animations_names, PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE/32)
         self.frame_index = 0
         self.animation_speed = 0.2
         self.image = self.animations['idle'][self.frame_index]
@@ -92,7 +93,7 @@ class Player(pygame.sprite.Sprite):
 
         # Start items:
         self.equipment = Equipment(self.id)
-        for item in create_start_items():
+        for item in create_items(START_ITEMS_LIST):
             self.equipment.add_item(item)
 
         # Object integration
@@ -183,6 +184,9 @@ class Player(pygame.sprite.Sprite):
         if keys[pygame.K_e]: # Use element:
             if self.can_use_object[0]:
                 self.can_use_object[1].collected = True
+                if self.can_use_object[1].kind == 'chest':
+                    self.collect_items(self.can_use_object[1].action())
+
 
     def get_status(self):
         if self.direction.y < 0 and not self.sword_attacking and not self.shielding:
@@ -267,6 +271,10 @@ class Player(pygame.sprite.Sprite):
         self.ui.add_experience(self.experience, experience)
         self.experience += experience
 
+    def collect_items(self, items):
+        for item in items:
+            self.equipment.add_item(item)
+        print('Dodano itemki')
     def update(self, screen, offset):
         if not self.dead:
             self.get_input()

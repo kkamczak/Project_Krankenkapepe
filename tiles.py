@@ -1,9 +1,12 @@
 import pygame
-from support import import_folder
+from support import import_folder, puts
+from game_data import CHESTS_CONTENT
+from items import create_items
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, id: int, size: tuple[int, int], x: int, y: int) -> None:
         super().__init__()
+        self.kind = 'terrain'
         self.image = pygame.Surface((size, size))
         self.rect = self.image.get_rect(topleft = (x, y))
         self.id = id
@@ -38,17 +41,35 @@ class AnimatedTile(Tile):
         self.animate()
 
 class Chest(AnimatedTile):
+    chests = []
     def __init__(self, id: int, size: tuple[int, int], x: int, y: int, path: str) -> None:
         super().__init__(id, size, x, y, path)
+        self.kind = 'chest'
         self.collected = False
         self.animated = False
         self.usable = True
+        self.content = self.create_content()
+        puts(f'Stworzono skrzynie, id {self.id}')
+        Chest.chests.append(self)
     def animate_once(self) -> None:
         self.frame_index += 0.15
         if self.frame_index >= len(self.frames):
             self.frame_index = len(self.frames) - 1
             self.animated = True
         self.image = self.frames[int(self.frame_index)]
+    def create_content(self) -> list:
+        content = []
+        # puts(str(Chest.chests))
+        # for i, element in enumerate(Chest.chests):
+        #     puts(f'Tworzenie ekwipunku skrzyni o id: {element.id}')
+        #     for item in create_items(CHESTS_CONTENT[i]):
+        #         content.append(item)
+        puts(str(len(Chest.chests)))
+        for element in create_items(CHESTS_CONTENT[len(Chest.chests)]):
+            content.append(element)
+        return content
+    def action(self) -> list:
+        return self.content
     def update(self):
         if self.collected and not self.animated:
             self.animate_once()

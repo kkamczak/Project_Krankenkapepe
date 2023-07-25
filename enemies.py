@@ -3,7 +3,7 @@ from settings import GREY, RED, ENEMY_IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, \
     SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, ENEMY_ANIMATION_SPEED, ENEMY_SIZE, ENEMY_HEALTH, ENEMY_ATTACK_SPEED, \
     ENEMY_TRIGGER_LENGTH, ENEMY_ATTACK_SPACE, ENEMY_ATTACK_RANGE, ENEMY_ULTIMATE_ATTACK_COOLDOWN, ENEMY_DAMAGE, \
-    ENEMY_EXPERIENCE, ENEMY_ATTACK_SIZE
+    ENEMY_EXPERIENCE, ENEMY_ATTACK_SIZE, TILE_SIZE, SCALE
 from support import draw_text, import_character_assets
 import random
 
@@ -21,7 +21,7 @@ class Enemy(pygame.sprite.Sprite):
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
                            'stun': []}
         if self.type == 'dark_knight':
-            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/', scale=0.2, flip=True)
+            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/', scale=SCALE*0.2, flip=True)
         else:
             import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.type}/')
            

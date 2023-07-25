@@ -3,6 +3,7 @@ from csv import reader
 from os import walk
 import time
 from datetime import datetime
+from settings import TILE_SIZE, SCALE
 
 
 def import_csv_file(path):
@@ -29,7 +30,7 @@ def import_cut_graphics(path: str, size: tuple[int, int]) -> list:
 
     return cut_tiles
 
-def import_character_assets(animations, path, scale: float = 1.0, flip: bool = False):  # Import all animations:
+def import_character_assets(animations, path, scale: float = SCALE, flip: bool = False):  # Import all animations:
     character_path = path
 
     for animation in animations.keys():
@@ -38,7 +39,7 @@ def import_character_assets(animations, path, scale: float = 1.0, flip: bool = F
 
     return animations
 
-def import_folder(path: str, scale: float = 1.0, flip: bool = False):
+def import_folder(path: str, scale: float = SCALE, flip: bool = False):
     surface_list = []
 
     for _, dirs, image_files in walk(path):

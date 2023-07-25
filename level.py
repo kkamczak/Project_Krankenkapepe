@@ -1,7 +1,7 @@
 import pygame
-from support import import_csv_file, import_cut_graphics
+from support import import_csv_file, import_cut_graphics, scale_image
 from game_data import levels
-from settings import TILE_SIZE, SCREEN_WIDTH
+from settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH
 from tiles import StaticTile, AnimatedTile, Chest, check_for_usable_elements
 from player import Player
 from enemies import Sceleton, Ninja, Wizard, Dark_Knight
@@ -67,7 +67,7 @@ class Level:
 
         # Load tile sets:
         if kind == 'terrain':
-            terrain_tile_list = import_cut_graphics('content/graphics/terrain/terrain_tiles.png', (TILE_SIZE, TILE_SIZE))
+            terrain_tile_list = import_cut_graphics('content/graphics/terrain/terrain_tiles.png', (PRIMAL_TILE_SIZE, PRIMAL_TILE_SIZE))
 
         for row_index, row in enumerate(layout):
             for col_index, val in enumerate(row):
@@ -77,15 +77,17 @@ class Level:
 
                     if kind == 'terrain':
                         tile_surface = terrain_tile_list[int(val)]
+                        tile_surface = scale_image(tile_surface, (TILE_SIZE, TILE_SIZE))
                         sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
                         tile_id += 1
 
                     if kind == 'terrain_elements':
-                        if val == '0':
+                        if val == '1':
                             sprite = AnimatedTile(tile_id, TILE_SIZE, x, y, 'content/graphics/terrain/fireplace/')
                             tile_id += 1
-                        if val == '1':
+                        if val == '0':
                             sprite = Chest(tile_id, TILE_SIZE, x, y, 'content/graphics/terrain/chest/')
+                            tile_id += 1
 
                     if kind == 'enemies':
                         if val == '0':

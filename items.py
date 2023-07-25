@@ -60,9 +60,9 @@ class Potion(Item):
         # Properties:
         self.damage = damage
 
-def create_start_items() -> list:
-        start_items = []
-        for item_id, item in enumerate(START_ITEMS_LIST):
+def create_items(list) -> list:
+        items = []
+        for item_id, item in enumerate(list):
             #print(item[item_id]['name'])
             if item['kind'] == 'sword':
                 item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
@@ -75,5 +75,5 @@ def create_start_items() -> list:
                          # item_id, name, kind, owner, price, damage
             else:
                 continue
-            start_items.append(item_x)
-        return start_items
+            items.append(item_x)
+        return items

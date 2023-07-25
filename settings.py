@@ -28,22 +28,23 @@ BUTTON_ACTIVE_COLOR = (181, 11, 65)
 # Game settings:
 SCREEN_WIDTH = 1600
 SCREEN_HEIGHT = 900
-RESOLUTION_SCALE = 2
-TILE_SIZE = 32
+TILE_SIZE = 48
+PRIMAL_TILE_SIZE = 32
+SCALE = TILE_SIZE / PRIMAL_TILE_SIZE
 
 # Player settings:
-PLAYER_SIZE = (30, 57)
-PLAYER_SPEED = 4
-PLAYER_GRAVITY = 0.8
-PLAYER_JUMP_SPEED = -12
+PLAYER_SIZE = (30*SCALE, 57*SCALE)
+PLAYER_SPEED = 4*SCALE
+PLAYER_GRAVITY = 0.8*SCALE
+PLAYER_JUMP_SPEED = -12*SCALE
 PLAYER_MAX_HEALTH = 122500
 
 PLAYER_ANIMATIONS_PATH = 'content/graphics/character/'
-PLAYER_DEATH_ANIMATION_SPEED = 0.15
+PLAYER_DEATH_ANIMATION_SPEED = 0.15*SCALE
 
-PLAYER_ATTACK_SPEED = 0.3
-PLAYER_ATTACK_SIZE = [40, 57]
-PLAYER_ATTACK_SPACE = 25
+PLAYER_ATTACK_SPEED = 0.3*SCALE
+PLAYER_ATTACK_SIZE = [40*SCALE, 57*SCALE]
+PLAYER_ATTACK_SPACE = 25*SCALE
 
 PLAYER_SWORD_COOLDOWN = 1000
 PLAYER_SHIELD_COOLDOWN = 1000
@@ -64,24 +65,24 @@ EQUIPMENT_ACTIVE_POSITION = (EQUIPMENT_POSITION[0] - EQUIPMENT_FRAME_SPACE - EQU
 
 # Enemy settings:
 ENEMY_ANIMATIONS_PATH = 'content/graphics/enemies/'
-ENEMY_SIZE = {'sceleton': (30, 62), 'ninja': (30, 57), 'wizard': (30, 57), 'dark_knight': (80, 150)}
-ENEMY_SPEED = {'sceleton': 1, 'ninja': 1, 'wizard': 1, 'dark_knight': 1}
-ENEMY_GRAVITY = 0.8
+ENEMY_SIZE = {'sceleton': (30*SCALE, 62*SCALE), 'ninja': (30*SCALE, 57*SCALE), 'wizard': (30*SCALE, 57*SCALE), 'dark_knight': (80*SCALE, 150*SCALE)}
+ENEMY_SPEED = {'sceleton': 1*SCALE, 'ninja': 1*SCALE, 'wizard': 1*SCALE, 'dark_knight': 1*SCALE}
+ENEMY_GRAVITY = 0.8*SCALE
 ENEMY_ANIMATION_SPEED = {'sceleton': 0.15, 'ninja': 0.15, 'wizard': 0.2, 'dark_knight': 0.15}
 
 ENEMY_HEALTH = {'sceleton': 225, 'ninja': 120, 'wizard': 60, 'dark_knight': 420}
 ENEMY_DAMAGE = {'sceleton': 60, 'ninja': 60, 'wizard': 200, 'dark_knight': 420}
 ENEMY_EXPERIENCE = {'sceleton': 20, 'ninja': 20, 'wizard': 50, 'dark_knight': 420}
 
-ENEMY_ATTACK_SIZE = {'sceleton': [60, 80], 'dark_knight': [45, 100]}
-ENEMY_ATTACK_SPACE = {'sceleton': 20, 'ninja': 5, 'wizard': 5, 'dark_knight': 10}
-ENEMY_TRIGGER_LENGTH = {'sceleton': 300, 'ninja': 350, 'wizard': 450, 'dark_knight': 250}
+ENEMY_ATTACK_SIZE = {'sceleton': [60*SCALE, 80*SCALE], 'dark_knight': [45*SCALE, 100*SCALE]}
+ENEMY_ATTACK_SPACE = {'sceleton': 20*SCALE, 'ninja': 5*SCALE, 'wizard': 5*SCALE, 'dark_knight': 10*SCALE}
+ENEMY_TRIGGER_LENGTH = {'sceleton': 300*SCALE, 'ninja': 350*SCALE, 'wizard': 450*SCALE, 'dark_knight': 250*SCALE}
 ENEMY_ATTACK_SPEED = {'sceleton': 0.25, 'ninja': 0.15, 'wizard': 0.25, 'dark_knight': 0.3}
-ENEMY_ATTACK_RANGE = {'sceleton': 60, 'ninja': 300, 'wizard': 400, 'dark_knight': 65}
+ENEMY_ATTACK_RANGE = {'sceleton': 60*SCALE, 'ninja': 300*SCALE, 'wizard': 400*SCALE, 'dark_knight': 65*SCALE}
 ENEMY_ULTIMATE_ATTACK_COOLDOWN = {'wizard': 3000, 'dark_knight': 5000}
 ENEMY_IMMUNITY_FROM_HIT = 300
 
-BULLET_DEFAULT_SPEED = {'arrow': 10, 'death_bullet': 5}
+BULLET_DEFAULT_SPEED = {'arrow': 10*SCALE, 'death_bullet': 5*SCALE}
 
 # Frames Per Seconds:
 FPS = 60
