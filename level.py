@@ -122,7 +122,7 @@ class Level:
     def scroll_camera(self):
         half_w = self.display_surface.get_size()[0] / 2
         half_h = self.display_surface.get_size()[1] / 2
-        player = self.player.sprite
+        player = self.get_player().movement
 
         offset_x = self.offset.x
         offset_y = self.offset.y
@@ -185,7 +185,7 @@ class Level:
         self.fight_manager.attack_update(self.display_surface, self.offset)
         self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
 
-        player_pos = self.get_player().collision_rect.centerx
+        player_pos = self.get_player().movement.collision_rect.centerx
         # Run the entire game / level
         for sprite in self.terrain_sprite:
             if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
@@ -200,13 +200,13 @@ class Level:
         player = self.get_player()
         if not self.game_over:
             self.player.update()
-            self.horizontal_movement_collision(self.player.sprite)
-            self.vertical_movement_collision(self.player.sprite)
+            self.horizontal_movement_collision(player.movement)
+            self.vertical_movement_collision(player.movement)
             self.scroll_camera()
 
             player.can_use_object = check_for_usable_elements(player, self.terrain_elements_sprite)
 
-            player.draw(self.display_surface, self.offset)
+            player.animations.draw(self.display_surface, self.offset)
             if player.dead and pygame.time.get_ticks() - player.dead_time > 2000:
                 self.create_death_scene()
                 self.game_over = True
@@ -227,7 +227,7 @@ class Level:
         # Show UI:
         if player.dead == False:
             player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
-            player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.collision_rect), \
+            player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.movement.collision_rect), \
                               player.equipment.active_items, player.equipment)
 
 

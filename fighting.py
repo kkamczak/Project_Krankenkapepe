@@ -219,7 +219,7 @@ class Fight_Manager():
                             if kind == 'bullet': point = True
 
 
-                if hit.rect.colliderect(player.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
+                if hit.rect.colliderect(player.movement.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
                     for enemy in enemies:
                         if enemy.id == hit.source_id:
                             if kind == 'thunder':
@@ -232,8 +232,8 @@ class Fight_Manager():
                                     collisions_group.append((player, hit.damage, hit.source))
                                     break
                             if player.shielding:
-                                if ((player.facing_right and enemy.collision_rect.x > player.collision_rect.x) or
-                                    (not player.facing_right and enemy.collision_rect.x < player.collision_rect.x)):
+                                if ((player.facing_right and enemy.collision_rect.x > player.movement.collision_rect.x) or
+                                    (not player.facing_right and enemy.collision_rect.x < player.movement.collision_rect.x)):
                                     self.shield_block_sound.play()
                                     hit.shielded = True
                                     print('Zablokowano')

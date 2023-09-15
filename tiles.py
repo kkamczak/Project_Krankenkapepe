@@ -175,8 +175,8 @@ def check_for_usable_elements(character, elements) -> list:
     for element in elements:
         if not element.usable:
             continue
-        if abs(character.rect.centerx - element.rect.centerx) < 50 and \
-            abs(character.rect.centery - element.rect.centery) < 50 and \
+        if abs(character.animations.rect.centerx - element.rect.centerx) < 50 and \
+            abs(character.animations.rect.centery - element.rect.centery) < 50 and \
             not element.collected:
             return [True, element]
     return [False, None]

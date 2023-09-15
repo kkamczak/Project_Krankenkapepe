@@ -206,16 +206,16 @@ class Enemy(pygame.sprite.Sprite):
 
     def check_for_combat(self, who):
         player = who
-        is_close = abs(self.collision_rect.centerx - player.collision_rect.centerx) < self.trigger_length \
-                   and abs(self.collision_rect.centery - player.collision_rect.centery) < self.trigger_length
-        is_close_to_attack = abs(self.collision_rect.centerx - player.collision_rect.centerx) < self.attack_range \
-                   and abs(self.collision_rect.centery - player.collision_rect.centery) < self.attack_range
+        is_close = abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.trigger_length \
+                   and abs(self.collision_rect.centery - player.movement.collision_rect.centery) < self.trigger_length
+        is_close_to_attack = abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range \
+                   and abs(self.collision_rect.centery - player.movement.collision_rect.centery) < self.attack_range
         if is_close_to_attack and not self.combat and not player.dead:
             self.combat = True
             self.combat_start = pygame.time.get_ticks()
             self.status = 'idle'
             self.direction.x = 0
-            if self.collision_rect.centerx > player.collision_rect.centerx:
+            if self.collision_rect.centerx > player.movement.collision_rect.centerx:
                 self.facing_right = False
             else:
                 self.facing_right = True
@@ -224,7 +224,7 @@ class Enemy(pygame.sprite.Sprite):
 
         if is_close and not is_close_to_attack and not self.attacking and not player.dead:
             self.trigger = True
-            if self.collision_rect.centerx > player.collision_rect.centerx:
+            if self.collision_rect.centerx > player.movement.collision_rect.centerx:
                 self.facing_right = False
                 self.direction.x = -1
             else:
@@ -233,14 +233,14 @@ class Enemy(pygame.sprite.Sprite):
         else:
             self.trigger = False
 
-        if abs(self.collision_rect.centerx - player.collision_rect.centerx) > self.trigger_length \
+        if abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) > self.trigger_length \
                 and self.combat and not self.attacking:
             self.combat_reset()
 
         if self.combat and pygame.time.get_ticks() - self.combat_start > self.preparing and not self.attacking \
-                and abs(self.collision_rect.centerx - player.collision_rect.centerx) < self.attack_range:
+                and abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range:
             self.can_attack = True
-            self.attack(player.collision_rect)
+            self.attack(player.movement.collision_rect)
 
     def combat_reset(self):
         self.trigger = False

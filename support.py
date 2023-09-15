@@ -83,7 +83,7 @@ def import_cut_graphics(path: str, size: tuple[int, int]) -> list:
     return cut_tiles
 
 def import_character_assets(animations, path,
-                            scale: float = SCALE, flip: bool = False):
+                            scale: float = SCALE, flip: bool = False) -> dict:
     """
     Imports character animation assets.
 
