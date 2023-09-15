@@ -23,8 +23,6 @@ class Player(pygame.sprite.Sprite):
         self.image = self.animations['idle'][self.frame_index]
         self.rect = self.image.get_rect(topleft=pos)
 
-
-
         # Player movement:
         self.direction = pygame.math.Vector2(0, 0)
         self.speed = PLAYER_SPEED
@@ -275,7 +273,7 @@ class Player(pygame.sprite.Sprite):
         for item in items:
             self.equipment.add_item(item)
         print('Dodano itemki')
-    def update(self, screen, offset):
+    def update(self):
         if not self.dead:
             self.get_input()
             self.equipment.update()
@@ -290,7 +288,7 @@ class Player(pygame.sprite.Sprite):
     def draw(self, surface, offset):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
-        if self.can_use_object[0] == True:
+        if self.can_use_object[0] is True:
             frame = pygame.Surface(self.collision_rect.size)
             frame.fill(YELLOW)
             frame.set_alpha(70)

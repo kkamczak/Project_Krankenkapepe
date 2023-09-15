@@ -199,7 +199,7 @@ class Level:
         # Draw player
         player = self.get_player()
         if not self.game_over:
-            self.player.update(self.display_surface, self.offset)
+            self.player.update()
             self.horizontal_movement_collision(self.player.sprite)
             self.vertical_movement_collision(self.player.sprite)
             self.scroll_camera()

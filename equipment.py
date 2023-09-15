@@ -94,7 +94,7 @@ class Equipment():
                 self.selected_frame = frame # New selected frame is already clicked frame.
         elif self.selected_frame == frame: # If selected frame is the same that before.
             self.selected_frame = None # Cancel selected frame.
-    def show_equipment(self, display_surface: pygame.Surface) -> None:
+    def show_equipment(self, display_surface: pygame.surface.Surface) -> None:
         def show_item_name(surface: pygame.Surface, name: str, position: tuple[int, int]) -> None:
             draw_text(surface, name,
                       UI_EQUIPMENT_ACTIVE_FONT, WHITE, position[0], position[1])
