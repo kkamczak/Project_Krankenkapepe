@@ -16,16 +16,11 @@ class Player(pygame.sprite.Sprite):
 
         self.animations = PlayerAnimations(self)
         self.movement = PlayerMovement(self)
+        self.status = PlayerStatus(self)
 
         self.animations.load_animations(pos)
         self.movement.init_movement()
-
-        # Player status:
-        self.type = 'player'
-        self.id = 999
-        self.status = 'idle'
-        self.facing_right = True
-        self.just_jumped = False
+        self.status.reset_status()
 
         # Attacking with Sword:
         self.attack_speed = PLAYER_ATTACK_SPEED
@@ -76,7 +71,7 @@ class Player(pygame.sprite.Sprite):
         self.player_arch_attack = arch_attack
 
         # Start items:
-        self.equipment = Equipment(self.id)
+        self.equipment = Equipment(self.status.id)
         for item in create_items(START_ITEMS_LIST):
             self.equipment.add_item(item)
 
@@ -86,39 +81,8 @@ class Player(pygame.sprite.Sprite):
         # Create in-level UI:
         self.ui = UI()
 
-    def get_status(self):
-        if self.movement.direction.y < 0 and not self.sword_attacking and not self.shielding:
-            if self.status != 'jump':
-                self.animations.frame_index = 0
-            self.status = 'jump'
-        elif self.movement.direction.y > 1 and not self.sword_attacking and not self.shielding:
-            if self.status != 'fall':
-                self.animations.frame_index = 0
-            self.status = 'fall'
-        elif self.sword_attacking and not self.shielding and not self.arch_attacking:
-            if self.status != 'attack':
-                self.animations.frame_index = 0
-            self.status = 'attack'
-        elif not self.sword_attacking and not self.shielding and self.arch_attacking:
-            if self.status != 'arch':
-                self.animations.frame_index = 0
-            self.status = 'arch'
-        elif not self.sword_attacking and not self.arch_attacking and self.shielding:
-            if self.status != 'shield':
-                self.animations.frame_index = 0
-            self.status = 'shield'
-        else:
-            if self.movement.direction.x != 0:
-                if self.status != 'run':
-                    self.animations.frame_index = 0
-                self.status = 'run'
-            else:
-                if self.status != 'idle':
-                    self.animations.frame_index = 0
-                self.status = 'idle'
-
     def sword_attack(self):
-        self.player_sword_attack(self.type, self.id, self.movement.collision_rect, self.facing_right, self.sword_damage,
+        self.player_sword_attack(self.status.type, self.status.id, self.movement.collision_rect, self.status.facing_right, self.sword_damage,
                                  self.sword_can_attack, self.movement.collision_rect.width, PLAYER_ATTACK_SPACE, PLAYER_ATTACK_SIZE[1])
         self.sword_attack_time = pygame.time.get_ticks()
         self.sword_attacking = True
@@ -140,7 +104,7 @@ class Player(pygame.sprite.Sprite):
                 self.arch_can_attack = True
                 self.arch_attacking = False
         if self.arch_attack_finish:
-            self.player_arch_attack('arrow', 'player', self.id, self.movement.collision_rect, self.facing_right, self.arch_damage,
+            self.player_arch_attack('arrow', 'player', self.status.id, self.movement.collision_rect, self.status.facing_right, self.arch_damage,
                                     self.arch_can_attack)
             self.arch_can_attack = False
             self.arch_attacking = False
@@ -154,7 +118,7 @@ class Player(pygame.sprite.Sprite):
 
     def check_if_hurt(self):
         if self.just_hurt and not self.sword_attacking and not self.arch_attacking and not self.shielding:
-            self.status = 'hit'
+            self.status.status = 'hit'
             if pygame.time.get_ticks() - self.just_hurt_time > PLAYER_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
@@ -171,7 +135,7 @@ class Player(pygame.sprite.Sprite):
         if not self.dead:
             self.movement.get_input()
             self.equipment.update()
-            self.get_status()
+            self.status.get_status()
             self.check_if_hurt()
             self.check_sword_attack_cooldown()
             self.check_arch_attack_cooldown()
@@ -197,38 +161,38 @@ class PlayerAnimations():
 
     def animate(self):  # Animate method
 
-        if self.player.status == 'dead':
+        if self.player.status.status == 'dead':
             animation_speed = PLAYER_DEATH_ANIMATION_SPEED
-        elif self.player.status == 'attack':
+        elif self.player.status.status == 'attack':
             animation_speed = self.player.attack_speed
         else:
             animation_speed = self.animation_speed
 
-        animation = self.animations[self.player.status]
+        animation = self.animations[self.player.status.status]
 
         # Loop over frame index
         self.frame_index += animation_speed
         if self.frame_index >= len(animation):
-            if self.player.status == 'dead':
+            if self.player.status.status == 'dead':
                 self.frame_index = len(animation) - 1
             else:
                 self.frame_index = 0
-            if self.player.status == 'attack':  # Is that attack animation?
-                self.player.status = 'idle'
+            if self.player.status.status == 'attack':  # Is that attack animation?
+                self.player.status.status = 'idle'
                 self.player.sword_attacking = False
                 self.player.sword_hit = True
-            if self.player.status == 'arch':  # Is that attack animation?
+            if self.player.status.status == 'arch':  # Is that attack animation?
                 self.player.arch_attack_finish = True
-                self.player.status = 'idle'
-            if self.player.status == 'hit':  # Is that hit animation?
-                self.player.status = 'idle'
-            if self.player.status == 'shield':  # Is that shield animation?
-                self.player.status = 'idle'
+                self.player.status.status = 'idle'
+            if self.player.status.status == 'hit':  # Is that hit animation?
+                self.player.status.status = 'idle'
+            if self.player.status.status == 'shield':  # Is that shield animation?
+                self.player.status.status= 'idle'
                 self.player.shielding = False
 
         image = animation[int(self.frame_index)]
 
-        if self.player.facing_right:
+        if self.player.status.facing_right:
             self.image = image
             self.rect.midbottom = self.player.movement.collision_rect.midbottom
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
@@ -302,24 +266,24 @@ class PlayerMovement():
                 not self.player.shielding and \
                 not self.player.arch_attacking:
             self.direction.x = 1
-            self.player.facing_right = True
+            self.player.status.facing_right = True
         elif keys[pygame.K_LEFT] and \
                 not self.player.sword_attacking and \
                 not self.player.shielding and \
                 not self.player.arch_attacking:
             self.direction.x = -1
-            self.player.facing_right = False
+            self.player.status.facing_right = False
         else:
             self.direction.x = 0
         if keys[pygame.K_SPACE] and \
                 self.on_ground and \
-                not self.player.just_jumped and \
+                not self.player.status.just_jumped and \
                 not self.player.sword_attacking and \
                 not self.player.arch_attacking:
             self.player.movement.jump()
-            self.player.just_jumped = True
+            self.player.status.just_jumped = True
         if not keys[pygame.K_SPACE]: # Player isn't jumping anymore
-            self.player.just_jumped = False
+            self.player.status.just_jumped = False
         if keys[pygame.K_ESCAPE]: # Pause game
             self.player.create_pause()
         if keys[pygame.K_d] and \
@@ -363,3 +327,50 @@ class PlayerMovement():
     def jump(self):
         self.direction.y = self.jump_speed
 
+
+class PlayerStatus():
+    def __init__(self, player):
+        self.player = player
+        self.type = 'player'
+        self.id = 999
+        self.status = 'idle'
+        self.facing_right = True
+        self.just_jumped = False
+
+    def reset_status(self):
+        self.type = 'player'
+        self.id = 999
+        self.status = 'idle'
+        self.facing_right = True
+        self.just_jumped = False
+
+    def get_status(self):
+        if self.player.movement.direction.y < 0 and not self.player.sword_attacking and not self.player.shielding:
+            if self.status != 'jump':
+                self.player.animations.frame_index = 0
+            self.status = 'jump'
+        elif self.player.movement.direction.y > 1 and not self.player.sword_attacking and not self.player.shielding:
+            if self.status != 'fall':
+                self.player.animations.frame_index = 0
+            self.status = 'fall'
+        elif self.player.sword_attacking and not self.player.shielding and not self.player.arch_attacking:
+            if self.status != 'attack':
+                self.player.animations.frame_index = 0
+            self.status = 'attack'
+        elif not self.player.sword_attacking and not self.player.shielding and self.player.arch_attacking:
+            if self.status != 'arch':
+                self.player.animations.frame_index = 0
+            self.status = 'arch'
+        elif not self.player.sword_attacking and not self.player.arch_attacking and self.player.shielding:
+            if self.status != 'shield':
+                self.player.animations.frame_index = 0
+            self.status = 'shield'
+        else:
+            if self.player.movement.direction.x != 0:
+                if self.status != 'run':
+                    self.player.animations.frame_index = 0
+                self.status = 'run'
+            else:
+                if self.status != 'idle':
+                    self.player.animations.frame_index = 0
+                self.status = 'idle'

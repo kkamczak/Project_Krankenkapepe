@@ -191,12 +191,12 @@ class Fight_Manager():
         thunder_collisions = []
         def character_kill(character) -> None:
             character.dead = True
-            character.status = 'dead'
+            character.status.status = 'dead'
             character.frame_index = 0
             character.direction.x = 0
             character.dead_time = pygame.time.get_ticks()
 
-            if character.type != 'player':
+            if character.status.type != 'player':
                 player.add_experience(character.experience)
 
         def character_hurt(character, damage) -> None:
@@ -212,28 +212,28 @@ class Fight_Manager():
                 for enemy in enemies:
                     if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player' and enemy.dead == False: # If enemy get hit by player
                         if kind == 'thunder' and hit.attack == False: break
-                        elif kind == 'thunder' and hit.attack == True and player.id in hit.character_collided: break
+                        elif kind == 'thunder' and hit.attack == True and player.status in hit.character_collided: break
                         else:
                             collisions_group.append((enemy, hit.damage, hit.source))
-                            hit.character_collided.append(enemy.id)
+                            hit.character_collided.append(enemy.status.id)
                             if kind == 'bullet': point = True
 
 
                 if hit.rect.colliderect(player.movement.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
                     for enemy in enemies:
-                        if enemy.id == hit.source_id:
+                        if enemy.status.id == hit.source_id:
                             if kind == 'thunder':
                                 if hit.attack == False:
                                     break
-                                elif hit.attack == True and player.id in hit.character_collided:
+                                elif hit.attack == True and player.status.id in hit.character_collided:
                                     break
-                                elif hit.attack == True and player.id not in hit.character_collided:
-                                    hit.character_collided.append(player.id)
+                                elif hit.attack == True and player.status.id not in hit.character_collided:
+                                    hit.character_collided.append(player.status.id)
                                     collisions_group.append((player, hit.damage, hit.source))
                                     break
                             if player.shielding:
-                                if ((player.facing_right and enemy.collision_rect.x > player.movement.collision_rect.x) or
-                                    (not player.facing_right and enemy.collision_rect.x < player.movement.collision_rect.x)):
+                                if ((player.status.facing_right and enemy.collision_rect.x > player.movement.collision_rect.x) or
+                                    (not player.status.facing_right and enemy.collision_rect.x < player.movement.collision_rect.x)):
                                     self.shield_block_sound.play()
                                     hit.shielded = True
                                     print('Zablokowano')
@@ -242,14 +242,14 @@ class Fight_Manager():
                                         enemy.frame_index = 0
                                         enemy.direction.x = 0
                                         enemy.stunned = True
-                                        enemy.status = 'stun'
+                                        enemy.status.status = 'stun'
                                         enemy.armor_ratio = 3
                                         break
                                 else:
-                                    hit.character_collided.append(player.id)
+                                    hit.character_collided.append(player.status.id)
                                     collisions_group.append((player, hit.damage, hit.source))
                             else:
-                                hit.character_collided.append(player.id)
+                                hit.character_collided.append(player.status.id)
                                 collisions_group.append((player, hit.damage, hit.source))
                     if kind == 'bullet': point = True
 
@@ -262,9 +262,9 @@ class Fight_Manager():
                     damage = collision[1]
                     source = collision[2].lower()
 
-                    if not character.just_hurt and character.type.lower() != 'player' and source == 'player':
+                    if not character.just_hurt and character.status.type.lower() != 'player' and source == 'player':
                         character_hurt(character, damage)
-                    if not character.just_hurt and character.type.lower() == 'player' and source != 'player':
+                    if not character.just_hurt and character.status.type.lower() == 'player' and source != 'player':
                         character_hurt(character, damage)
 
         character_search_hit_collisions('sword', self.sword_hits, player, enemies, sword_collisions)
