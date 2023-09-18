@@ -14,8 +14,10 @@ class Enemy(pygame.sprite.Sprite):
 
         self.status = EnemyStatus(self, kind, enemy_id)
         self.defense = EnemyDefense()
+        self.properties = EnemyProperies(self)
 
         self.status.reset_status()
+        self.properties.reset_properies()
 
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
                            'stun': []}
@@ -61,22 +63,18 @@ class Enemy(pygame.sprite.Sprite):
         self.attack_animation_start = 0
         self.attacking = False
 
-        # Properties:
-        self.max_health = ENEMY_HEALTH[self.status.type]
-        self.health = self.max_health
         self.damage = ENEMY_DAMAGE[self.status.type]
-        self.experience = ENEMY_EXPERIENCE[self.status.type]
 
         # Death:
-        self.dead = False
-        self.dead_time = 0
+        # self.dead = False
+        # self.dead_time = 0
 
         self.stunned = False
 
     def move(self):
         self.current_position = self.collision_rect.x
 
-        if not self.trigger and not self.combat and not self.dead and not self.stunned:
+        if not self.trigger and not self.combat and not self.properties.dead['status'] and not self.stunned:
             # Check if actually collided with wall or walked away too far from spawn position:
             delta = self.current_position - self.start_position
             if abs(self.current_position - self.start_position) > self.max_position_range:
@@ -100,7 +98,7 @@ class Enemy(pygame.sprite.Sprite):
         self.collision_rect.y += self.direction.y
 
     def animate(self):
-        if self.status.status != 'attack' and not self.dead:
+        if self.status.status != 'attack' and not self.properties.dead['status']:
             animation_speed = self.animation_speed
             if self.defense.just_hurt:
                 animation = self.animations['hit']
@@ -133,7 +131,7 @@ class Enemy(pygame.sprite.Sprite):
 
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
     def animate_attack(self):
-        if self.status.status == 'attack' and self.attacking and not self.dead and not self.stunned:
+        if self.status.status == 'attack' and self.attacking and not self.properties.dead['status'] and not self.stunned:
             animation_speed = self.attack_speed
             animation = self.animations['attack']
 
@@ -163,7 +161,7 @@ class Enemy(pygame.sprite.Sprite):
 
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
     def animate_dead(self):
-        if self.status.status == 'dead' and self.dead:
+        if self.status.status == 'dead' and self.properties.dead['status']:
             self.direction.x = 0
             self.direction.y = 0
             animation_speed = 0.15
@@ -195,7 +193,7 @@ class Enemy(pygame.sprite.Sprite):
                    and abs(self.collision_rect.centery - player.movement.collision_rect.centery) < self.trigger_length
         is_close_to_attack = abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range \
                    and abs(self.collision_rect.centery - player.movement.collision_rect.centery) < self.attack_range
-        if is_close_to_attack and not self.combat and not player.dead:
+        if is_close_to_attack and not self.combat and not player.properties.dead['status']:
             self.combat = True
             self.combat_start = pygame.time.get_ticks()
             self.status.status = 'idle'
@@ -207,7 +205,7 @@ class Enemy(pygame.sprite.Sprite):
 
 
 
-        if is_close and not is_close_to_attack and not self.attacking and not player.dead:
+        if is_close and not is_close_to_attack and not self.attacking and not player.properties.dead['status']:
             self.trigger = True
             if self.collision_rect.centerx > player.movement.collision_rect.centerx:
                 self.status.facing_right = False
@@ -240,17 +238,17 @@ class Enemy(pygame.sprite.Sprite):
         self.frame_index = 0
 
     def draw_health_bar(self, screen, offset):
-        if not self.dead:
+        if not self.properties.dead['status']:
             hp_max = pygame.Surface((self.collision_rect.width, 5))
             hp_max.fill(GREY)
-            cur = pygame.Surface((self.health / self.max_health * self.collision_rect.width, 5))
+            cur = pygame.Surface((self.properties.health['current'] / self.properties.health['max'] * self.collision_rect.width, 5))
             cur.fill(RED)
 
             screen.blit(hp_max, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
             screen.blit(cur, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
 
     def update(self, offset):
-        if not self.dead:
+        if not self.properties.dead['status']:
             self.defense.check_if_hurt()
             self.animate()
         self.animate_dead()
@@ -307,6 +305,28 @@ class EnemyDefense():
             if pygame.time.get_ticks() - self.just_hurt_time > ENEMY_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
+class EnemyProperies():
+    def __init__(self, enemy):
+        self.enemy = enemy
+        self.health = {
+            'current': ENEMY_HEALTH[self.enemy.status.type],
+            'max': ENEMY_HEALTH[self.enemy.status.type]
+        }
+        self.experience = {
+            'current': ENEMY_EXPERIENCE[self.enemy.status.type]
+        }
+        self.dead = {
+            'status': False,
+            'time': 0
+        }
+    def reset_properies(self):
+        self.health = {
+            'current': ENEMY_HEALTH[self.enemy.status.type],
+            'max': ENEMY_HEALTH[self.enemy.status.type]
+        }
+        self.experience = {
+            'current': ENEMY_EXPERIENCE[self.enemy.status.type]
+        }
 class Sceleton(Enemy):
     def __init__(self, enemy_id, pos, sword_attack):
         super().__init__(enemy_id, pos, 'sceleton')
@@ -323,7 +343,7 @@ class Sceleton(Enemy):
 
     def update(self, offset):
         super().update(offset)
-        if not self.dead:
+        if not self.properties.dead['status']:
             self.animate_attack()
             self.check_attack_finish()
             self.move()
@@ -344,7 +364,7 @@ class Ninja(Enemy):
 
     def update(self, offset):
         super().update(offset)
-        if not self.dead:
+        if not self.properties.dead['status']:
             self.animate_attack()
             self.check_attack_finish()
             self.move()
@@ -374,7 +394,7 @@ class Wizard(Enemy):
 
     def update(self, offset):
         super().update(offset)
-        if not self.dead:
+        if not self.properties.dead['status']:
             self.animate_attack()
             self.check_attack_finish()
             self.move()
@@ -397,7 +417,7 @@ class Dark_Knight(Enemy):
 
     def update(self, offset):
         super().update(offset)
-        if not self.dead:
+        if not self.properties.dead['status']:
             self.animate_attack()
             self.check_attack_finish()
             self.move()

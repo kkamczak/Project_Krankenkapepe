@@ -190,27 +190,29 @@ class Fight_Manager():
         arrow_collisions = []
         thunder_collisions = []
         def character_kill(character) -> None:
-            character.dead = True
+            character.properties.dead['status'] = True
             character.status.status = 'dead'
             character.frame_index = 0
             character.direction.x = 0
-            character.dead_time = pygame.time.get_ticks()
+            character.properties.dead['time'] = pygame.time.get_ticks()
 
             if character.status.type != 'player':
-                player.add_experience(character.experience)
+                player.properties.add_experience(character.properties.experience['current'])
 
         def character_hurt(character, damage) -> None:
             character.defense.just_hurt = True
             character.defense.just_hurt_time = pygame.time.get_ticks()
-            character.health -= damage * character.defense.armor_ratio
-            if character.health <= 0:  # Death of player
+            character.properties.health['current'] -= damage * character.defense.armor_ratio
+            if character.properties.health['current'] <= 0:  # Death of player
                 character_kill(character)
 
         def character_search_hit_collisions(kind, hits, player, enemies, collisions_group) -> None:
             for hit in hits:  # Check for any hits collisions
                 point = False # if kind of hits is 'bullets'
                 for enemy in enemies:
-                    if hit.rect.colliderect(enemy.collision_rect) and hit.source == 'player' and enemy.dead == False: # If enemy get hit by player
+                    if hit.rect.colliderect(enemy.collision_rect) and \
+                            hit.source == 'player' and \
+                            not enemy.properties.dead['status']: # If enemy get hit by player
                         if kind == 'thunder' and hit.attack == False: break
                         elif kind == 'thunder' and hit.attack == True and player.status in hit.character_collided: break
                         else:
@@ -219,7 +221,10 @@ class Fight_Manager():
                             if kind == 'bullet': point = True
 
 
-                if hit.rect.colliderect(player.movement.collision_rect) and not hit.shielded and hit.source != 'player' and player.dead == False: # If player get hit by enemy
+                if hit.rect.colliderect(player.movement.collision_rect) and \
+                        not hit.shielded and \
+                        hit.source != 'player' and \
+                        not player.properties.dead['status']: # If player get hit by enemy
                     for enemy in enemies:
                         if enemy.status.id == hit.source_id:
                             if kind == 'thunder':

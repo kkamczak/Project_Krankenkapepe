@@ -20,6 +20,8 @@ class Player(pygame.sprite.Sprite):
         self.attack = PlayerAttack(self, sword_attack, arch_attack)
         self.equipment = Equipment(self.status.id)
         self.defense = PlayerDefense(self)
+        self.properties = PlayerProperties(self)
+        self.ui = UI()
 
         self.animations.load_animations(pos)
         self.movement.init_movement()
@@ -27,19 +29,7 @@ class Player(pygame.sprite.Sprite):
         self.attack.reset_attack_properties()
         for item in create_items(START_ITEMS_LIST):
             self.equipment.add_item(item)
-
-        # Properties:
-        self.max_health = PLAYER_MAX_HEALTH
-        self.health = self.max_health
-
-        # Experience:
-        self.player_level = 1
-        self.max_exp = 300
-        self.experience = 0
-
-        # Death:
-        self.dead = False
-        self.dead_time = 0
+        self.properties.reset_properties()
 
         # Methods:
         self.create_pause = create_pause
@@ -47,19 +37,12 @@ class Player(pygame.sprite.Sprite):
         # Object integration
         self.can_use_object = [False, None]
 
-        # Create in-level UI:
-        self.ui = UI()
-
-    def add_experience(self, experience):
-        self.ui.add_experience(self.experience, experience)
-        self.experience += experience
-
     def collect_items(self, items):
         for item in items:
             self.equipment.add_item(item)
 
     def update(self):
-        if not self.dead:
+        if not self.properties.dead['status']:
             self.movement.get_input()
             self.equipment.update()
             self.status.get_status()
@@ -419,3 +402,36 @@ class PlayerDefense():
             self.player.status.status = 'hit'
             if pygame.time.get_ticks() - self.just_hurt_time > PLAYER_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
+
+
+class PlayerProperties():
+    def __init__(self, player):
+        self.player = player
+        self.health = {
+            'current': PLAYER_MAX_HEALTH,
+            'max': PLAYER_MAX_HEALTH
+        }
+        self.player_level = 1
+        self.experience = {
+            'current': 0,
+            'max': 300
+        }
+        self.dead = {
+            'status': False,
+            'time': 0
+        }
+
+    def reset_properties(self):
+        self.health = {
+            'current': PLAYER_MAX_HEALTH,
+            'max': PLAYER_MAX_HEALTH
+        }
+        self.player_level = 1
+        self.experience = {
+            'current': 0,
+            'max': 300
+        }
+
+    def add_experience(self, experience):
+        self.player.ui.add_experience(self.experience['current'], experience)
+        self.experience['current'] += experience

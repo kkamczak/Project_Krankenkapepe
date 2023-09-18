@@ -207,7 +207,7 @@ class Level:
             player.can_use_object = check_for_usable_elements(player, self.terrain_elements_sprite)
 
             player.animations.draw(self.display_surface, self.offset)
-            if player.dead and pygame.time.get_ticks() - player.dead_time > 2000:
+            if player.properties.dead['status'] and pygame.time.get_ticks() - player.properties.dead['time'] > 2000:
                 self.create_death_scene()
                 self.game_over = True
 
@@ -217,18 +217,17 @@ class Level:
             if abs(enemy.rect.centerx - player_pos) < SCREEN_WIDTH:
                 self.horizontal_movement_collision(enemy)
                 self.vertical_movement_collision(enemy)
-                if not enemy.dead:
+                if not enemy.properties.dead['status']:
                     enemy.draw_health_bar(self.display_surface, self.offset)
                     enemy.check_for_combat(self.get_player())
                 enemy.draw(self.display_surface, self.offset)
-            if enemy.dead and pygame.time.get_ticks() - enemy.dead_time > 3000:
+            if enemy.properties.dead['status'] and pygame.time.get_ticks() - enemy.properties.dead['time'] > 3000:
                 enemy.kill()
 
         # Show UI:
-        if player.dead == False:
-            player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
-            player.attack.sword['able'], player.attack.sword['start'], player.attack.sword['cooldown'],
-            player.movement.collision_rect), player.equipment.active_items, player.equipment)
-
-
-
+        if not player.properties.dead['status']:
+            player.ui.show_ui(self.display_surface, self.offset,
+                              (player.properties.health['max'], player.properties.health['current']),
+                              (player.attack.sword['able'], player.attack.sword['start'],
+                               player.attack.sword['cooldown'], player.movement.collision_rect),
+                              player.equipment.active_items, player.equipment)
