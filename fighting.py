@@ -200,9 +200,9 @@ class Fight_Manager():
                 player.add_experience(character.experience)
 
         def character_hurt(character, damage) -> None:
-            character.just_hurt = True
-            character.just_hurt_time = pygame.time.get_ticks()
-            character.health -= damage * character.armor_ratio
+            character.defense.just_hurt = True
+            character.defense.just_hurt_time = pygame.time.get_ticks()
+            character.health -= damage * character.defense.armor_ratio
             if character.health <= 0:  # Death of player
                 character_kill(character)
 
@@ -231,7 +231,7 @@ class Fight_Manager():
                                     hit.character_collided.append(player.status.id)
                                     collisions_group.append((player, hit.damage, hit.source))
                                     break
-                            if player.shielding:
+                            if player.defense.shield['shielding']:
                                 if ((player.status.facing_right and enemy.collision_rect.x > player.movement.collision_rect.x) or
                                     (not player.status.facing_right and enemy.collision_rect.x < player.movement.collision_rect.x)):
                                     self.shield_block_sound.play()
@@ -262,9 +262,9 @@ class Fight_Manager():
                     damage = collision[1]
                     source = collision[2].lower()
 
-                    if not character.just_hurt and character.status.type.lower() != 'player' and source == 'player':
+                    if not character.defense.just_hurt and character.status.type.lower() != 'player' and source == 'player':
                         character_hurt(character, damage)
-                    if not character.just_hurt and character.status.type.lower() == 'player' and source != 'player':
+                    if not character.defense.just_hurt and character.status.type.lower() == 'player' and source != 'player':
                         character_hurt(character, damage)
 
         character_search_hit_collisions('sword', self.sword_hits, player, enemies, sword_collisions)

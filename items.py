@@ -61,19 +61,21 @@ class Potion(Item):
         self.damage = damage
 
 def create_items(list) -> list:
-        items = []
-        for item_id, item in enumerate(list):
-            #print(item[item_id]['name'])
-            if item['kind'] == 'sword':
-                item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
-            elif item['kind'] == 'bow':
-                item_x = Bow(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
-            elif item['kind'] == 'shield':
-                item_x = Shield(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
-            elif item['kind'] == 'item':
-                item_x = Potion(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
-                         # item_id, name, kind, owner, price, damage
-            else:
-                continue
-            items.append(item_x)
-        return items
+    items = []
+    for item_id, item in enumerate(list):
+        if item['kind'] == 'sword':
+            item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'],
+                           active=True)
+        elif item['kind'] == 'bow':
+            item_x = Bow(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
+        elif item['kind'] == 'shield':
+            item_x = Shield(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'],
+                            active=True)
+        elif item['kind'] == 'item':
+            item_x = Potion(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'],
+                            active=True)
+            # item_id, name, kind, owner, price, damage
+        else:
+            continue
+        items.append(item_x)
+    return items

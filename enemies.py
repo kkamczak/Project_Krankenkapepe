@@ -13,6 +13,8 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__()
 
         self.status = EnemyStatus(self, kind, enemy_id)
+        self.defense = EnemyDefense()
+
         self.status.reset_status()
 
         self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
@@ -59,11 +61,6 @@ class Enemy(pygame.sprite.Sprite):
         self.attack_animation_start = 0
         self.attacking = False
 
-        # Get hurt:
-        self.just_hurt = False
-        self.just_hurt_time = 0
-        self.armor_ratio = 1
-
         # Properties:
         self.max_health = ENEMY_HEALTH[self.status.type]
         self.health = self.max_health
@@ -105,7 +102,7 @@ class Enemy(pygame.sprite.Sprite):
     def animate(self):
         if self.status.status != 'attack' and not self.dead:
             animation_speed = self.animation_speed
-            if self.just_hurt:
+            if self.defense.just_hurt:
                 animation = self.animations['hit']
             elif self.stunned:
                 animation = self.animations['stun']
@@ -192,11 +189,6 @@ class Enemy(pygame.sprite.Sprite):
 
             self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
 
-    def check_if_hurt(self):
-        if self.just_hurt:
-            if pygame.time.get_ticks() - self.just_hurt_time > ENEMY_IMMUNITY_FROM_HIT:
-                self.just_hurt = False
-
     def check_for_combat(self, who):
         player = who
         is_close = abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.trigger_length \
@@ -259,7 +251,7 @@ class Enemy(pygame.sprite.Sprite):
 
     def update(self, offset):
         if not self.dead:
-            self.check_if_hurt()
+            self.defense.check_if_hurt()
             self.animate()
         self.animate_dead()
 
@@ -301,6 +293,19 @@ class EnemyStatus():
     def reset_status(self):
         self.status = 'run'
         self.facing_right = random.choice([True, False])
+
+
+class EnemyDefense():
+    def __init__(self):
+        # Get hurt:
+        self.just_hurt = False
+        self.just_hurt_time = 0
+        self.armor_ratio = 1
+
+    def check_if_hurt(self):
+        if self.just_hurt:
+            if pygame.time.get_ticks() - self.just_hurt_time > ENEMY_IMMUNITY_FROM_HIT:
+                self.just_hurt = False
 
 class Sceleton(Enemy):
     def __init__(self, enemy_id, pos, sword_attack):
