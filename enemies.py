@@ -312,7 +312,7 @@ class Sceleton(Enemy):
     def check_attack_finish(self):
         if self.attack_finish:
             self.sword_attack(self.status.type, self.status.id, self.collision_rect, self.status.facing_right, self.damage,
-                              self.can_attack, self.collision_rect.width, self.attack_space, ENEMY_ATTACK_SIZE[self.status.type][1])
+                              self.can_attack, self.attack_space, ENEMY_ATTACK_SIZE[self.status.type][1])
             self.can_attack = False
             self.attack_finish = False
 
@@ -386,7 +386,7 @@ class Dark_Knight(Enemy):
     def check_attack_finish(self):
         if self.attack_finish:
             self.sword_attack(self.status.type, self.status.id, self.collision_rect, self.status.facing_right, self.damage,
-                              self.can_attack, self.collision_rect.width, self.attack_space, ENEMY_ATTACK_SIZE[self.status.type][1])
+                              self.can_attack, self.attack_space, ENEMY_ATTACK_SIZE[self.status.type][1])
             self.can_attack = False
             self.attack_finish = False
 

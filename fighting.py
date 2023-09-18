@@ -138,14 +138,14 @@ class Fight_Manager():
         # Sounds:
         self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
         self.shield_block_sound.set_volume(0.05)
-    def sword_attack(self, source, source_id, collision_rect, facing_right, damage, can_attack, width, space, hit_height):
-        if can_attack:
+    def sword_attack(self, source, source_id, collision_rect, facing_right, sword_able, sword_damage, space, hit_height):
+        if sword_able:
             if facing_right:
                 position = (collision_rect.centerx + space, collision_rect.bottom - hit_height)
             else:
-                position = (collision_rect.centerx - width - space, collision_rect.bottom - hit_height)
+                position = (collision_rect.centerx - collision_rect.width - space, collision_rect.bottom - hit_height)
 
-            hit = Hit(position, damage, source, source_id)
+            hit = Hit(position, sword_damage, source, source_id)
             self.sword_hits.add(hit)
 
     def arch_attack(self, kind, source, source_id, collision_rect, facing_right, damage, can_attack):

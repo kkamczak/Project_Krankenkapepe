@@ -227,8 +227,8 @@ class Level:
         # Show UI:
         if player.dead == False:
             player.ui.show_ui(self.display_surface, self.offset, (player.max_health, player.health), (
-            player.sword_can_attack, player.sword_attack_time, player.sword_attack_cooldown, player.movement.collision_rect), \
-                              player.equipment.active_items, player.equipment)
+            player.attack.sword['able'], player.attack.sword['start'], player.attack.sword['cooldown'],
+            player.movement.collision_rect), player.equipment.active_items, player.equipment)
 
 
 
