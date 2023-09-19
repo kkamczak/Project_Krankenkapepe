@@ -204,7 +204,7 @@ class Level:
             self.vertical_movement_collision(player.movement)
             self.scroll_camera()
 
-            player.can_use_object = check_for_usable_elements(player, self.terrain_elements_sprite)
+            player.status.can_use_object = check_for_usable_elements(player, self.terrain_elements_sprite)
 
             player.animations.draw(self.display_surface, self.offset)
             if player.properties.dead['status'] and pygame.time.get_ticks() - player.properties.dead['time'] > 2000:

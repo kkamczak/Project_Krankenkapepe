@@ -34,9 +34,6 @@ class Player(pygame.sprite.Sprite):
         # Methods:
         self.create_pause = create_pause
 
-        # Object integration
-        self.can_use_object = [False, None]
-
     def collect_items(self, items):
         for item in items:
             self.equipment.add_item(item)
@@ -83,25 +80,30 @@ class PlayerAnimations():
         # Loop over frame index
         self.frame_index += animation_speed
         if self.frame_index >= len(animation):
-            if self.player.status.status == 'dead':
-                self.frame_index = len(animation) - 1
-            else:
-                self.frame_index = 0
-            if self.player.status.status == 'attack':  # Is that attack animation?
-                self.player.status.status = 'idle'
-                self.player.attack.sword['attacking'] = False
-                self.player.attack.sword['hit'] = True
-            if self.player.status.status == 'arch':  # Is that attack animation?
-                self.player.attack.arch['finish'] = True
-                self.player.status.status = 'idle'
-            if self.player.status.status == 'hit':  # Is that hit animation?
-                self.player.status.status = 'idle'
-            if self.player.status.status == 'shield':  # Is that shield animation?
-                self.player.status.status= 'idle'
-                self.player.defense.shield['shielding'] = False
+            self.change_status(len(animation) - 1)
 
+        self.flip_character(animation)
+
+    def change_status(self, new_index):
+        if self.player.status.status == 'dead':
+            self.frame_index = new_index
+        else:
+            self.frame_index = 0
+        if self.player.status.status == 'attack':  # Is that attack animation?
+            self.player.status.status = 'idle'
+            self.player.attack.sword['attacking'] = False
+            self.player.attack.sword['hit'] = True
+        if self.player.status.status == 'arch':  # Is that attack animation?
+            self.player.attack.arch['finish'] = True
+            self.player.status.status = 'idle'
+        if self.player.status.status == 'hit':  # Is that hit animation?
+            self.player.status.status = 'idle'
+        if self.player.status.status == 'shield':  # Is that shield animation?
+            self.player.status.status = 'idle'
+            self.player.defense.shield['shielding'] = False
+
+    def flip_character(self, animation):
         image = animation[int(self.frame_index)]
-
         if self.player.status.facing_right:
             self.image = image
             self.rect.midbottom = self.player.movement.collision_rect.midbottom
@@ -115,7 +117,7 @@ class PlayerAnimations():
     def draw(self, surface, offset):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
-        if self.player.can_use_object[0] is True:
+        if self.player.status.can_use_object[0] is True:
             frame = pygame.Surface(self.player.movement.collision_rect.size)
             frame.fill(YELLOW)
             frame.set_alpha(70)
@@ -157,7 +159,6 @@ class PlayerMovement():
         self.gravity = PLAYER_GRAVITY
         self.jump_speed = PLAYER_JUMP_SPEED
         self.on_ground = False
-        self.on_ceiling = False
         self.on_left = False
         self.on_right = False
 
@@ -171,6 +172,15 @@ class PlayerMovement():
     def get_input(self):
         keys = pygame.key.get_pressed()
 
+        self.input_movement(keys)
+        self.input_jumping(keys)
+        self.input_fighting(keys)
+        self.input_equipment(keys)
+
+        if keys[pygame.K_ESCAPE]: # Pause game
+            self.player.create_pause()
+
+    def input_movement(self, keys):
         if keys[pygame.K_RIGHT] and \
                 not self.player.attack.sword['attacking'] and \
                 not self.player.defense.shield['shielding'] and \
@@ -185,6 +195,8 @@ class PlayerMovement():
             self.player.status.facing_right = False
         else:
             self.direction.x = 0
+
+    def input_jumping(self, keys):
         if keys[pygame.K_SPACE] and \
                 self.on_ground and \
                 not self.player.status.just_jumped and \
@@ -194,8 +206,8 @@ class PlayerMovement():
             self.player.status.just_jumped = True
         if not keys[pygame.K_SPACE]: # Player isn't jumping anymore
             self.player.status.just_jumped = False
-        if keys[pygame.K_ESCAPE]: # Pause game
-            self.player.create_pause()
+
+    def input_fighting(self, keys):
         if keys[pygame.K_d] and \
                 not self.player.attack.sword['attacking'] and \
                 not self.player.attack.arch['attacking'] and \
@@ -217,6 +229,8 @@ class PlayerMovement():
                 not self.player.defense.shield['shielding'] and \
                 self.player.attack.sword['able']: # Player shot arrow
             self.player.attack.arch_start_attack()
+
+    def input_equipment(self, keys):
         if keys[pygame.K_i]: # Show Equipment
             if pygame.time.get_ticks() - self.player.equipment.show_cooldown > 400:
                 if self.player.equipment.show:
@@ -224,10 +238,10 @@ class PlayerMovement():
                 else: self.player.equipment.show = True
                 self.player.equipment.show_cooldown = pygame.time.get_ticks()
         if keys[pygame.K_e]: # Use element:
-            if self.player.can_use_object[0]:
-                self.player.can_use_object[1].collected = True
-                if self.player.can_use_object[1].kind == 'chest':
-                    self.player.collect_items(self.player.can_use_object[1].action())
+            if self.player.status.can_use_object[0]:
+                self.player.status.can_use_object[1].collected = True
+                if self.player.status.can_use_object[1].kind == 'chest':
+                    self.player.collect_items(self.player.status.can_use_object[1].action())
 
     def apply_gravity(self):
         self.direction.y += self.gravity
@@ -245,6 +259,7 @@ class PlayerStatus():
         self.status = 'idle'
         self.facing_right = True
         self.just_jumped = False
+        self.can_use_object = [False, None]
 
     def reset_status(self):
         self.type = 'player'
@@ -254,33 +269,23 @@ class PlayerStatus():
         self.just_jumped = False
 
     def get_status(self):
-        if self.player.movement.direction.y < 0 and \
-                not self.player.attack.sword['attacking'] and \
-                not self.player.defense.shield['shielding']:
+        if self.player.movement.direction.y < 0 and self.get_action() == 'nothing':
             if self.status != 'jump':
                 self.player.animations.frame_index = 0
             self.status = 'jump'
-        elif self.player.movement.direction.y > 1 and \
-                not self.player.attack.sword['attacking'] and \
-                not self.player.defense.shield['shielding']:
+        elif self.player.movement.direction.y > 1 and self.get_action() == 'nothing':
             if self.status != 'fall':
                 self.player.animations.frame_index = 0
             self.status = 'fall'
-        elif self.player.attack.sword['attacking'] and \
-                not self.player.defense.shield['shielding'] and \
-                not self.player.attack.arch['attacking']:
+        elif self.get_action() == 'sword':
             if self.status != 'attack':
                 self.player.animations.frame_index = 0
             self.status = 'attack'
-        elif not self.player.attack.sword['attacking'] and \
-                not self.player.defense.shield['shielding'] and \
-                self.player.attack.arch['attacking']:
+        elif self.get_action() == 'arch':
             if self.status != 'arch':
                 self.player.animations.frame_index = 0
             self.status = 'arch'
-        elif not self.player.attack.sword['attacking'] and \
-                not self.player.attack.arch['attacking'] and \
-                self.player.defense.shield['shielding']:
+        elif self.get_action() == 'shield':
             if self.status != 'shield':
                 self.player.animations.frame_index = 0
             self.status = 'shield'
@@ -293,6 +298,24 @@ class PlayerStatus():
                 if self.status != 'idle':
                     self.player.animations.frame_index = 0
                 self.status = 'idle'
+
+    def get_action(self):
+        if not self.player.attack.sword['attacking'] and \
+            not self.player.attack.arch['attacking'] and \
+            not self.player.defense.shield['shielding']:
+            return 'nothing'
+        if self.player.attack.sword['attacking'] and \
+            not self.player.attack.arch['attacking'] and \
+            not self.player.defense.shield['shielding']:
+            return 'sword'
+        if not self.player.attack.sword['attacking'] and \
+            self.player.attack.arch['attacking'] and \
+            not self.player.defense.shield['shielding']:
+            return 'arch'
+        if not self.player.attack.sword['attacking'] and \
+            not self.player.attack.arch['attacking'] and \
+            self.player.defense.shield['shielding']:
+            return 'shield'
 
 
 class PlayerAttack():
