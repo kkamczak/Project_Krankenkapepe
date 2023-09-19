@@ -214,13 +214,13 @@ class Level:
         # Enemy
         self.enemy_sprites.update(self.offset)
         for enemy in self.enemy_sprites:
-            if abs(enemy.rect.centerx - player_pos) < SCREEN_WIDTH:
+            if abs(enemy.animations.rect.centerx - player_pos) < SCREEN_WIDTH:
                 self.horizontal_movement_collision(enemy)
                 self.vertical_movement_collision(enemy)
                 if not enemy.properties.dead['status']:
                     enemy.draw_health_bar(self.display_surface, self.offset)
                     enemy.check_for_combat(self.get_player())
-                enemy.draw(self.display_surface, self.offset)
+                enemy.animations.draw(self.display_surface, self.offset)
             if enemy.properties.dead['status'] and pygame.time.get_ticks() - enemy.properties.dead['time'] > 3000:
                 enemy.kill()
 

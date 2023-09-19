@@ -14,24 +14,17 @@ class Enemy(pygame.sprite.Sprite):
 
         self.status = EnemyStatus(self, kind, enemy_id)
         self.defense = EnemyDefense()
-        self.properties = EnemyProperies(self)
+        self.properties = EnemyProperties(self)
+        self.animations = EnemyAnimations(self)
 
         self.status.reset_status()
         self.properties.reset_properies()
+        self.animations.load_animations(pos)
 
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
-                           'stun': []}
-        if self.status.type == 'dark_knight':
-            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.status.type}/', scale=SCALE*0.2, flip=True)
-        else:
-            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.status.type}/')
-
-        # Enemy animation setup:
-        self.frame_index = 0
-        self.animation_speed = ENEMY_ANIMATION_SPEED[self.status.type]
-        self.image = self.animations['idle'][self.frame_index]
-        self.rect = self.image.get_rect(topleft=pos)
-        self.collision_rect = pygame.Rect((self.rect.centerx, self.rect.top - ENEMY_SIZE[self.status.type][1] / 2), ENEMY_SIZE[self.status.type])
+        self.collision_rect = pygame.Rect(
+            (self.animations.rect.centerx, self.animations.rect.top - ENEMY_SIZE[self.status.type][1] / 2),
+            ENEMY_SIZE[self.status.type]
+        )
 
         # Variables for movement:
         self.start_position = self.collision_rect.x
@@ -65,10 +58,6 @@ class Enemy(pygame.sprite.Sprite):
 
         self.damage = ENEMY_DAMAGE[self.status.type]
 
-        # Death:
-        # self.dead = False
-        # self.dead_time = 0
-
         self.stunned = False
 
     def move(self):
@@ -96,96 +85,6 @@ class Enemy(pygame.sprite.Sprite):
     def apply_gravity(self):
         self.direction.y += self.gravity
         self.collision_rect.y += self.direction.y
-
-    def animate(self):
-        if self.status.status != 'attack' and not self.properties.dead['status']:
-            animation_speed = self.animation_speed
-            if self.defense.just_hurt:
-                animation = self.animations['hit']
-            elif self.stunned:
-                animation = self.animations['stun']
-                animation_speed = 0.1
-
-            else:
-                animation = self.animations[self.status.status]
-
-            # Loop over frame index
-            self.frame_index += animation_speed
-            if self.frame_index >= len(animation):
-                self.frame_index = 0
-                if self.status.status == 'stun':
-                    self.status.status = 'run'
-                    self.stunned = False
-                    self.armor_ratio = 1
-                    self.combat_reset()
-
-            image = animation[int(self.frame_index)]
-
-            if self.status.facing_right:
-                self.image = image
-                self.rect.midbottom = self.collision_rect.midbottom
-            else:
-                flipped_image = pygame.transform.flip(image, True, False)
-                self.image = flipped_image
-                self.rect.midbottom = self.collision_rect.midbottom
-
-            self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-    def animate_attack(self):
-        if self.status.status == 'attack' and self.attacking and not self.properties.dead['status'] and not self.stunned:
-            animation_speed = self.attack_speed
-            animation = self.animations['attack']
-
-            # Loop over frame index
-            self.frame_index += animation_speed
-            if self.frame_index > (len(animation)-1) and self.can_attack:
-                self.attack_finish = True
-
-            if self.frame_index >= len(animation):
-                self.frame_index = 0
-                self.can_attack = True
-                self.combat = False
-                self.attacking = False
-                self.status.status = 'run'
-
-            image = animation[int(self.frame_index)]
-
-            if self.status.facing_right:
-                self.image = image
-                self.rect.midbottom = self.collision_rect.midbottom
-
-            else:
-                flipped_image = pygame.transform.flip(image, True, False)
-                self.image = flipped_image
-
-                self.rect.midbottom = self.collision_rect.midbottom
-
-            self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
-    def animate_dead(self):
-        if self.status.status == 'dead' and self.properties.dead['status']:
-            self.direction.x = 0
-            self.direction.y = 0
-            animation_speed = 0.15
-
-            animation = self.animations['dead']
-
-            # Loop over frame index
-            self.frame_index += animation_speed
-            if self.frame_index >= len(animation):
-                self.frame_index = len(animation) - 1
-
-            image = animation[int(self.frame_index)]
-
-            if self.status.facing_right:
-                self.image = image
-                self.rect.midbottom = self.collision_rect.midbottom
-
-            else:
-                flipped_image = pygame.transform.flip(image, True, False)
-                self.image = flipped_image
-
-                self.rect.midbottom = self.collision_rect.midbottom
-
-            self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
 
     def check_for_combat(self, who):
         player = who
@@ -250,35 +149,9 @@ class Enemy(pygame.sprite.Sprite):
     def update(self, offset):
         if not self.properties.dead['status']:
             self.defense.check_if_hurt()
-            self.animate()
-        self.animate_dead()
+            self.animations.animate()
+        self.animations.animate_dead()
 
-    def draw(self, surface, offset):
-        pos = self.rect.topleft - offset
-        surface.blit(self.image, pos)
-
-        # Show collision rectangles:
-        if SHOW_COLLISION_RECTANGLES:
-            collide_surface = pygame.Surface(self.collision_rect.size)
-            collide_surface.set_alpha(40)
-            surface.blit(collide_surface, self.collision_rect.topleft - offset)
-
-        # Show image rectangles:
-        if SHOW_IMAGE_RECTANGLES:
-            image_surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
-            image_surface.set_alpha(30)
-            surface.blit(image_surface, self.rect.topleft - offset)
-
-        if SHOW_ENEMY_STATUS:
-            # Show information for developer
-            draw_text(surface, self.status.type,
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
-
-            draw_text(surface, 'Pos: ' + str(self.rect.center),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
-
-            draw_text(surface, 'Combat: ' + str(int(self.combat)),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
 
 class EnemyStatus():
     def __init__(self, enemy, kind, enemy_id):
@@ -305,7 +178,8 @@ class EnemyDefense():
             if pygame.time.get_ticks() - self.just_hurt_time > ENEMY_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
-class EnemyProperies():
+
+class EnemyProperties():
     def __init__(self, enemy):
         self.enemy = enemy
         self.health = {
@@ -327,6 +201,133 @@ class EnemyProperies():
         self.experience = {
             'current': ENEMY_EXPERIENCE[self.enemy.status.type]
         }
+
+
+class EnemyAnimations():
+    def __init__(self, enemy):
+        self.enemy = enemy
+        self.animations = {}
+        self.frame_index = 0
+        self.animation_speed = 0
+        self.image = None
+        self.rect = None
+
+    def load_animations(self, position):
+        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
+                           'stun': []}
+        if self.enemy.status.type == 'dark_knight':
+            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.enemy.status.type}/', scale=SCALE * 0.2,
+                                    flip=True)
+        else:
+            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{self.enemy.status.type}/')
+
+        self.frame_index = 0
+        self.animation_speed = ENEMY_ANIMATION_SPEED[self.enemy.status.type]
+        self.image = self.animations['idle'][self.frame_index]
+        self.rect = self.image.get_rect(topleft=position)
+    def animate(self):
+        if self.enemy.status.status == 'attack' or self.enemy.properties.dead['status']:
+            return
+        animation_speed = self.animation_speed
+        if self.enemy.defense.just_hurt:
+            animation = self.animations['hit']
+        elif self.enemy.stunned:
+            animation = self.animations['stun']
+            animation_speed = 0.1
+        else:
+            animation = self.animations[self.enemy.status.status]
+
+        # Loop over frame index
+        self.frame_index += animation_speed
+        if self.frame_index >= len(animation):
+            self.frame_index = 0
+            if self.enemy.status.status == 'stun':
+                self.enemy.status.status = 'run'
+                self.enemy.stunned = False
+                self.enemy.defense.armor_ratio = 1
+                self.enemy.combat_reset()
+
+        image = animation[int(self.frame_index)]
+        self.flip_image(image)
+
+    def animate_attack(self):
+        if self.enemy.status.status == 'attack' and \
+                self.enemy.attacking and \
+                not self.enemy.properties.dead['status'] and \
+                not self.enemy.stunned:
+            animation_speed = self.enemy.attack_speed
+            animation = self.animations['attack']
+
+            # Loop over frame index
+            self.frame_index += animation_speed
+            if self.frame_index > (len(animation) - 1) and self.enemy.can_attack:
+                self.enemy.attack_finish = True
+
+            if self.frame_index >= len(animation):
+                self.frame_index = 0
+                self.enemy.can_attack = True
+                self.enemy.combat = False
+                self.enemy.attacking = False
+                self.enemy.status.status = 'run'
+
+            image = animation[int(self.frame_index)]
+            self.flip_image(image)
+
+    def animate_dead(self):
+        if self.enemy.status.status == 'dead' and self.enemy.properties.dead['status']:
+            self.enemy.direction.x = 0
+            self.enemy.direction.y = 0
+            animation_speed = 0.15
+
+            animation = self.animations['dead']
+
+            # Loop over frame index
+            self.frame_index += animation_speed
+            if self.frame_index >= len(animation):
+                self.frame_index = len(animation) - 1
+
+            image = animation[int(self.frame_index)]
+            self.flip_image(image)
+
+    def flip_image(self, image):
+        if self.enemy.status.facing_right:
+            self.image = image
+            self.rect.midbottom = self.enemy.collision_rect.midbottom
+        else:
+            flipped_image = pygame.transform.flip(image, True, False)
+            self.image = flipped_image
+            self.rect.midbottom = self.enemy.collision_rect.midbottom
+
+        self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+
+    def draw(self, surface, offset):
+        pos = self.rect.topleft - offset
+        surface.blit(self.image, pos)
+
+        # Show collision rectangles:
+        if SHOW_COLLISION_RECTANGLES:
+            collide_surface = pygame.Surface(self.enemy.collision_rect.size)
+            collide_surface.set_alpha(40)
+            surface.blit(collide_surface, self.enemy.collision_rect.topleft - offset)
+
+        # Show image rectangles:
+        if SHOW_IMAGE_RECTANGLES:
+            image_surface = pygame.Surface((self.image.get_width(), self.image.get_height()))
+            image_surface.set_alpha(30)
+            surface.blit(image_surface, self.rect.topleft - offset)
+
+        if SHOW_ENEMY_STATUS:
+            # Show information for developer
+            draw_text(surface, self.enemy.status.type,
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
+
+            draw_text(surface, 'Pos: ' + str(self.rect.center),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+
+            draw_text(surface, 'Combat: ' + str(int(self.enemy.combat)),
+                      SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
+
+
 class Sceleton(Enemy):
     def __init__(self, enemy_id, pos, sword_attack):
         super().__init__(enemy_id, pos, 'sceleton')
@@ -344,7 +345,7 @@ class Sceleton(Enemy):
     def update(self, offset):
         super().update(offset)
         if not self.properties.dead['status']:
-            self.animate_attack()
+            self.animations.animate_attack()
             self.check_attack_finish()
             self.move()
 
@@ -365,7 +366,7 @@ class Ninja(Enemy):
     def update(self, offset):
         super().update(offset)
         if not self.properties.dead['status']:
-            self.animate_attack()
+            self.animations.animate_attack()
             self.check_attack_finish()
             self.move()
 
@@ -395,7 +396,7 @@ class Wizard(Enemy):
     def update(self, offset):
         super().update(offset)
         if not self.properties.dead['status']:
-            self.animate_attack()
+            self.animations.animate_attack()
             self.check_attack_finish()
             self.move()
 
@@ -418,6 +419,6 @@ class Dark_Knight(Enemy):
     def update(self, offset):
         super().update(offset)
         if not self.properties.dead['status']:
-            self.animate_attack()
+            self.animations.animate_attack()
             self.check_attack_finish()
             self.move()

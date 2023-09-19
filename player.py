@@ -82,7 +82,8 @@ class PlayerAnimations():
         if self.frame_index >= len(animation):
             self.change_status(len(animation) - 1)
 
-        self.flip_character(animation)
+        image = animation[int(self.frame_index)]
+        self.flip_character(image)
 
     def change_status(self, new_index):
         if self.player.status.status == 'dead':
@@ -102,8 +103,7 @@ class PlayerAnimations():
             self.player.status.status = 'idle'
             self.player.defense.shield['shielding'] = False
 
-    def flip_character(self, animation):
-        image = animation[int(self.frame_index)]
+    def flip_character(self, image):
         if self.player.status.facing_right:
             self.image = image
             self.rect.midbottom = self.player.movement.collision_rect.midbottom
