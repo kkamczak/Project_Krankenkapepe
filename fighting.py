@@ -193,7 +193,7 @@ class Fight_Manager():
             character.properties.dead['status'] = True
             character.status.status = 'dead'
             character.frame_index = 0
-            character.direction.x = 0
+            character.movement.direction.x = 0
             character.properties.dead['time'] = pygame.time.get_ticks()
 
             if character.status.type != 'player':
@@ -210,7 +210,7 @@ class Fight_Manager():
             for hit in hits:  # Check for any hits collisions
                 point = False # if kind of hits is 'bullets'
                 for enemy in enemies:
-                    if hit.rect.colliderect(enemy.collision_rect) and \
+                    if hit.rect.colliderect(enemy.movement.collision_rect) and \
                             hit.source == 'player' and \
                             not enemy.properties.dead['status']: # If enemy get hit by player
                         if kind == 'thunder' and hit.attack == False: break
@@ -237,18 +237,18 @@ class Fight_Manager():
                                     collisions_group.append((player, hit.damage, hit.source))
                                     break
                             if player.defense.shield['shielding']:
-                                if ((player.status.facing_right and enemy.collision_rect.x > player.movement.collision_rect.x) or
-                                    (not player.status.facing_right and enemy.collision_rect.x < player.movement.collision_rect.x)):
+                                if ((player.status.facing_right and enemy.movement.collision_rect.x > player.movement.collision_rect.x) or
+                                    (not player.status.facing_right and enemy.movement.collision_rect.x < player.movement.collision_rect.x)):
                                     self.shield_block_sound.play()
                                     hit.shielded = True
                                     print('Zablokowano')
                                     if not enemy.stunned and kind == 'sword':
                                         print('Zestunowano')
                                         enemy.frame_index = 0
-                                        enemy.direction.x = 0
+                                        enemy.movement.direction.x = 0
                                         enemy.stunned = True
                                         enemy.status.status = 'stun'
-                                        enemy.armor_ratio = 3
+                                        enemy.defense.armor_ratio = 3
                                         break
                                 else:
                                     hit.character_collided.append(player.status.id)

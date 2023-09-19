@@ -16,29 +16,12 @@ class Enemy(pygame.sprite.Sprite):
         self.defense = EnemyDefense()
         self.properties = EnemyProperties(self)
         self.animations = EnemyAnimations(self)
+        self.movement = EnemyMovement(self)
 
         self.status.reset_status()
         self.properties.reset_properies()
         self.animations.load_animations(pos)
-
-        self.collision_rect = pygame.Rect(
-            (self.animations.rect.centerx, self.animations.rect.top - ENEMY_SIZE[self.status.type][1] / 2),
-            ENEMY_SIZE[self.status.type]
-        )
-
-        # Variables for movement:
-        self.start_position = self.collision_rect.x
-        self.past_position = self.collision_rect.x
-        self.current_position = self.collision_rect.x
-        self.max_position_range = 300
-        self.on_right = False
-        self.on_left = False
-
-        # Enemy status setup:
-        self.on_ground = False
-        self.direction = pygame.math.Vector2(0, 0)
-        self.speed = ENEMY_SPEED[self.status.type]
-        self.gravity = ENEMY_GRAVITY
+        self.movement.init_movement()
 
         # Attacking:
         self.attack_speed = ENEMY_ATTACK_SPEED[self.status.type]
@@ -60,67 +43,38 @@ class Enemy(pygame.sprite.Sprite):
 
         self.stunned = False
 
-    def move(self):
-        self.current_position = self.collision_rect.x
-
-        if not self.trigger and not self.combat and not self.properties.dead['status'] and not self.stunned:
-            # Check if actually collided with wall or walked away too far from spawn position:
-            delta = self.current_position - self.start_position
-            if abs(self.current_position - self.start_position) > self.max_position_range:
-                if self.status.facing_right and delta > 0:
-                    self.status.facing_right = False
-                elif not self.status.facing_right and delta < 0:
-                    self.status.facing_right = True
-            if self.status.facing_right:
-                self.direction.x = 1
-            else:
-                self.direction.x = -1
-            if self.on_right:
-                self.status.facing_right = False
-                self.on_right = False
-            if self.on_left:
-                self.status.facing_right = True
-                self.on_left = False
-
-    def apply_gravity(self):
-        self.direction.y += self.gravity
-        self.collision_rect.y += self.direction.y
-
-    def check_for_combat(self, who):
-        player = who
-        is_close = abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.trigger_length \
-                   and abs(self.collision_rect.centery - player.movement.collision_rect.centery) < self.trigger_length
-        is_close_to_attack = abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range \
-                   and abs(self.collision_rect.centery - player.movement.collision_rect.centery) < self.attack_range
+    def check_for_combat(self, player):
+        is_close = abs(self.movement.collision_rect.centerx - player.movement.collision_rect.centerx) < self.trigger_length \
+                   and abs(self.movement.collision_rect.centery - player.movement.collision_rect.centery) < self.trigger_length
+        is_close_to_attack = abs(self.movement.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range \
+                   and abs(self.movement.collision_rect.centery - player.movement.collision_rect.centery) < self.attack_range
         if is_close_to_attack and not self.combat and not player.properties.dead['status']:
             self.combat = True
             self.combat_start = pygame.time.get_ticks()
             self.status.status = 'idle'
-            self.direction.x = 0
-            if self.collision_rect.centerx > player.movement.collision_rect.centerx:
+            self.movement.direction.x = 0
+            if self.movement.collision_rect.centerx > player.movement.collision_rect.centerx:
                 self.status.facing_right = False
             else:
                 self.status.facing_right = True
-
-
 
         if is_close and not is_close_to_attack and not self.attacking and not player.properties.dead['status']:
             self.trigger = True
-            if self.collision_rect.centerx > player.movement.collision_rect.centerx:
+            if self.movement.collision_rect.centerx > player.movement.collision_rect.centerx:
                 self.status.facing_right = False
-                self.direction.x = -1
+                self.movement.direction.x = -1
             else:
                 self.status.facing_right = True
-                self.direction.x = 1
+                self.movement.direction.x = 1
         else:
             self.trigger = False
 
-        if abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) > self.trigger_length \
+        if abs(self.movement.collision_rect.centerx - player.movement.collision_rect.centerx) > self.trigger_length \
                 and self.combat and not self.attacking:
             self.combat_reset()
 
         if self.combat and pygame.time.get_ticks() - self.combat_start > self.preparing and not self.attacking \
-                and abs(self.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range:
+                and abs(self.movement.collision_rect.centerx - player.movement.collision_rect.centerx) < self.attack_range:
             self.can_attack = True
             self.attack(player.movement.collision_rect)
 
@@ -138,13 +92,13 @@ class Enemy(pygame.sprite.Sprite):
 
     def draw_health_bar(self, screen, offset):
         if not self.properties.dead['status']:
-            hp_max = pygame.Surface((self.collision_rect.width, 5))
+            hp_max = pygame.Surface((self.movement.collision_rect.width, 5))
             hp_max.fill(GREY)
-            cur = pygame.Surface((self.properties.health['current'] / self.properties.health['max'] * self.collision_rect.width, 5))
+            cur = pygame.Surface((self.properties.health['current'] / self.properties.health['max'] * self.movement.collision_rect.width, 5))
             cur.fill(RED)
 
-            screen.blit(hp_max, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
-            screen.blit(cur, (self.collision_rect.left - offset.x, self.collision_rect.top - 15 - offset.y))
+            screen.blit(hp_max, (self.movement.collision_rect.left - offset.x, self.movement.collision_rect.top - 15 - offset.y))
+            screen.blit(cur, (self.movement.collision_rect.left - offset.x, self.movement.collision_rect.top - 15 - offset.y))
 
     def update(self, offset):
         if not self.properties.dead['status']:
@@ -275,8 +229,8 @@ class EnemyAnimations():
 
     def animate_dead(self):
         if self.enemy.status.status == 'dead' and self.enemy.properties.dead['status']:
-            self.enemy.direction.x = 0
-            self.enemy.direction.y = 0
+            self.enemy.movement.direction.x = 0
+            self.enemy.movement.direction.y = 0
             animation_speed = 0.15
 
             animation = self.animations['dead']
@@ -292,12 +246,11 @@ class EnemyAnimations():
     def flip_image(self, image):
         if self.enemy.status.facing_right:
             self.image = image
-            self.rect.midbottom = self.enemy.collision_rect.midbottom
         else:
             flipped_image = pygame.transform.flip(image, True, False)
             self.image = flipped_image
-            self.rect.midbottom = self.enemy.collision_rect.midbottom
 
+        self.rect.midbottom = self.enemy.movement.collision_rect.midbottom
         self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
 
     def draw(self, surface, offset):
@@ -306,9 +259,9 @@ class EnemyAnimations():
 
         # Show collision rectangles:
         if SHOW_COLLISION_RECTANGLES:
-            collide_surface = pygame.Surface(self.enemy.collision_rect.size)
+            collide_surface = pygame.Surface(self.enemy.movement.collision_rect.size)
             collide_surface.set_alpha(40)
-            surface.blit(collide_surface, self.enemy.collision_rect.topleft - offset)
+            surface.blit(collide_surface, self.enemy.movement.collision_rect.topleft - offset)
 
         # Show image rectangles:
         if SHOW_IMAGE_RECTANGLES:
@@ -328,6 +281,63 @@ class EnemyAnimations():
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
 
 
+class EnemyMovement():
+    def __init__(self, enemy):
+        self.enemy = enemy
+
+        self.collision_rect = None
+        self.position = None
+
+        self.on_right = False
+        self.on_left = False
+        self.on_ground = False
+
+        self.direction = pygame.math.Vector2(0, 0)
+        self.speed = ENEMY_SPEED[self.enemy.status.type]
+        self.gravity = ENEMY_GRAVITY
+
+    def init_movement(self):
+        self.collision_rect = pygame.Rect(
+            (self.enemy.animations.rect.centerx,
+             self.enemy.animations.rect.top - int(ENEMY_SIZE[self.enemy.status.type][1] / 2)),
+            ENEMY_SIZE[self.enemy.status.type]
+        )
+        self.position = {
+            'start': self.collision_rect.x,
+            'past': self.collision_rect.x,
+            'current': self.collision_rect.x,
+            'max': 300
+        }
+
+    def move(self):
+        self.position['current'] = self.collision_rect.x
+
+        if not self.enemy.trigger and \
+                not self.enemy.combat and \
+                not self.enemy.properties.dead['status'] and \
+                not self.enemy.stunned:
+            # Check if actually collided with wall or walked away too far from spawn position:
+            delta = self.position['current'] - self.position['start']
+            if abs(self.position['current'] - self.position['start']) > self.position['max']:
+                if self.enemy.status.facing_right and delta > 0:
+                    self.enemy.status.facing_right = False
+                elif not self.enemy.status.facing_right and delta < 0:
+                    self.enemy.status.facing_right = True
+            if self.enemy.status.facing_right:
+                self.direction.x = 1
+            else:
+                self.direction.x = -1
+            if self.on_right:
+                self.enemy.status.facing_right = False
+                self.on_right = False
+            if self.on_left:
+                self.enemy.status.facing_right = True
+                self.on_left = False
+
+    def apply_gravity(self):
+        self.direction.y += self.gravity
+        self.collision_rect.y += self.direction.y
+
 class Sceleton(Enemy):
     def __init__(self, enemy_id, pos, sword_attack):
         super().__init__(enemy_id, pos, 'sceleton')
@@ -337,7 +347,7 @@ class Sceleton(Enemy):
 
     def check_attack_finish(self):
         if self.attack_finish:
-            self.sword_attack(self.status.type, self.status.id, self.collision_rect, self.status.facing_right, self.damage,
+            self.sword_attack(self.status.type, self.status.id, self.movement.collision_rect, self.status.facing_right, self.damage,
                               self.can_attack, self.attack_space, ENEMY_ATTACK_SIZE[self.status.type][1])
             self.can_attack = False
             self.attack_finish = False
@@ -347,7 +357,7 @@ class Sceleton(Enemy):
         if not self.properties.dead['status']:
             self.animations.animate_attack()
             self.check_attack_finish()
-            self.move()
+            self.movement.move()
 
 
 class Ninja(Enemy):
@@ -359,7 +369,7 @@ class Ninja(Enemy):
 
     def check_attack_finish(self):
         if self.attack_finish:
-            self.arch_attack('arrow', self.status.type, self.status.id, self.collision_rect, self.status.facing_right, self.damage, self.can_attack)
+            self.arch_attack('arrow', self.status.type, self.status.id, self.movement.collision_rect, self.status.facing_right, self.damage, self.can_attack)
             self.can_attack = False
             self.attack_finish = False
 
@@ -368,7 +378,7 @@ class Ninja(Enemy):
         if not self.properties.dead['status']:
             self.animations.animate_attack()
             self.check_attack_finish()
-            self.move()
+            self.movement.move()
 
 
 class Wizard(Enemy):
@@ -383,7 +393,7 @@ class Wizard(Enemy):
         self.cooldown = ENEMY_ULTIMATE_ATTACK_COOLDOWN[self.status.type]
     def check_attack_finish(self):
         if self.attack_finish:
-            self.arch_attack('death_bullet', self.status.type, self.status.id, self.collision_rect, self.status.facing_right, self.damage, self.can_attack)
+            self.arch_attack('death_bullet', self.status.type, self.status.id, self.movement.collision_rect, self.status.facing_right, self.damage, self.can_attack)
             self.can_attack = False
             self.attack_finish = False
 
@@ -398,7 +408,7 @@ class Wizard(Enemy):
         if not self.properties.dead['status']:
             self.animations.animate_attack()
             self.check_attack_finish()
-            self.move()
+            self.movement.move()
 
 
 
@@ -411,7 +421,7 @@ class Dark_Knight(Enemy):
 
     def check_attack_finish(self):
         if self.attack_finish:
-            self.sword_attack(self.status.type, self.status.id, self.collision_rect, self.status.facing_right, self.damage,
+            self.sword_attack(self.status.type, self.status.id, self.movement.collision_rect, self.status.facing_right, self.damage,
                               self.can_attack, self.attack_space, ENEMY_ATTACK_SIZE[self.status.type][1])
             self.can_attack = False
             self.attack_finish = False
@@ -421,4 +431,4 @@ class Dark_Knight(Enemy):
         if not self.properties.dead['status']:
             self.animations.animate_attack()
             self.check_attack_finish()
-            self.move()
+            self.movement.move()
