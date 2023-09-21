@@ -4,7 +4,7 @@ from game_data import levels
 from settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH
 from tiles import StaticTile, AnimatedTile, Chest, check_for_usable_elements
 from player import Player
-from enemies import Sceleton, Ninja, Wizard, Dark_Knight
+from enemies import Sceleton, Ninja, Wizard, DarkKnight
 from fighting import Fight_Manager
 
 
@@ -100,7 +100,7 @@ class Level:
                             sprite = Wizard(enemy_id, (x, y), self.fight_manager.arch_attack, self.fight_manager.thunder_attack)
                             enemy_id += 1
                         if val == '3':
-                            sprite = Dark_Knight(enemy_id, (x, y), self.fight_manager.sword_attack)
+                            sprite = DarkKnight(enemy_id, (x, y), self.fight_manager.sword_attack)
                             enemy_id += 1
                     sprite_group.add(sprite)
         return sprite_group
@@ -212,14 +212,14 @@ class Level:
                 self.game_over = True
 
         # Enemy
-        self.enemy_sprites.update(self.offset)
+        self.enemy_sprites.update()
         for enemy in self.enemy_sprites:
             if abs(enemy.animations.rect.centerx - player_pos) < SCREEN_WIDTH:
                 self.horizontal_movement_collision(enemy.movement)
                 self.vertical_movement_collision(enemy.movement)
                 if not enemy.properties.dead['status']:
-                    enemy.draw_health_bar(self.display_surface, self.offset)
-                    enemy.check_for_combat(self.get_player())
+                    enemy.animations.draw_health_bar(self.display_surface, self.offset)
+                    enemy.fighting.check_for_combat(self.get_player())
                 enemy.animations.draw(self.display_surface, self.offset)
             if enemy.properties.dead['status'] and pygame.time.get_ticks() - enemy.properties.dead['time'] > 3000:
                 enemy.kill()

@@ -192,7 +192,7 @@ class Fight_Manager():
         def character_kill(character) -> None:
             character.properties.dead['status'] = True
             character.status.status = 'dead'
-            character.frame_index = 0
+            character.animations.frame_index = 0
             character.movement.direction.x = 0
             character.properties.dead['time'] = pygame.time.get_ticks()
 
@@ -214,7 +214,7 @@ class Fight_Manager():
                             hit.source == 'player' and \
                             not enemy.properties.dead['status']: # If enemy get hit by player
                         if kind == 'thunder' and hit.attack == False: break
-                        elif kind == 'thunder' and hit.attack == True and player.status in hit.character_collided: break
+                        elif kind == 'thunder' and hit.attack == True and player.status.id in hit.character_collided: break
                         else:
                             collisions_group.append((enemy, hit.damage, hit.source))
                             hit.character_collided.append(enemy.status.id)
@@ -242,11 +242,11 @@ class Fight_Manager():
                                     self.shield_block_sound.play()
                                     hit.shielded = True
                                     print('Zablokowano')
-                                    if not enemy.stunned and kind == 'sword':
+                                    if not enemy.fighting.combat['stunned'] and kind == 'sword':
                                         print('Zestunowano')
-                                        enemy.frame_index = 0
+                                        enemy.animations.frame_index = 0
                                         enemy.movement.direction.x = 0
-                                        enemy.stunned = True
+                                        enemy.fighting.combat['stunned'] = True
                                         enemy.status.status = 'stun'
                                         enemy.defense.armor_ratio = 3
                                         break
