@@ -10,11 +10,11 @@ from fighting import Fight_Manager
 
 
 class Level:
-    def __init__(self, surface, create_pause, create_main_menu, create_death_scene):
+    def __init__(self, level, surface, create_pause, create_main_menu, create_death_scene):
         # General setup
         self.display_surface = surface
         self.offset = pygame.math.Vector2(0, 0)
-        self.current_level = 1
+        self.current_level = level
         self.pause = False
         self.game_over = False
 

@@ -72,6 +72,8 @@ class PlayerAnimations():
             animation_speed = PLAYER_DEATH_ANIMATION_SPEED
         elif self.player.status.status == 'attack':
             animation_speed = self.player.fighting.attack['speed']
+        elif self.player.status.status == 'shield':
+            animation_speed = self.animation_speed
         else:
             animation_speed = self.animation_speed
 
@@ -181,16 +183,10 @@ class PlayerMovement():
             self.player.create_pause()
 
     def input_movement(self, keys):
-        if keys[pygame.K_RIGHT] and \
-                not self.player.fighting.attack['attacking'] and \
-                not self.player.defense.shield['shielding'] and \
-                not self.player.fighting.arch['attacking']:
+        if keys[pygame.K_RIGHT] and self.not_in_fight():
             self.direction.x = 1
             self.player.status.facing_right = True
-        elif keys[pygame.K_LEFT] and \
-                not self.player.fighting.attack['attacking'] and \
-                not self.player.defense.shield['shielding'] and \
-                not self.player.fighting.arch['attacking']:
+        elif keys[pygame.K_LEFT] and self.not_in_fight():
             self.direction.x = -1
             self.player.status.facing_right = False
         else:
@@ -200,8 +196,7 @@ class PlayerMovement():
         if keys[pygame.K_SPACE] and \
                 self.on_ground and \
                 not self.player.status.just_jumped and \
-                not self.player.fighting.attack['attacking'] and \
-                not self.player.fighting.arch['attacking']:
+                self.not_in_fight():
             self.player.movement.jump()
             self.player.status.just_jumped = True
         if not keys[pygame.K_SPACE]: # Player isn't jumping anymore
@@ -209,24 +204,18 @@ class PlayerMovement():
 
     def input_fighting(self, keys):
         if keys[pygame.K_d] and \
-                not self.player.fighting.attack['attacking'] and \
-                not self.player.fighting.arch['attacking'] and \
-                not self.player.defense.shield['shielding'] and \
+                self.not_in_fight() and \
                 self.player.fighting.attack['able']: # Player attack with sword
             self.player.fighting.sword_start_attack()
         if keys[pygame.K_s] and \
-                not self.player.fighting.attack['attacking'] and \
-                not self.player.fighting.arch['attacking'] and \
-                not self.player.defense.shield['shielding'] \
-                and self.player.defense.shield['able'] and \
+                self.not_in_fight() and \
+                self.player.defense.shield['able'] and \
                 not self.player.defense.just_hurt: # Player use SHIELD
             self.player.defense.shield['shielding'] = True
             self.player.defense.shield['able'] = False
             self.player.defense.shield['start'] = pygame.time.get_ticks()
         if keys[pygame.K_a] and \
-                not self.player.fighting.attack['attacking'] and \
-                not self.player.fighting.arch['attacking'] and \
-                not self.player.defense.shield['shielding'] and \
+                self.not_in_fight() and \
                 self.player.fighting.attack['able']: # Player shot arrow
             self.player.fighting.arch_start_attack()
 
@@ -242,6 +231,13 @@ class PlayerMovement():
                 self.player.status.can_use_object[1].collected = True
                 if self.player.status.can_use_object[1].kind == 'chest':
                     self.player.collect_items(self.player.status.can_use_object[1].action())
+
+    def not_in_fight(self):
+        if not self.player.fighting.attack['attacking'] and \
+            not self.player.defense.shield['shielding'] and \
+            not self.player.fighting.arch['attacking']:
+            return True
+        return False
 
     def apply_gravity(self):
         self.direction.y += self.gravity

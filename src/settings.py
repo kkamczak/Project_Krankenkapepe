@@ -3,6 +3,7 @@ pygame.font.init()
 
 # Sounds:
 SOUND_PLAY_MUSIC = False
+MUSIC_VOLUME = 0.03
 
 # Fonts:
 BIG_FONT = pygame.font.SysFont('content/fonts/arial.ttf', 72)
@@ -24,6 +25,7 @@ YELLOW = (224, 187, 123)
 GREEN = (127,255,0)
 BUTTON_BASIC_COLOR = (105, 77, 86)
 BUTTON_ACTIVE_COLOR = (181, 11, 65)
+MASK_ALPHA = 150
 
 # Game settings:
 SCREEN_WIDTH = 1600

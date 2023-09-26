@@ -447,9 +447,7 @@ class Fight_Manager():
                             (not player.status.facing_right and enemy.movement.collision_rect.x < player.movement.collision_rect.x)):
                             self.shield_block_sound.play()
                             hit.shielded = True
-                            print('Zablokowano')
                             if not enemy.fighting.combat['stunned'] and kind == 'sword':
-                                print('Zestunowano')
                                 enemy.animations.frame_index = 0
                                 enemy.movement.direction.x = 0
                                 enemy.fighting.combat['stunned'] = True
