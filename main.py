@@ -1,9 +1,9 @@
 import pygame
 import sys
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, WHITE, SKY, FPS, FPS_FONT, FPS_SHOW_POS, SOUND_PLAY_MUSIC, BIG_FONT
-from level import Level
-from support import draw_text
-from overworld import Pause, MainMenu, DeathScene
+from src.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, WHITE, SKY, FPS, FPS_FONT, FPS_SHOW_POS, SOUND_PLAY_MUSIC, BIG_FONT
+from src.level import Level
+from src.support import draw_text
+from src.overworld import Pause, MainMenu, DeathScene
 
 
 def print_mask():
