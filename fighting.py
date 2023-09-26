@@ -395,78 +395,93 @@ class Fight_Manager():
         arrow_collisions = []
         thunder_collisions = []
 
-        def character_search_hit_collisions(kind, hits, player, enemies, collisions_group) -> None:
-            for hit in hits:  # Check for any hits collisions
-                point = False # if kind of hits is 'bullets'
+        self.character_search_hit_collisions('sword', self.sword_hits, player, enemies, sword_collisions)
+        self.character_hit_collisions(sword_collisions, player)
+
+        self.character_search_hit_collisions('bullet', self.bullet_hits, player, enemies, arrow_collisions)
+        self.character_hit_collisions(arrow_collisions, player)
+
+        self.character_search_hit_collisions('thunder', self.thunder_hits, player, enemies, thunder_collisions)
+        self.character_hit_collisions(thunder_collisions, player)
+
+    def character_search_hit_collisions(self, kind, hits, player, enemies, collisions_group) -> None:
+        """
+        Check and handle collisions between hits and characters.
+
+        This method checks for collisions between hits and characters, such as enemies and the player.
+        It calculates and records damage and manages various hit conditions and interactions.
+        """
+        for hit in hits:  # Check for any hits collisions
+            point = False  # if kind of hits is 'bullets'
+            for enemy in enemies:
+                if hit.rect.colliderect(enemy.movement.collision_rect) and \
+                        hit.source == 'player' and \
+                        not enemy.properties.dead['status']:  # If enemy get hit by player
+                    if kind == 'thunder' and hit.attack is False:
+                        break
+                    elif kind == 'thunder' and hit.attack is True and player.status.id in hit.character_collided:
+                        break
+                    else:
+                        collisions_group.append((enemy, hit.damage, hit.source))
+                        hit.character_collided.append(enemy.status.id)
+                        if kind == 'bullet': point = True
+
+            if hit.rect.colliderect(player.movement.collision_rect) and \
+                    not hit.shielded and \
+                    hit.source != 'player' and \
+                    not player.properties.dead['status']:  # If player get hit by enemy
                 for enemy in enemies:
-                    if hit.rect.colliderect(enemy.movement.collision_rect) and \
-                            hit.source == 'player' and \
-                            not enemy.properties.dead['status']: # If enemy get hit by player
-                        if kind == 'thunder' and hit.attack is False: break
-                        elif kind == 'thunder' and hit.attack is True and player.status.id in hit.character_collided: break
+                    if enemy.status.id != hit.source_id:
+                        continue
+                    if kind == 'thunder':
+                        if hit.attack is False:
+                            break
+                        if hit.attack is True and player.status.id in hit.character_collided:
+                            break
+                        if hit.attack is True and player.status.id not in hit.character_collided:
+                            hit.character_collided.append(player.status.id)
+                            collisions_group.append((player, hit.damage, hit.source))
+                            break
+                    if player.defense.shield['shielding']:
+                        if ((player.status.facing_right and enemy.movement.collision_rect.x > player.movement.collision_rect.x) or
+                            (not player.status.facing_right and enemy.movement.collision_rect.x < player.movement.collision_rect.x)):
+                            self.shield_block_sound.play()
+                            hit.shielded = True
+                            print('Zablokowano')
+                            if not enemy.fighting.combat['stunned'] and kind == 'sword':
+                                print('Zestunowano')
+                                enemy.animations.frame_index = 0
+                                enemy.movement.direction.x = 0
+                                enemy.fighting.combat['stunned'] = True
+                                enemy.status.status = 'stun'
+                                enemy.defense.armor_ratio = 3
+                                break
                         else:
-                            collisions_group.append((enemy, hit.damage, hit.source))
-                            hit.character_collided.append(enemy.status.id)
-                            if kind == 'bullet': point = True
+                            hit.character_collided.append(player.status.id)
+                            collisions_group.append((player, hit.damage, hit.source))
+                    else:
+                        hit.character_collided.append(player.status.id)
+                        collisions_group.append((player, hit.damage, hit.source))
+                if kind == 'bullet': point = True
 
+            if point and kind == 'bullet':  # Destroy bullet after collision with anyone
+                hit.kill()
 
-                if hit.rect.colliderect(player.movement.collision_rect) and \
-                        not hit.shielded and \
-                        hit.source != 'player' and \
-                        not player.properties.dead['status']: # If player get hit by enemy
-                    for enemy in enemies:
-                        if enemy.status.id == hit.source_id:
-                            if kind == 'thunder':
-                                if hit.attack is False:
-                                    break
-                                if hit.attack is True and player.status.id in hit.character_collided:
-                                    break
-                                if hit.attack is True and player.status.id not in hit.character_collided:
-                                    hit.character_collided.append(player.status.id)
-                                    collisions_group.append((player, hit.damage, hit.source))
-                                    break
-                            if player.defense.shield['shielding']:
-                                if ((player.status.facing_right and enemy.movement.collision_rect.x > player.movement.collision_rect.x) or
-                                    (not player.status.facing_right and enemy.movement.collision_rect.x < player.movement.collision_rect.x)):
-                                    self.shield_block_sound.play()
-                                    hit.shielded = True
-                                    print('Zablokowano')
-                                    if not enemy.fighting.combat['stunned'] and kind == 'sword':
-                                        print('Zestunowano')
-                                        enemy.animations.frame_index = 0
-                                        enemy.movement.direction.x = 0
-                                        enemy.fighting.combat['stunned'] = True
-                                        enemy.status.status = 'stun'
-                                        enemy.defense.armor_ratio = 3
-                                        break
-                                else:
-                                    hit.character_collided.append(player.status.id)
-                                    collisions_group.append((player, hit.damage, hit.source))
-                            else:
-                                hit.character_collided.append(player.status.id)
-                                collisions_group.append((player, hit.damage, hit.source))
-                    if kind == 'bullet': point = True
+    def character_hit_collisions(self, collisions, player) -> None:
+        """
+        Handle character hit collisions and apply damage.
 
-                if point and kind == 'bullet': # Destroy bullet after collision with anyone
-                    hit.kill()
-        def character_hit_collisions(collisions) -> None:
-            if collisions:  # If there is attack collision with enemies:
-                for collision in collisions:
-                    character = collision[0]
-                    damage = collision[1]
-                    source = collision[2].lower()
+        This method handles the results of character hit collisions, including applying damage to characters.
+        It also handles experience point updates and character status changes.
+        """
+        if collisions:  # If there is attack collision with enemies:
+            for collision in collisions:
+                character = collision[0]
+                damage = collision[1]
+                source = collision[2].lower()
 
-                    if not character.defense.just_hurt and character.status.type.lower() != 'player' and source == 'player':
-                        if character.defense.hurt(damage):
-                            player.properties.add_experience(character.properties.experience['current'])
-                    if not character.defense.just_hurt and character.status.type.lower() == 'player' and source != 'player':
-                        character.defense.hurt(damage)
-
-        character_search_hit_collisions('sword', self.sword_hits, player, enemies, sword_collisions)
-        character_hit_collisions(sword_collisions)
-
-        character_search_hit_collisions('bullet', self.bullet_hits, player, enemies, arrow_collisions)
-        character_hit_collisions(arrow_collisions)
-
-        character_search_hit_collisions('thunder', self.thunder_hits, player, enemies, thunder_collisions)
-        character_hit_collisions(thunder_collisions)
+                if not character.defense.just_hurt and character.status.type.lower() != 'player' and source == 'player':
+                    if character.defense.hurt(damage):
+                        player.properties.add_experience(character.properties.experience['current'])
+                if not character.defense.just_hurt and character.status.type.lower() == 'player' and source != 'player':
+                    character.defense.hurt(damage)
