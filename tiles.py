@@ -144,11 +144,8 @@ class Chest(AnimatedTile):
     def create_content(self) -> list:
         """Create the content (items) for the chest."""
         content = []
-        # puts(str(Chest.chests))
-        # for i, element in enumerate(Chest.chests):
-        #     puts(f'Tworzenie ekwipunku skrzyni o id: {element.id}')
-        #     for item in create_items(CHESTS_CONTENT[i]):
-        #         content.append(item)
+        Chest.chests = []
+
         puts(str(len(Chest.chests)))
         for element in create_items(CHESTS_CONTENT[len(Chest.chests)]):
             content.append(element)

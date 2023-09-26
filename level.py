@@ -228,6 +228,6 @@ class Level:
         if not player.properties.dead['status']:
             player.ui.show_ui(self.display_surface, self.offset,
                               (player.properties.health['max'], player.properties.health['current']),
-                              (player.attack.sword['able'], player.attack.sword['start'],
-                               player.attack.sword['cooldown'], player.movement.collision_rect),
+                              (player.fighting.attack['able'], player.fighting.attack['start'],
+                               player.fighting.attack['cooldown'], player.movement.collision_rect),
                               player.equipment.active_items, player.equipment)

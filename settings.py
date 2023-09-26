@@ -37,7 +37,7 @@ PLAYER_SIZE = (30*SCALE, 57*SCALE)
 PLAYER_SPEED = 4*SCALE
 PLAYER_GRAVITY = 0.8*SCALE
 PLAYER_JUMP_SPEED = -12*SCALE
-PLAYER_MAX_HEALTH = 40000
+PLAYER_MAX_HEALTH = 500
 
 PLAYER_ANIMATIONS_PATH = 'content/graphics/character/'
 PLAYER_DEATH_ANIMATION_SPEED = 0.15*SCALE
@@ -74,7 +74,7 @@ ENEMY_HEALTH = {'sceleton': 225, 'ninja': 120, 'wizard': 60, 'dark_knight': 420}
 ENEMY_DAMAGE = {'sceleton': 60, 'ninja': 60, 'wizard': 200, 'dark_knight': 420}
 ENEMY_EXPERIENCE = {'sceleton': 20, 'ninja': 20, 'wizard': 50, 'dark_knight': 420}
 
-ENEMY_ATTACK_SIZE = {'sceleton': [60*SCALE, 80*SCALE], 'dark_knight': [45*SCALE, 100*SCALE]}
+ENEMY_ATTACK_SIZE = {'sceleton': [60*SCALE, 80*SCALE], 'ninja': [0, 0], 'wizard': [0, 0], 'dark_knight': [45*SCALE, 100*SCALE]}
 ENEMY_ATTACK_SPACE = {'sceleton': 20*SCALE, 'ninja': 5*SCALE, 'wizard': 5*SCALE, 'dark_knight': 10*SCALE}
 ENEMY_TRIGGER_LENGTH = {'sceleton': 300*SCALE, 'ninja': 350*SCALE, 'wizard': 450*SCALE, 'dark_knight': 250*SCALE}
 ENEMY_ATTACK_SPEED = {'sceleton': 0.25, 'ninja': 0.15, 'wizard': 0.25, 'dark_knight': 0.3}

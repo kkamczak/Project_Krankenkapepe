@@ -13,7 +13,7 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__()
 
         self.status = EnemyStatus(self, kind, enemy_id)
-        self.defense = EnemyDefense()
+        self.defense = EnemyDefense(self)
         self.properties = EnemyProperties(self)
         self.animations = EnemyAnimations(self)
         self.movement = EnemyMovement(self)
@@ -45,8 +45,9 @@ class EnemyStatus():
 
 
 class EnemyDefense():
-    def __init__(self):
+    def __init__(self, enemy):
         # Get hurt:
+        self.enemy = enemy
         self.just_hurt = False
         self.just_hurt_time = 0
         self.armor_ratio = 1
@@ -56,6 +57,21 @@ class EnemyDefense():
             if pygame.time.get_ticks() - self.just_hurt_time > ENEMY_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
+    def kill(self) -> None:
+        self.enemy.properties.dead['status'] = True
+        self.enemy.properties.dead['time'] = pygame.time.get_ticks()
+        self.enemy.animations.frame_index = 0
+        self.enemy.movement.direction.x = 0
+        self.enemy.status.status = 'dead'
+
+    def hurt(self, damage) -> bool:
+        self.just_hurt = True
+        self.just_hurt_time = pygame.time.get_ticks()
+        self.enemy.properties.health['current'] -= damage * self.armor_ratio
+        if self.enemy.properties.health['current'] <= 0:  # Death
+            self.kill()
+            return True
+        return False
 
 class EnemyProperties():
     def __init__(self, enemy):
@@ -286,6 +302,7 @@ class EnemyFighting():
             'speed': ENEMY_ATTACK_SPEED[self.enemy.status.type],
             'damage': ENEMY_DAMAGE[self.enemy.status.type],
             'range': ENEMY_ATTACK_RANGE[self.enemy.status.type],
+            'size': ENEMY_ATTACK_SIZE[self.enemy.status.type],
             'space': ENEMY_ATTACK_SPACE[self.enemy.status.type],
             'able': True,
             'attacking': False,
@@ -359,7 +376,10 @@ class EnemyFightingThunder(EnemyFighting):
     def do_attack(self, player_pos):
         super().do_attack(player_pos)
         if pygame.time.get_ticks() - self.enemy.thunder['time'] > self.enemy.thunder['cooldown']:
-            self.enemy.thunder_attack('enemy', self.enemy.status.id, player_pos, 1000, self.enemy.fighting.attack['able'])
+            self.enemy.thunder_attack(
+                'enemy', self.enemy.status.id, player_pos,
+                self.enemy.fighting.attack['damage'] * 10, self.enemy.fighting.attack['able']
+            )
             self.enemy.thunder['time'] = pygame.time.get_ticks()
 
 class Sceleton(Enemy):
@@ -371,8 +391,7 @@ class Sceleton(Enemy):
 
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
-            self.sword_attack(self.status.type, self.status.id, self.movement.collision_rect, self.status.facing_right, self.fighting.attack['damage'],
-                              self.fighting.attack['able'], self.fighting.attack['space'], ENEMY_ATTACK_SIZE[self.status.type][1])
+            self.sword_attack(self)
             self.fighting.attack['able'] = False
             self.fighting.attack['finish'] = False
 
@@ -393,9 +412,7 @@ class Ninja(Enemy):
 
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
-            self.arch_attack('arrow', self.status.type, self.status.id,
-                             self.movement.collision_rect, self.status.facing_right,
-                             self.fighting.attack['damage'], self.fighting.attack['able'])
+            self.arch_attack('arrow', self)
             self.fighting.attack['able'] = False
             self.fighting.attack['finish'] = False
 
@@ -422,9 +439,7 @@ class Wizard(Enemy):
 
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
-            self.arch_attack('death_bullet', self.status.type, self.status.id,
-                             self.movement.collision_rect, self.status.facing_right,
-                             self.fighting.attack['damage'], self.fighting.attack['able'])
+            self.arch_attack('death_bullet', self)
             self.fighting.attack['able'] = False
             self.fighting.attack['finish'] = False
 
@@ -445,10 +460,7 @@ class DarkKnight(Enemy):
 
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
-            self.sword_attack(self.status.type, self.status.id, self.movement.collision_rect,
-                              self.status.facing_right, self.fighting.attack['damage'],
-                              self.fighting.attack['able'], self.fighting.attack['space'],
-                              ENEMY_ATTACK_SIZE[self.status.type][1])
+            self.sword_attack(self)
             self.fighting.attack['able'] = False
             self.fighting.attack['finish'] = False
 
