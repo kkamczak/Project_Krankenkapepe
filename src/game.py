@@ -12,14 +12,14 @@ class Game:
         # Overworld creation
         self.screen = screen
         self.clock = clock
-        self.main_menu: object = MainMenu(self.screen, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
-        self.status: str = 'main_menu'
+        self.main_menu = MainMenu(self.screen, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
+        self.status = 'main_menu'
 
-        self.level: object = None
-        self.pause: object = None
+        self.level = None
+        self.pause = None
 
-        self.paused: bool = False
-        self.death_scene: object = None
+        self.paused = False
+        self.death_scene = None
 
         # Sounds:
         self.level_bg_music = pygame.mixer.Sound('content/sounds/background.mp3')

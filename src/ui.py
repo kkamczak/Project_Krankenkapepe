@@ -5,7 +5,6 @@ including health bars, cooldowns, equipment, and more.
 It provides methods to display and update these UI elements during gameplay.
 """
 import pygame
-import equipment
 from support import create_bar, draw_text, import_image, scale_image
 from settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT, UI_ACTIVE_EQUIPMENT_POSITION, \
     UI_FRAME_SIZE, UI_FRAME_FONT, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION
@@ -203,39 +202,43 @@ class UI:
             self.exp_visible = int(self.exp_max)
 
     def show_ui(self, screen: pygame.surface.Surface,
-                offset: pygame.math.Vector2, health: tuple[int, int],
-                sword_cd: tuple[bool, int, int, pygame.Rect],
-                active_equipment: dict, player_equipment: equipment.Equipment) -> None:
+                offset: pygame.math.Vector2, player) -> None:
         """
         Display the entire user interface on the screen.
 
         Args:
             screen: The screen surface to display the UI on.
             offset: The offset for rendering.
-            health: Tuple containing maximum health and current health.
-            sword_cd: Tuple containing sword cooldown information.
-            active_equipment: Dictionary containing active equipment items.
-            player_equipment: The player's equipment.
+            player: Object Player containing all statistics
 
         Returns:
             None
         """
 
         # Health bar:
-        self.show_health(screen, health[0], health[1])
+        self.show_health(
+            screen,
+            player.properties.health['max'],
+            player.properties.health['current']
+        )
 
         # Sword cooldown:
-        if not sword_cd[0]:
-            self.show_attack_cooldown(screen, sword_cd[1], sword_cd[2],
-                                         sword_cd[3], offset)
+        if not player.fighting.attack['able']:
+            self.show_attack_cooldown(
+                screen,
+                player.fighting.attack['start'],
+                player.fighting.attack['cooldown'],
+                player.movement.collision_rect,
+                offset
+            )
 
         # Skeletons:
         self.show_skeleton_points(screen)
         self.update_experience()
 
         # Outfit
-        self.show_active_equipment(screen, active_equipment)
+        self.show_active_equipment(screen, player.equipment.active_items)
 
-        #Show equipment:
-        if player_equipment.show:
-            player_equipment.show_equipment(screen)
+        # Show equipment:
+        if player.equipment.show:
+            player.equipment.show_equipment(screen)

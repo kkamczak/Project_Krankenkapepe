@@ -150,7 +150,7 @@ class Level:
 
     def run(self):
         player = self.get_player()
-        player_pos = self.get_player().movement.collision_rect.centerx
+        player_pos = player.movement.collision_rect.centerx
         # Fighting:
         self.fight_manager.attack_update(self.display_surface, self.offset)
         self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
@@ -177,7 +177,7 @@ class Level:
                 self.create_death_scene()
                 self.game_over = True
 
-        # Enemy
+        # Draw enemies
         for enemy in self.enemy_sprites:
             enemy.update()
             if abs(enemy.animations.rect.centerx - player_pos) < SCREEN_WIDTH:
@@ -192,8 +192,4 @@ class Level:
 
         # Show UI:
         if not player.properties.dead['status']:
-            player.ui.show_ui(self.display_surface, self.offset,
-                              (player.properties.health['max'], player.properties.health['current']),
-                              (player.fighting.attack['able'], player.fighting.attack['start'],
-                               player.fighting.attack['cooldown'], player.movement.collision_rect),
-                              player.equipment.active_items, player.equipment)
+            player.ui.show_ui(self.display_surface, self.offset, player)
