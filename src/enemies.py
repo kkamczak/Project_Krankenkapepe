@@ -73,6 +73,12 @@ class EnemyDefense():
             return True
         return False
 
+    def reset_stun(self):
+        self.enemy.status.status = 'run'
+        self.enemy.fighting.combat['stunned'] = False
+        self.enemy.defense.armor_ratio = 1
+        self.enemy.fighting.combat_reset()
+
 class EnemyProperties():
     def __init__(self, enemy):
         self.enemy = enemy
@@ -138,10 +144,7 @@ class EnemyAnimations():
         if self.frame_index >= len(animation):
             self.frame_index = 0
             if self.enemy.status.status == 'stun':
-                self.enemy.status.status = 'run'
-                self.enemy.fighting.combat['stunned'] = False
-                self.enemy.defense.armor_ratio = 1
-                self.enemy.fighting.combat_reset()
+                self.enemy.defense.reset_stun()
 
         image = animation[int(self.frame_index)]
         self.flip_image(image)
@@ -160,11 +163,7 @@ class EnemyAnimations():
                 self.enemy.fighting.attack['finish'] = True
 
             if self.frame_index >= len(animation):
-                self.frame_index = 0
-                self.enemy.fighting.attack['able'] = True
-                self.enemy.fighting.combat['on'] = False
-                self.enemy.fighting.attack['attacking'] = False
-                self.enemy.status.status = 'run'
+                self.enemy.fighting.reset_attack()
 
             image = animation[int(self.frame_index)]
             self.flip_image(image)
@@ -367,6 +366,13 @@ class EnemyFighting():
         self.enemy.status.status = 'attack'
         self.attack['attacking'] = True
         self.enemy.animations.frame_index = 0
+
+    def reset_attack(self):
+        self.enemy.animations.frame_index = 0
+        self.attack['able'] = True
+        self.combat['on'] = False
+        self.attack['attacking'] = False
+        self.enemy.status.status = 'run'
 
 
 class EnemyFightingThunder(EnemyFighting):

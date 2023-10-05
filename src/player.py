@@ -93,17 +93,13 @@ class PlayerAnimations():
         else:
             self.frame_index = 0
         if self.player.status.status == 'attack':  # Is that attack animation?
-            self.player.status.status = 'idle'
             self.player.fighting.attack['attacking'] = False
             self.player.fighting.attack['hit'] = True
         if self.player.status.status == 'arch':  # Is that attack animation?
             self.player.fighting.arch['finish'] = True
-            self.player.status.status = 'idle'
-        if self.player.status.status == 'hit':  # Is that hit animation?
-            self.player.status.status = 'idle'
         if self.player.status.status == 'shield':  # Is that shield animation?
-            self.player.status.status = 'idle'
             self.player.defense.shield['shielding'] = False
+        self.player.status.status = 'idle'
 
     def flip_character(self, image):
         if self.player.status.facing_right:
