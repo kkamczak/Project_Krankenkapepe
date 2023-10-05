@@ -28,7 +28,7 @@ class Game:
     def create_level(self) -> None:
         self.screen.fill(BLACK)
         draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-        self.level = Level(1, self.screen, self.create_pause, self.create_main_menu, self.create_death_scene)
+        self.level = Level(1, self.screen, self)
         self.status = 'level'
         if SOUND_PLAY_MUSIC: self.level_bg_music.play(loops=-1)
 

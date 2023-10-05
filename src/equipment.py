@@ -60,7 +60,7 @@ class Equipment():
         if self.selected_frame != frame: # If selected frame is not same that before.
             if self.selected_frame != None:# If there was already selected frame
                 self.selected_frame.change_frame_status() # Change it status.
-                if self.selected_frame.item != None: # If there was item on selected frame
+                if self.selected_frame.item is not None: # If there was item on selected frame
                     item_to_transfer = self.selected_frame.item # Create copy of item to transfer
                     if frame.item == None:
                         if self.selected_frame.kind == 'regular' and frame.kind == 'active':

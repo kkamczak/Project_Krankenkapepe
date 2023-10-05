@@ -52,6 +52,8 @@ PLAYER_SWORD_COOLDOWN = 1000
 PLAYER_SHIELD_COOLDOWN = 1000
 PLAYER_IMMUNITY_FROM_HIT = 300
 
+PLAYER_DEATH_LATENCY = 2000
+
 # Equipment settings:
 EQUIPMENT_POSITION = (SCREEN_WIDTH - SCREEN_WIDTH / 4.7, SCREEN_HEIGHT / 8)
 EQUIPMENT_FRAME_SIZE = (50, 60)
@@ -84,6 +86,8 @@ ENEMY_ATTACK_RANGE = {'sceleton': 60*SCALE, 'ninja': 300*SCALE, 'wizard': 400*SC
 ENEMY_ULTIMATE_ATTACK_COOLDOWN = {'wizard': 3000, 'dark_knight': 5000}
 ENEMY_IMMUNITY_FROM_HIT = 300
 
+ENEMY_DEATH_LATENCY = 3000
+
 BULLET_DEFAULT_SPEED = {'arrow': 10*SCALE, 'death_bullet': 5*SCALE}
 
 # Frames Per Seconds:
@@ -99,6 +103,11 @@ UI_ACTIVE_EQUIPMENT_POSITION = (int(SCREEN_WIDTH / 15), SCREEN_HEIGHT - 100)
 UI_FRAME_SIZE = (80, 90)
 UI_ITEM_IMAGE_SIZE = (60, 70)
 UI_HP_BAR_POSITION = (20, 50)
+
+# Terrain:
+TERRAIN_PATH = 'content/graphics/terrain/terrain_tiles.png'
+FIREPLACE_PATH = 'content/graphics/terrain/fireplace/'
+CHEST_PATH = 'content/graphics/terrain/chest/'
 
 # Developing:
 

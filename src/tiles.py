@@ -177,3 +177,5 @@ def check_for_usable_elements(character, elements) -> list:
             not element.collected:
             return [True, element]
     return [False, None]
+
+
