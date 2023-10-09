@@ -356,10 +356,10 @@ class EnemyFighting():
             self.do_attack(player.movement.collision_rect)
 
     def combat_reset(self):
-        self.combat['trigger'] = False
-        self.combat['on'] = False
-        self.attack['able'] = True
         self.attack['attacking'] = False
+        self.attack['able'] = True
+        self.combat['on'] = False
+        self.combat['trigger'] = False
         self.enemy.status.status = 'run'
 
     def do_attack(self, player_pos):

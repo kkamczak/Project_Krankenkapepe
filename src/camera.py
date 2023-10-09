@@ -1,18 +1,19 @@
 import pygame
 
+
 class Camera():
-    def __init__(self, border_right, border_left):
+    def __init__(self, border_right, border_bottom):
         self.offset = pygame.math.Vector2(0, 0)
         self.border = {
             'left': 0,
             'right': border_right,
             'top': 0,
-            'bottom': border_left
+            'bottom': border_bottom
         }
 
-    def scroll_camera(self, screen, player_movement):
-        half_w = screen.get_size()[0] / 2
-        half_h = screen.get_size()[1] / 2
+    def scroll_camera(self, screen_size, player_movement):
+        half_w = screen_size[0] / 2
+        half_h = screen_size[1] / 2
         player = player_movement
 
         offset_x = self.offset.x

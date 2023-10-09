@@ -60,7 +60,7 @@ class Game:
             self.death_scene.run()
 
     def show_fps(self) -> None:
-        draw_text(self.screen, 'FPS: ' + str(int(self.clock.get_fps())), FPS_FONT, GREY, FPS_SHOW_POS[0], FPS_SHOW_POS[1])
+        draw_text(self.screen, f'FPS: {str(int(self.clock.get_fps()))}', FPS_FONT, GREY, FPS_SHOW_POS[0], FPS_SHOW_POS[1])
 
     @staticmethod
     def exit_game() -> None:

@@ -202,7 +202,7 @@ class Level:
             self.player.update()
             horizontal_movement_collision(player.movement, self.terrain_sprite)
             vertical_movement_collision(player.movement, self.terrain_sprite)
-            self.camera.scroll_camera(self.display_surface, player.movement)
+            self.camera.scroll_camera(self.display_surface.get_size(), player.movement)
 
             player.status.can_use_object = check_for_usable_elements(
                 player,
