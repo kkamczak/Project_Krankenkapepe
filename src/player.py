@@ -61,10 +61,22 @@ class PlayerAnimations():
         self.frame_index = 0
         self.animation_speed = 0.2
 
+    def set_image(self, new_image: pygame.image) -> None:
+        self.image = new_image
+
+    def set_rect(self, new_rect: pygame.Rect) -> None:
+        self.rect = new_rect
+
+    def set_frame_index(self, new_index: int) -> None:
+        self.frame_index = new_index
+
+    def set_animation_speed(self, new_speed: float) -> None:
+        self.animation_speed = new_speed
+
     def load_animations(self, position):
         self.animations = import_character_assets(self.animations_names, PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE / 32)
-        self.image = self.animations['idle'][self.frame_index]
-        self.rect = self.image.get_rect(topleft=position)
+        self.set_image(self.animations['idle'][self.frame_index])
+        self.set_rect(self.image.get_rect(topleft=position))
 
     def animate(self):  # Animate method
 
@@ -80,7 +92,7 @@ class PlayerAnimations():
         animation = self.animations[self.player.status.status]
 
         # Loop over frame index
-        self.frame_index += animation_speed
+        self.set_frame_index(self.frame_index + animation_speed)
         if self.frame_index >= len(animation):
             self.change_status(len(animation) - 1)
 
@@ -89,9 +101,9 @@ class PlayerAnimations():
 
     def change_status(self, new_index):
         if self.player.status.status == 'dead':
-            self.frame_index = new_index
+            self.set_frame_index(new_index)
         else:
-            self.frame_index = 0
+            self.set_frame_index(0)
         if self.player.status.status == 'attack':  # Is that attack animation?
             self.player.fighting.attack['attacking'] = False
             self.player.fighting.attack['hit'] = True
@@ -103,14 +115,16 @@ class PlayerAnimations():
 
     def flip_character(self, image):
         if self.player.status.facing_right:
-            self.image = image
-            self.rect.midbottom = self.player.movement.collision_rect.midbottom
-            self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+            self.set_image(image)
+            temp_rect = self.image.get_rect()
+            temp_rect.midbottom = self.player.movement.collision_rect.midbottom
+            self.set_rect(temp_rect)
         else:
             flipped_image = pygame.transform.flip(image, True, False)
-            self.image = flipped_image
-            self.rect.midbottom = self.player.movement.collision_rect.midbottom
-            self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
+            self.set_image(flipped_image)
+            temp_rect = self.image.get_rect()
+            temp_rect.midbottom = self.player.movement.collision_rect.midbottom
+            self.set_rect(temp_rect)
 
     def draw(self, surface, offset):
         pos = self.rect.topleft - offset
