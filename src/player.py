@@ -173,12 +173,37 @@ class PlayerMovement():
         self.on_ground = False
         self.on_left = False
         self.on_right = False
+    def set_direction(self, new_direction: pygame.math.Vector2) -> None:
+        self.direction = new_direction
+
+    def set_collision_rect(self, new_rect: pygame.Rect) -> None:
+        self.collision_rect = new_rect
+
+    def set_speed(self, new_speed: int) -> None:
+        self.speed = new_speed
+
+    def set_gravity(self, new_gravity: float) -> None:
+        self.gravity = new_gravity
+
+    def set_jump_speed(self, new_speed: float) -> None:
+        self.jump_speed = new_speed
+
+    def set_on_ground(self, new_value: bool) -> None:
+        self.on_ground = new_value
+
+    def set_on_left(self, new_value: bool) -> None:
+        self.on_left = new_value
+
+    def set_on_right(self, new_value: bool) -> None:
+        self.on_right = new_value
 
     def init_movement(self):
-        self.direction = pygame.math.Vector2(0, 0)
-        self.collision_rect = pygame.Rect(
+        self.set_direction(pygame.math.Vector2(0, 0))
+        self.set_collision_rect(
+            pygame.Rect(
             (self.player.animations.rect.centerx, self.player.animations.rect.top - PLAYER_SIZE[0] / 2),
             PLAYER_SIZE
+            )
         )
 
     def get_input(self):
