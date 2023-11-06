@@ -292,6 +292,8 @@ class PlayerStatus():
         self.just_jumped = False
         self.can_use_object = [False, None]
 
+    def set_status(self, new_status: str) -> None:
+        self.status = new_status
     def set_facing(self, new_facing: bool) -> None:
         self.facing_right = new_facing
 
@@ -386,6 +388,12 @@ class PlayerAttack():
         self.sword_attack = sword_attack
         self.arch_attack = arch_attack
 
+    def change_attack_status(self, key: str, new_value) -> None:
+        self.attack[key] = new_value
+
+    def change_arch_status(self, key: str, new_value) -> None:
+        self.arch[key] = new_value
+
     def reset_attack_properties(self):
         self.attack = {
             'speed': PLAYER_ATTACK_SPEED,
@@ -451,6 +459,16 @@ class PlayerDefense():
             'start': 0,
             'cooldown': PLAYER_SHIELD_COOLDOWN
         }
+
+    def set_hurt_status(self, new_status: bool) -> None:
+        self.just_hurt = new_status
+
+    def set_hurt_time(self, new_value: int) -> None:
+        self.just_hurt_time = new_value
+
+    def set_armor_ratio(self, new_ratio: float) -> None:
+        self.armor_ratio = new_ratio
+
     def check_shield_cooldown(self):
         if not self.shield['able']:
             if (pygame.time.get_ticks() - self.shield['start']) > self.shield['cooldown']:
@@ -460,16 +478,18 @@ class PlayerDefense():
     def check_if_hurt(self):
         if self.just_hurt and not self.player.fighting.attack['attacking'] and \
                 not self.player.fighting.arch['attacking'] and not self.shield['shielding']:
-            self.player.status.status = 'hit'
+            self.player.status.set_status('hit')
             if pygame.time.get_ticks() - self.just_hurt_time > PLAYER_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
     def kill(self) -> None:
         self.player.properties.dead['status'] = True
         self.player.properties.dead['time'] = pygame.time.get_ticks()
-        self.player.animations.frame_index = 0
-        self.player.movement.direction.x = 0
-        self.player.status.status = 'dead'
+        self.player.animations.set_frame_index(0)
+        temp_direction = self.player.movement.direction
+        temp_direction.x = 0
+        self.player.movement.set_direction(temp_direction)
+        self.player.status.set_status('dead')
 
     def hurt(self, damage) -> bool:
         self.just_hurt = True
