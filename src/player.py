@@ -1,4 +1,5 @@
 import pygame
+from typing import Any
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
@@ -105,13 +106,13 @@ class PlayerAnimations():
         else:
             self.set_frame_index(0)
         if self.player.status.status == 'attack':  # Is that attack animation?
-            self.player.fighting.attack['attacking'] = False
-            self.player.fighting.attack['hit'] = True
+            self.player.fighting.change_attack_status('attacking', False)
+            self.player.fighting.change_attack_status('hit', True)
         if self.player.status.status == 'arch':  # Is that attack animation?
-            self.player.fighting.arch['finish'] = True
+            self.player.fighting.change_arch_status('finish', True)
         if self.player.status.status == 'shield':  # Is that shield animation?
-            self.player.defense.shield['shielding'] = False
-        self.player.status.status = 'idle'
+            self.player.defense.change_shield_status('shielding', False)
+        self.player.status.set_status('idle')
 
     def flip_character(self, image):
         if self.player.status.facing_right:
@@ -220,10 +221,10 @@ class PlayerMovement():
     def input_movement(self, keys):
         if keys[pygame.K_RIGHT] and self.not_in_fight():
             self.direction.x = 1
-            self.player.status.facing_right = True
+            self.player.status.set_facing(True)
         elif keys[pygame.K_LEFT] and self.not_in_fight():
             self.direction.x = -1
-            self.player.status.facing_right = False
+            self.player.status.set_facing(False)
         else:
             self.direction.x = 0
 
@@ -233,9 +234,9 @@ class PlayerMovement():
                 not self.player.status.just_jumped and \
                 self.not_in_fight():
             self.player.movement.jump()
-            self.player.status.just_jumped = True
+            self.player.status.set_jumped_status(True)
         if not keys[pygame.K_SPACE]: # Player isn't jumping anymore
-            self.player.status.just_jumped = False
+            self.player.status.set_jumped_status(False)
 
     def input_fighting(self, keys):
         if keys[pygame.K_d] and \
@@ -246,9 +247,9 @@ class PlayerMovement():
                 self.not_in_fight() and \
                 self.player.defense.shield['able'] and \
                 not self.player.defense.just_hurt: # Player use SHIELD
-            self.player.defense.shield['shielding'] = True
-            self.player.defense.shield['able'] = False
-            self.player.defense.shield['start'] = pygame.time.get_ticks()
+            self.player.defense.change_shield_status('shielding', True)
+            self.player.defense.change_shield_status('able', False)
+            self.player.defense.change_shield_status('start', pygame.time.get_ticks())
         if keys[pygame.K_a] and \
                 self.not_in_fight() and \
                 self.player.fighting.attack['able']: # Player shot arrow
@@ -300,7 +301,7 @@ class PlayerStatus():
     def set_jumped_status(self, new_status: bool) -> None:
         self.just_jumped = new_status
 
-    def set_object_usable(self, can_use: list) -> None:
+    def set_object_usable(self, can_use: list[bool, Any]) -> None:
         self.can_use_object = can_use
 
     def reset_status(self):
@@ -388,10 +389,10 @@ class PlayerAttack():
         self.sword_attack = sword_attack
         self.arch_attack = arch_attack
 
-    def change_attack_status(self, key: str, new_value) -> None:
+    def change_attack_status(self, key: str, new_value: Any) -> None:
         self.attack[key] = new_value
 
-    def change_arch_status(self, key: str, new_value) -> None:
+    def change_arch_status(self, key: str, new_value: Any) -> None:
         self.arch[key] = new_value
 
     def reset_attack_properties(self):
@@ -469,6 +470,9 @@ class PlayerDefense():
     def set_armor_ratio(self, new_ratio: float) -> None:
         self.armor_ratio = new_ratio
 
+    def change_shield_status(self, key: str, value: Any) -> None:
+        self.shield[key] = value
+
     def check_shield_cooldown(self):
         if not self.shield['able']:
             if (pygame.time.get_ticks() - self.shield['start']) > self.shield['cooldown']:
@@ -483,8 +487,8 @@ class PlayerDefense():
                 self.just_hurt = False
 
     def kill(self) -> None:
-        self.player.properties.dead['status'] = True
-        self.player.properties.dead['time'] = pygame.time.get_ticks()
+        self.player.properties.set_dead('status', True)
+        self.player.properties.set_dead('time', pygame.time.get_ticks())
         self.player.animations.set_frame_index(0)
         temp_direction = self.player.movement.direction
         temp_direction.x = 0
@@ -494,7 +498,8 @@ class PlayerDefense():
     def hurt(self, damage) -> bool:
         self.just_hurt = True
         self.just_hurt_time = pygame.time.get_ticks()
-        self.player.properties.health['current'] -= damage * self.armor_ratio
+        current_hp = self.player.properties.health['current']
+        self.player.properties.set_health('current', current_hp - damage * self.armor_ratio)
         if self.player.properties.health['current'] <= 0:  # Death
             self.kill()
             return True
@@ -517,6 +522,18 @@ class PlayerProperties():
             'status': False,
             'time': 0
         }
+
+    def set_health(self, key: str, value: int) -> None:
+        self.health[key] = value
+
+    def set_level(self, new_level: int) -> None:
+        self.player_level = new_level
+
+    def set_experience(self, key: str, value: Any) -> None:
+        self.experience[key] = value
+
+    def set_dead(self, key: str, value: Any):
+        self.dead[key] = value
 
     def reset_properties(self):
         self.health = {
