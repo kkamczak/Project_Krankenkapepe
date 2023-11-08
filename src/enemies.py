@@ -74,26 +74,31 @@ class EnemyDefense():
                 self.just_hurt = False
 
     def kill(self) -> None:
-        self.enemy.properties.dead['status'] = True
-        self.enemy.properties.dead['time'] = pygame.time.get_ticks()
-        self.enemy.animations.frame_index = 0
-        self.enemy.movement.direction.x = 0
-        self.enemy.status.status = 'dead'
+        self.enemy.properties.set_dead('status', True)
+        self.enemy.properties.set_dead('time', pygame.time.get_ticks())
+        self.enemy.animations.set_frame_index(0)
+        temp_direction = self.enemy.movement.direction
+        temp_direction.x = 0
+        self.enemy.movement.set_direction(temp_direction)
+        self.enemy.status.set_status('dead')
+
 
     def hurt(self, damage) -> bool:
         self.just_hurt = True
         self.just_hurt_time = pygame.time.get_ticks()
-        self.enemy.properties.health['current'] -= damage * self.armor_ratio
+        current_hp = self.enemy.properties.health['current']
+        self.enemy.properties.set_health('current', current_hp - damage * self.armor_ratio)
         if self.enemy.properties.health['current'] <= 0:  # Death
             self.kill()
             return True
         return False
 
     def reset_stun(self):
-        self.enemy.status.status = 'run'
-        self.enemy.fighting.combat['stunned'] = False
-        self.enemy.defense.armor_ratio = 1
+        self.enemy.status.set_status('run')
+        self.enemy.fighting.change_combat_status('stunned', False)
+        self.armor_ratio = 1
         self.enemy.fighting.combat_reset()
+
 
 class EnemyProperties():
     def __init__(self, enemy):
@@ -137,6 +142,18 @@ class EnemyAnimations():
         self.animation_speed = 0
         self.image = None
         self.rect = None
+
+    def set_image(self, new_image: pygame.image) -> None:
+        self.image = new_image
+
+    def set_rect(self, new_rect: pygame.Rect) -> None:
+        self.rect = new_rect
+
+    def set_frame_index(self, new_index: int) -> None:
+        self.frame_index = new_index
+
+    def set_animation_speed(self, new_speed: float) -> None:
+        self.animation_speed = new_speed
 
     def load_animations(self, position):
         type = self.enemy.status.type
@@ -196,8 +213,7 @@ class EnemyAnimations():
 
     def animate_dead(self):
         if self.enemy.status.status == 'dead' and self.enemy.properties.dead['status']:
-            self.enemy.movement.direction.x = 0
-            self.enemy.movement.direction.y = 0
+            self.enemy.movement.set_direction(pygame.math.Vector2(0, 0))
             animation_speed = 0.15
 
             animation = self.animations['dead']
@@ -276,6 +292,33 @@ class EnemyMovement():
         self.speed = ENEMY_SPEED[self.enemy.status.type]
         self.gravity = ENEMY_GRAVITY
 
+    def set_collision_rect(self, new_rect: pygame.Rect) -> None:
+        self.collision_rect = new_rect
+
+    def set_position(self, key: str, value: int) -> None:
+        self.position[key] = value
+
+    def set_jump_speed(self, new_speed: float) -> None:
+        self.jump_speed = new_speed
+
+    def set_on_right(self, new_value: bool) -> None:
+        self.on_right = new_value
+
+    def set_on_left(self, new_value: bool) -> None:
+        self.on_left = new_value
+
+    def set_on_ground(self, new_value: bool) -> None:
+        self.on_ground = new_value
+
+    def set_direction(self, new_direction: pygame.math.Vector2) -> None:
+        self.direction = new_direction
+
+    def set_speed(self, new_speed: int) -> None:
+        self.speed = new_speed
+
+    def set_gravity(self, new_gravity: float) -> None:
+        self.gravity = new_gravity
+
     def init_movement(self):
         self.collision_rect = pygame.Rect(
             (self.enemy.animations.rect.centerx,
@@ -300,18 +343,18 @@ class EnemyMovement():
             delta = self.position['current'] - self.position['start']
             if abs(self.position['current'] - self.position['start']) > self.position['max']:
                 if self.enemy.status.facing_right and delta > 0:
-                    self.enemy.status.facing_right = False
+                    self.enemy.status.set_facing(False)
                 elif not self.enemy.status.facing_right and delta < 0:
-                    self.enemy.status.facing_right = True
+                    self.enemy.status.set_facing(True)
             if self.enemy.status.facing_right:
                 self.direction.x = 1
             else:
                 self.direction.x = -1
             if self.on_right:
-                self.enemy.status.facing_right = False
+                self.enemy.status.set_facing(False)
                 self.on_right = False
             if self.on_left:
-                self.enemy.status.facing_right = True
+                self.enemy.status.set_facing(True)
                 self.on_left = False
 
     def apply_gravity(self):
@@ -343,6 +386,12 @@ class EnemyFighting():
             'stunned': False
         }
 
+    def change_attack_status(self, key: str, new_value: Any) -> None:
+        self.attack[key] = new_value
+
+    def change_combat_status(self, key: str, new_value: Any) -> None:
+        self.combat[key] = new_value
+
     def check_for_combat(self, player):
         rect = self.enemy.movement.collision_rect
         is_close = abs(rect.centerx - player.movement.collision_rect.centerx) < self.combat['range'] \
@@ -352,21 +401,25 @@ class EnemyFighting():
         if is_close_to_attack and not self.combat['on'] and not player.properties.dead['status']:
             self.combat['on'] = True
             self.combat['start'] = pygame.time.get_ticks()
-            self.enemy.status.status = 'idle'
-            self.enemy.movement.direction.x = 0
+            self.enemy.status.set_status('idle')
+            temp_dir = self.enemy.movement.direction
+            temp_dir.x = 0
+            self.enemy.movement.set_direction(temp_dir)
             if rect.centerx > player.movement.collision_rect.centerx:
-                self.enemy.status.facing_right = False
+                self.enemy.status.set_facing(False)
             else:
-                self.enemy.status.facing_right = True
+                self.enemy.status.set_facing(True)
 
         if is_close and not is_close_to_attack and not self.attack['attacking'] and not player.properties.dead['status']:
             self.combat['trigger'] = True
+            temp_dir = self.enemy.movement.direction
             if rect.centerx > player.movement.collision_rect.centerx:
-                self.enemy.status.facing_right = False
-                self.enemy.movement.direction.x = -1
+                self.enemy.status.set_facing(False)
+                temp_dir.x = -1
             else:
-                self.enemy.status.facing_right = True
-                self.enemy.movement.direction.x = 1
+                self.enemy.status.set_facing(True)
+                temp_dir.x = 1
+            self.enemy.movement.set_direction(temp_dir)
         else:
             self.combat['trigger'] = False
 
@@ -386,19 +439,19 @@ class EnemyFighting():
         self.attack['able'] = True
         self.combat['on'] = False
         self.combat['trigger'] = False
-        self.enemy.status.status = 'run'
+        self.enemy.status.set_status('run')
 
     def do_attack(self, player_pos):
-        self.enemy.status.status = 'attack'
+        self.enemy.status.set_status('attack')
         self.attack['attacking'] = True
-        self.enemy.animations.frame_index = 0
+        self.enemy.animations.set_frame_index(0)
 
     def reset_attack(self):
-        self.enemy.animations.frame_index = 0
+        self.enemy.animations.set_frame_index(0)
         self.attack['able'] = True
         self.combat['on'] = False
         self.attack['attacking'] = False
-        self.enemy.status.status = 'run'
+        self.enemy.status.set_status('run')
 
 
 class EnemyFightingThunder(EnemyFighting):
@@ -412,7 +465,8 @@ class EnemyFightingThunder(EnemyFighting):
                 'enemy', self.enemy.status.id, player_pos,
                 self.enemy.fighting.attack['damage'] * 10, self.enemy.fighting.attack['able']
             )
-            self.enemy.thunder['time'] = pygame.time.get_ticks()
+            self.enemy.set_thunder('time', pygame.time.get_ticks())
+
 
 class Sceleton(Enemy):
     def __init__(self, enemy_id, pos, sword_attack):
@@ -424,8 +478,8 @@ class Sceleton(Enemy):
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
             self.sword_attack(self)
-            self.fighting.attack['able'] = False
-            self.fighting.attack['finish'] = False
+            self.fighting.change_attack_status('able', False)
+            self.fighting.change_attack_status('finish', False)
 
     def update(self):
         super().update()
@@ -445,8 +499,8 @@ class Ninja(Enemy):
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
             self.arch_attack('arrow', self)
-            self.fighting.attack['able'] = False
-            self.fighting.attack['finish'] = False
+            self.fighting.change_attack_status('able', False)
+            self.fighting.change_attack_status('finish', False)
 
     def update(self):
         super().update()
@@ -469,11 +523,14 @@ class Wizard(Enemy):
 
         self.fighting = EnemyFightingThunder(self)
 
+    def set_thunder(self, key: str, value: int) -> None:
+        self.thunder[key] = value
+
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
             self.arch_attack('death_bullet', self)
-            self.fighting.attack['able'] = False
-            self.fighting.attack['finish'] = False
+            self.fighting.change_attack_status('able', False)
+            self.fighting.change_attack_status('finish', False)
 
     def update(self):
         super().update()
@@ -493,8 +550,8 @@ class DarkKnight(Enemy):
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
             self.sword_attack(self)
-            self.fighting.attack['able'] = False
-            self.fighting.attack['finish'] = False
+            self.fighting.change_attack_status('able', False)
+            self.fighting.change_attack_status('finish', False)
 
     def update(self):
         super().update()
