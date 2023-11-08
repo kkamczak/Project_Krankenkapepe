@@ -1,5 +1,6 @@
 import random
 import pygame
+from typing import Any
 from settings import GREY, RED, ENEMY_IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, \
     SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, ENEMY_ANIMATION_SPEED, ENEMY_SIZE, ENEMY_HEALTH, ENEMY_ATTACK_SPEED, \
@@ -20,7 +21,7 @@ class Enemy(pygame.sprite.Sprite):
         self.fighting = EnemyFighting(self)
 
         self.status.reset_status()
-        self.properties.reset_properies()
+        self.properties.reset_properties()
         self.animations.load_animations(pos)
         self.movement.init_movement()
 
@@ -57,6 +58,15 @@ class EnemyDefense():
         self.just_hurt = False
         self.just_hurt_time = 0
         self.armor_ratio = 1
+
+    def set_hurt_status(self, new_status: bool) -> None:
+        self.just_hurt = new_status
+
+    def set_hurt_time(self, time: int) -> None:
+        self.just_hurt_time = time
+
+    def set_armor_ratio(self, new_ratio: float) -> None:
+        self.armor_ratio = new_ratio
 
     def check_if_hurt(self):
         if self.just_hurt:
@@ -99,7 +109,17 @@ class EnemyProperties():
             'status': False,
             'time': 0
         }
-    def reset_properies(self):
+
+    def set_health(self, key: str, value: int) -> None:
+        self.health[key] = value
+
+    def set_experience(self, key: str, value: Any) -> None:
+        self.experience[key] = value
+
+    def set_dead(self, key: str, value: Any):
+        self.dead[key] = value
+
+    def reset_properties(self):
         self.health = {
             'current': ENEMY_HEALTH[self.enemy.status.type],
             'max': ENEMY_HEALTH[self.enemy.status.type]
