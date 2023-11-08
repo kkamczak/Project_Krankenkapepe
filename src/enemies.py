@@ -39,6 +39,12 @@ class EnemyStatus():
         self.status = 'idle'
         self.facing_right = True
 
+    def set_status(self, new_status: str) -> None:
+        self.status = new_status
+
+    def set_facing(self, facing: bool) -> None:
+        self.facing_right = facing
+
     def reset_status(self):
         self.status = 'run'
         self.facing_right = random.choice([True, False])
