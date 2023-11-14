@@ -3,8 +3,9 @@ from typing import Any
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
-    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE
-from support import draw_text, import_character_assets
+    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE, FPS, \
+    PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN
+from support import draw_text, import_character_assets, calculate_animation_speed
 from ui import UI
 from items import create_items
 from equipment import Equipment
@@ -80,18 +81,23 @@ class PlayerAnimations():
         self.set_rect(self.image.get_rect(topleft=position))
 
     def animate(self):  # Animate method
+        animation = self.animations[self.player.status.status]
 
         if self.player.status.status == 'dead':
             animation_speed = PLAYER_DEATH_ANIMATION_SPEED
         elif self.player.status.status == 'attack':
             animation_speed = self.player.fighting.attack['speed']
+        elif self.player.status.status == 'arch':
+            animation_speed = calculate_animation_speed(
+                FPS,
+                len(animation),
+                self.player.fighting.arch['cooldown']
+            )
         elif self.player.status.status == 'shield':
             animation_speed = self.animation_speed
         else:
             animation_speed = self.animation_speed
-
-        animation = self.animations[self.player.status.status]
-
+        print('PIES', animation_speed)
         # Loop over frame index
         self.set_frame_index(self.frame_index + animation_speed)
         if self.frame_index >= len(animation):
@@ -108,8 +114,6 @@ class PlayerAnimations():
         if self.player.status.status == 'attack':  # Is that attack animation?
             self.player.fighting.change_attack_status('attacking', False)
             self.player.fighting.change_attack_status('hit', True)
-        if self.player.status.status == 'arch':  # Is that attack animation?
-            self.player.fighting.change_arch_status('finish', True)
         if self.player.status.status == 'shield':  # Is that shield animation?
             self.player.defense.change_shield_status('shielding', False)
         self.player.status.set_status('idle')
@@ -158,7 +162,7 @@ class PlayerAnimations():
             draw_text(surface, 'arch_attacking= ' + str(self.player.fighting.arch['attacking']),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
                       self.rect.bottom + SHOW_STATUS_SPACE * 5 - offset[1])
-            draw_text(surface, 'sword_hit= ' + str(self.player.fighting.attack['hit']),
+            draw_text(surface, 'arch_able= ' + str(self.player.fighting.arch['able']),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
                       self.rect.bottom + SHOW_STATUS_SPACE * 7 - offset[1])
 
@@ -252,7 +256,7 @@ class PlayerMovement():
             self.player.defense.change_shield_status('start', pygame.time.get_ticks())
         if keys[pygame.K_a] and \
                 self.not_in_fight() and \
-                self.player.fighting.attack['able']: # Player shot arrow
+                self.player.fighting.arch['able']: # Player shot arrow
             self.player.fighting.arch_start_attack()
 
     def input_equipment(self, keys):
@@ -377,12 +381,11 @@ class PlayerAttack():
         }
 
         self.arch = {
-            'speed': PLAYER_ATTACK_SPEED,
+            'range': PLAYER_ARCH_RANGE,
             'attacking': False,
             'start': 0,
-            'cooldown': PLAYER_SWORD_COOLDOWN,
+            'cooldown': PLAYER_ARCH_COOLDOWN,
             'able': True,
-            'finish': False,
             'damage': 60
         }
 
@@ -408,12 +411,11 @@ class PlayerAttack():
             'size': PLAYER_ATTACK_SIZE
         }
         self.arch = {
-            'speed': PLAYER_ATTACK_SPEED,
+            'range': PLAYER_ARCH_RANGE,
             'attacking': False,
             'start': 0,
-            'cooldown': PLAYER_SWORD_COOLDOWN,
+            'cooldown': PLAYER_ARCH_COOLDOWN,
             'able': True,
-            'finish': False,
             'damage': 60
         }
 
@@ -426,6 +428,7 @@ class PlayerAttack():
     def arch_start_attack(self):
         self.arch['start'] = pygame.time.get_ticks()
         self.arch['attacking'] = True
+        self.arch['able'] = False
 
     def check_sword_attack_cooldown(self):
         if not self.attack['able']:
@@ -434,15 +437,11 @@ class PlayerAttack():
                 self.attack['attacking'] = False
 
     def check_arch_attack_cooldown(self):
-        if not self.arch['able']:
-            if (pygame.time.get_ticks() - self.arch['start']) > self.arch['cooldown']:
-                self.arch['able'] = True
-                self.arch['attacking'] = False
-        if self.arch['finish']:
+        if self.arch['attacking'] and \
+                (pygame.time.get_ticks() - self.arch['start']) > self.arch['cooldown']:
             self.arch_attack('arrow', self.player)
-            self.arch['able'] = False
+            self.arch['able'] = True
             self.arch['attacking'] = False
-            self.arch['finish'] = False
 
 
 class PlayerDefense():

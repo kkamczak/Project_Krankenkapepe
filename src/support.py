@@ -184,6 +184,25 @@ def create_bar(size, color):
     bar_surface.fill(color)
     return bar_surface
 
+def calculate_animation_speed(fps, length, cooldown) -> float:
+    """
+    Calculates the length of the animation depending
+    on the renewal time and the number of frames of the animation.
+
+    Args:
+    - fps: frames per second
+    - length: number of animation frames
+    - cooldown: cooldown of action
+
+    Returns:
+    - float: animation speed
+
+    """
+
+    temp = fps * (cooldown / length) * 1 / 1000
+    print('FPS', fps, 'cd', cooldown, 'length', length)
+    return (1 / temp)
+
 # Drawing function:
 def draw_text(surface, text, font, text_col, x_pos, y_pos):
     """

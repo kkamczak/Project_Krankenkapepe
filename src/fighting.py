@@ -318,12 +318,11 @@ class Fight_Manager():
         else:
             attack = character.fighting.attack
         rect = character.movement.collision_rect
-        if attack['able']:
+        if attack['able'] or (character.status.type == 'player' and attack['attacking']):
             if character.status.facing_right:
                 position = (rect.right, rect.top + rect.height / 3)
             else:
                 position = (rect.left + 20, rect.top + rect.height / 3)
-
             bullet = Bullet(
                 kind, position, attack['damage'],
                 character.status.type, character.status.id,
