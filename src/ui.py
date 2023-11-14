@@ -77,11 +77,16 @@ class UI:
         Returns:
             None
         """
-        ratio = (pygame.time.get_ticks() - attack_time) / attack_cooldown
-        cd_max = pygame.Surface((collision_rect.width - collision_rect.width * ratio, 5))
-        cd_max.fill(YELLOW)
+        pass
+        # ****************************************************************************
+        # THIS FUNCTION IS TEMPORARY DISABLED DUE TO CHANGING SWORD ATTACKING MECHANIC
+        # ****************************************************************************
 
-        surface.blit(cd_max, (collision_rect.left - offset.x, collision_rect.top - 15 - offset.y))
+        # ratio = (pygame.time.get_ticks() - attack_time) / attack_cooldown
+        # cd_max = pygame.Surface((collision_rect.width - collision_rect.width * ratio, 5))
+        # cd_max.fill(YELLOW)
+        #
+        # surface.blit(cd_max, (collision_rect.left - offset.x, collision_rect.top - 15 - offset.y))
 
     def show_skeleton_points(self, surface: pygame.surface.Surface) -> None:
         """

@@ -287,7 +287,7 @@ class Fight_Manager():
         """
         attack = character.fighting.attack
         rect = character.movement.collision_rect
-        if attack['able']:
+        if attack['able'] or (character.status.type == 'player' and attack['attacking']):
             if character.status.facing_right:
                 position = (
                     rect.centerx + attack['space'],

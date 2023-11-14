@@ -200,7 +200,6 @@ def calculate_animation_speed(fps, length, cooldown) -> float:
     """
 
     temp = fps * (cooldown / length) * 1 / 1000
-    print('FPS', fps, 'cd', cooldown, 'length', length)
     return (1 / temp)
 
 # Drawing function:
