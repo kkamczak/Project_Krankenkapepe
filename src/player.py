@@ -3,9 +3,10 @@ from typing import Any
 from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
-    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_ATTACK_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE, FPS, \
-    PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN, PLAYER_ARCH_DAMAGE, PLAYER_SWORD_DAMAGE
-from support import draw_text, import_character_assets, calculate_animation_speed
+    PLAYER_DEATH_ANIMATION_SPEED, PLAYER_SWORD_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE, FPS, \
+    PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN, PLAYER_ARCH_DAMAGE, PLAYER_SWORD_DAMAGE, PLAYER_SWORD_HIT_TIME, \
+    PLAYER_ARCH_SPEED
+from support import draw_text, import_character_assets, calculate_animation_speed, now
 from ui import UI
 from items import create_items
 from equipment import Equipment
@@ -42,13 +43,13 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         if not self.properties.dead['status']:
+            self.fighting.check_sword_attack_cooldown()
+            self.fighting.check_arch_attack_cooldown()
+            self.defense.check_shield_cooldown()
             self.movement.get_input()
             self.equipment.update()
             self.status.get_status()
             self.defense.check_if_hurt()
-            self.fighting.check_sword_attack_cooldown()
-            self.fighting.check_arch_attack_cooldown()
-            self.defense.check_shield_cooldown()
         self.animations.animate()
 
 
@@ -89,13 +90,13 @@ class PlayerAnimations():
             animation_speed = calculate_animation_speed(
                 FPS,
                 len(animation),
-                self.player.fighting.attack['cooldown']
+                self.player.fighting.attack['speed']
             )
         elif self.player.status.status == 'arch':
             animation_speed = calculate_animation_speed(
                 FPS,
                 len(animation),
-                self.player.fighting.arch['cooldown']
+                self.player.fighting.arch['speed']
             )
         elif self.player.status.status == 'shield':
             animation_speed = self.animation_speed
@@ -133,6 +134,7 @@ class PlayerAnimations():
             self.set_rect(temp_rect)
 
     def draw(self, surface, offset):
+        print('Index', self.frame_index, 'status', self.player.status.status)
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
         if self.player.status.can_use_object[0] is True:
@@ -246,7 +248,8 @@ class PlayerMovement():
     def input_fighting(self, keys):
         if keys[pygame.K_d] and \
                 self.not_in_fight() and \
-                self.player.fighting.attack['able']: # Player attack with sword
+                self.player.fighting.attack['able'] and \
+                now() - self.player.fighting.attack['end'] > self.player.fighting.attack['cooldown']:
             self.player.fighting.sword_start_attack()
         if keys[pygame.K_s] and \
                 self.not_in_fight() and \
@@ -257,7 +260,8 @@ class PlayerMovement():
             self.player.defense.change_shield_status('start', pygame.time.get_ticks())
         if keys[pygame.K_a] and \
                 self.not_in_fight() and \
-                self.player.fighting.arch['able']: # Player shot arrow
+                self.player.fighting.arch['able'] and \
+                now() - self.player.fighting.arch['end'] > self.player.fighting.arch['cooldown']:
             self.player.fighting.arch_start_attack()
 
     def input_equipment(self, keys):
@@ -328,6 +332,7 @@ class PlayerStatus():
         elif self.get_action() == 'sword':
             if self.status != 'attack':
                 self.player.animations.set_frame_index(0)
+            print('RObie to XD')
             self.status = 'attack'
         elif self.get_action() == 'arch':
             if self.status != 'arch':
@@ -370,9 +375,10 @@ class PlayerAttack():
     def __init__(self, player, sword_attack, arch_attack):
         self.player = player
         self.attack = {
-            'speed': PLAYER_ATTACK_SPEED,
+            'speed': PLAYER_SWORD_SPEED,
             'attacking': False,
             'start': 0,
+            'end': 0,
             'cooldown': PLAYER_SWORD_COOLDOWN,
             'able': True,
             'hit': False,
@@ -382,9 +388,11 @@ class PlayerAttack():
         }
 
         self.arch = {
+            'speed': PLAYER_ARCH_SPEED,
             'range': PLAYER_ARCH_RANGE,
             'attacking': False,
             'start': 0,
+            'end': 0,
             'cooldown': PLAYER_ARCH_COOLDOWN,
             'able': True,
             'damage': PLAYER_ARCH_DAMAGE
@@ -401,9 +409,10 @@ class PlayerAttack():
 
     def reset_attack_properties(self):
         self.attack = {
-            'speed': PLAYER_ATTACK_SPEED,
+            'speed': PLAYER_SWORD_SPEED,
             'attacking': False,
             'start': 0,
+            'end': 0,
             'cooldown': PLAYER_SWORD_COOLDOWN,
             'able': True,
             'hit': False,
@@ -412,38 +421,46 @@ class PlayerAttack():
             'size': PLAYER_ATTACK_SIZE
         }
         self.arch = {
+            'speed': PLAYER_ARCH_SPEED,
             'range': PLAYER_ARCH_RANGE,
             'attacking': False,
             'start': 0,
+            'end': 0,
             'cooldown': PLAYER_ARCH_COOLDOWN,
             'able': True,
             'damage': PLAYER_ARCH_DAMAGE
         }
 
     def sword_start_attack(self):
-        self.attack['start'] = pygame.time.get_ticks()
+        self.attack['start'] = now()
         self.attack['attacking'] = True
         self.attack['able'] = False
 
     def arch_start_attack(self):
-        self.arch['start'] = pygame.time.get_ticks()
+        self.arch['start'] = now()
         self.arch['attacking'] = True
         self.arch['able'] = False
 
     def check_sword_attack_cooldown(self):
         if self.attack['attacking'] and \
-                (pygame.time.get_ticks() - self.attack['start']) > self.attack['cooldown']:
-            self.sword_attack(self.player)
-            self.attack['able'] = True
-            self.attack['attacking'] = False
+                (now() - self.attack['start']) > PLAYER_SWORD_HIT_TIME * self.attack['speed']:
+            if not self.attack['hit']:
+                self.sword_attack(self.player)
+                self.attack['hit'] = True
+            if (now() - self.attack['start']) > self.attack['speed']:
+                self.attack['able'] = True
+                self.attack['attacking'] = False
+                self.attack['hit'] = False
+                self.attack['end'] = now()
 
 
     def check_arch_attack_cooldown(self):
         if self.arch['attacking'] and \
-                (pygame.time.get_ticks() - self.arch['start']) > self.arch['cooldown']:
+                (now() - self.arch['start']) > self.arch['speed']:
             self.arch_attack('arrow', self.player)
             self.arch['able'] = True
             self.arch['attacking'] = False
+            self.arch['end'] = now()
 
 
 class PlayerDefense():
@@ -476,7 +493,7 @@ class PlayerDefense():
 
     def check_shield_cooldown(self):
         if not self.shield['able']:
-            if (pygame.time.get_ticks() - self.shield['start']) > self.shield['cooldown']:
+            if (now() - self.shield['start']) > self.shield['cooldown']:
                 self.shield['able'] = True
                 self.shield['shielding'] = False
 
@@ -484,7 +501,7 @@ class PlayerDefense():
         if self.just_hurt and not self.player.fighting.attack['attacking'] and \
                 not self.player.fighting.arch['attacking'] and not self.shield['shielding']:
             self.player.status.set_status('hit')
-            if pygame.time.get_ticks() - self.just_hurt_time > PLAYER_IMMUNITY_FROM_HIT:
+            if now() - self.just_hurt_time > PLAYER_IMMUNITY_FROM_HIT:
                 self.just_hurt = False
 
     def kill(self) -> None:

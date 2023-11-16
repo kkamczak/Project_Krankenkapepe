@@ -5,7 +5,7 @@ including health bars, cooldowns, equipment, and more.
 It provides methods to display and update these UI elements during gameplay.
 """
 import pygame
-from support import create_bar, draw_text, import_image, scale_image
+from support import create_bar, draw_text, import_image, scale_image, now
 from settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT, UI_ACTIVE_EQUIPMENT_POSITION, \
     UI_FRAME_SIZE, UI_FRAME_FONT, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION
 
@@ -81,12 +81,12 @@ class UI:
         # ****************************************************************************
         # THIS FUNCTION IS TEMPORARY DISABLED DUE TO CHANGING SWORD ATTACKING MECHANIC
         # ****************************************************************************
+        ratio = (now() - attack_time) / attack_cooldown
+        if ratio < 1:
+            cd_max = pygame.Surface((collision_rect.width - collision_rect.width * ratio, 5))
+            cd_max.fill(YELLOW)
 
-        # ratio = (pygame.time.get_ticks() - attack_time) / attack_cooldown
-        # cd_max = pygame.Surface((collision_rect.width - collision_rect.width * ratio, 5))
-        # cd_max.fill(YELLOW)
-        #
-        # surface.blit(cd_max, (collision_rect.left - offset.x, collision_rect.top - 15 - offset.y))
+            surface.blit(cd_max, (collision_rect.left - offset.x, collision_rect.top - 15 - offset.y))
 
     def show_skeleton_points(self, surface: pygame.surface.Surface) -> None:
         """
@@ -228,10 +228,11 @@ class UI:
         )
 
         # Sword cooldown:
-        if not player.fighting.attack['able']:
+        #if not player.fighting.attack['attacking']:
+        if 0 < now() - player.fighting.attack['end'] < player.fighting.attack['cooldown']:
             self.show_attack_cooldown(
                 screen,
-                player.fighting.attack['start'],
+                player.fighting.attack['end'],
                 player.fighting.attack['cooldown'],
                 player.movement.collision_rect,
                 offset

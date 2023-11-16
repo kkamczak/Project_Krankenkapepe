@@ -184,7 +184,7 @@ def create_bar(size, color):
     bar_surface.fill(color)
     return bar_surface
 
-def calculate_animation_speed(fps, length, cooldown) -> float:
+def calculate_animation_speed(fps: int, length: int, cooldown: int) -> float:
     """
     Calculates the length of the animation depending
     on the renewal time and the number of frames of the animation.
@@ -196,11 +196,18 @@ def calculate_animation_speed(fps, length, cooldown) -> float:
 
     Returns:
     - float: animation speed
-
     """
 
-    temp = fps * (cooldown / length) * 1 / 1000
+    temp = fps * (cooldown * 1.1 / length) * 1 / 1000
     return (1 / temp)
+
+def now() -> int:
+    """
+
+    Returns:
+    - int: ticks
+    """
+    return pygame.time.get_ticks()
 
 # Drawing function:
 def draw_text(surface, text, font, text_col, x_pos, y_pos):
