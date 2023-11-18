@@ -7,7 +7,7 @@ It provides methods to display and update these UI elements during gameplay.
 import pygame
 from support import create_bar, draw_text, import_image, scale_image, now
 from settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT, UI_ACTIVE_EQUIPMENT_POSITION, \
-    UI_FRAME_SIZE, UI_FRAME_FONT, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION
+    UI_FRAME_SIZE, UI_FRAME_FONT, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION, UI_SKELETON_POINTS_SPACE
 
 
 class UI:
@@ -98,8 +98,8 @@ class UI:
         Returns:
             None
         """
-        x_pos = surface.get_width() - 120
-        y_pos = surface.get_height() - 50
+        x_pos = surface.get_width() - UI_SKELETON_POINTS_SPACE[0]
+        y_pos = surface.get_height() - UI_SKELETON_POINTS_SPACE[1]
         background = pygame.Surface((110, 45))
         background.fill(BLACK)
         background.set_alpha(180)

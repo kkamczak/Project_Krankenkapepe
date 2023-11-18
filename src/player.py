@@ -115,10 +115,11 @@ class PlayerAnimations():
         if self.player.status.status == 'dead':
             self.set_frame_index(new_index)
         else:
+            if self.player.status.status == 'shield':  # Is that shield animation?
+                self.player.defense.change_shield_status('shielding', False)
             self.set_frame_index(0)
-        if self.player.status.status == 'shield':  # Is that shield animation?
-            self.player.defense.change_shield_status('shielding', False)
-        self.player.status.set_status('idle')
+            self.player.status.set_status('idle')
+
 
     def flip_character(self, image):
         if self.player.status.facing_right:
@@ -134,7 +135,6 @@ class PlayerAnimations():
             self.set_rect(temp_rect)
 
     def draw(self, surface, offset):
-        print('Index', self.frame_index, 'status', self.player.status.status)
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
         if self.player.status.can_use_object[0] is True:
@@ -332,7 +332,6 @@ class PlayerStatus():
         elif self.get_action() == 'sword':
             if self.status != 'attack':
                 self.player.animations.set_frame_index(0)
-            print('RObie to XD')
             self.status = 'attack'
         elif self.get_action() == 'arch':
             if self.status != 'arch':

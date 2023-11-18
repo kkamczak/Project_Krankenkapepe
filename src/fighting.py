@@ -14,6 +14,7 @@ Classes:
 import pygame
 from settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, BULLET_DEFAULT_SPEED, \
     SCREEN_HEIGHT, ENEMY_ATTACK_SIZE
+from support import now
 
 class Hit(pygame.sprite.Sprite):
     """
@@ -98,29 +99,29 @@ class Bullet(pygame.sprite.Sprite):
             on the provided surface with the given offset.
 
     """
-    def __init__(self, kind, pos, damage, source, source_id, facing_right):
+    #def __init__(self, kind, pos, damage, source, source_id, facing_right):
+    def __init__(self, kind, position, source):
         """
         Initialize a ranged attack projectile.
-
-        Args:
-            kind (str): The type of projectile (e.g., 'arrow' or 'bullet').
-            pos (tuple): The starting position of the projectile.
-            damage (int): The amount of damage the projectile deals.
-            source (str): The source of the projectile (e.g., 'player' or 'enemy').
-            source_id (int): The unique identifier of the source.
-            facing_right (bool): Indicates the direction of the projectile.
         """
         super().__init__()
-
+        """
+        bullet = Bullet(
+            kind, position, attack['damage'],
+            character.status.type, character.status.id,
+            character.status.facing_right
+        )
+        """
         self.kind = kind
-        self.source = source
-        self.source_id = source_id
+        self.source = source.status.type
+        self.source_id = source.status.id
 
         self.image = pygame.image.load(f'content/graphics/weapons/{self.kind}.png').convert_alpha()
-        self.rect = self.image.get_rect(topleft=pos)
-        self.collision_rect = pygame.Rect((pos), (5, 5))
+        self.rect = self.image.get_rect(topleft=position)
+        self.start_rect = self.rect
+        self.collision_rect = pygame.Rect((position), (5, 5))
 
-        self.facing_right = facing_right
+        self.facing_right = source.status.facing_right
 
         if not self.facing_right:
             self.direction = pygame.math.Vector2(-1, 0)
@@ -129,12 +130,19 @@ class Bullet(pygame.sprite.Sprite):
             flipped_image = pygame.transform.flip(self.image, True, False)
             self.image = flipped_image
 
+
         self.speed = BULLET_DEFAULT_SPEED[self.kind]
 
         self.attack_time = pygame.time.get_ticks()
         self.attack_duration = 1500
 
-        self.damage = damage
+        if self.source == 'player':
+            self.attack_range = source.fighting.arch['range']
+            self.damage = source.fighting.arch['damage']
+        else:
+            self.attack_range = source.fighting.attack['range']
+            self.damage = source.fighting.attack['damage']
+
         self.shielded = False
         self.character_collided = []
 
@@ -323,10 +331,10 @@ class Fight_Manager():
                 position = (rect.right, rect.top + rect.height / 3)
             else:
                 position = (rect.left + 20, rect.top + rect.height / 3)
+
+            #def __init__(self, kind, position, source):
             bullet = Bullet(
-                kind, position, attack['damage'],
-                character.status.type, character.status.id,
-                character.status.facing_right
+                kind, position, character
             )
             self.bullet_hits.add(bullet)
 
@@ -362,19 +370,21 @@ class Fight_Manager():
         self.sword_hits.update()
         for hit in self.sword_hits:
             hit.draw(surface, offset)
-            if pygame.time.get_ticks() - hit.attack_time > hit.attack_duration:
+            if now() - hit.attack_time > hit.attack_duration:
                 hit.kill()
 
         self.bullet_hits.update()
         for bullet in self.bullet_hits:
             bullet.draw(surface, offset)
-            if pygame.time.get_ticks() - bullet.attack_time > bullet.attack_duration:
+            # if now() - bullet.attack_time > bullet.attack_duration:
+            #     bullet.kill()
+            if bullet.rect.x - bullet.start_rect.x > bullet.attack_range:
                 bullet.kill()
 
         self.thunder_hits.update()
         for thunder in self.thunder_hits:
             thunder.draw(surface, offset)
-            if pygame.time.get_ticks() - thunder.attack_time > thunder.attack_duration and thunder.attack is True:
+            if now() - thunder.attack_time > thunder.attack_duration and thunder.attack is True:
                 thunder.kill()
 
     def check_damage(self, player, enemies):

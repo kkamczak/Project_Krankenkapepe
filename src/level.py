@@ -10,7 +10,7 @@ It provides essential functions for running the game loop
 and updating the game state during gameplay.
 """
 import pygame
-from support import import_csv_file, import_cut_graphics, scale_image
+from support import import_csv_file, import_cut_graphics, scale_image, import_image
 from game_data import levels
 from settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH, \
     TERRAIN_PATH, FIREPLACE_PATH, CHEST_PATH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY
@@ -20,6 +20,7 @@ from player import Player
 from enemies import Sceleton, Ninja, Wizard, DarkKnight
 from fighting import Fight_Manager
 from camera import Camera
+from animations import SoulAnimation
 
 
 class Level:
@@ -50,6 +51,13 @@ class Level:
 
         # Fighting:
         self.fight_manager = Fight_Manager()
+
+        # Background:
+        self.background = import_image('content/graphics/terrain/background.png')
+        self.background = scale_image(self.background, self.display_surface.get_size())
+
+        # Animations:
+        self.animations = []
 
         # Player import:
         player_layout = import_csv_file(level_data['player'])
@@ -183,6 +191,8 @@ class Level:
         """
         Run the game loop for the level.
         """
+        self.display_surface.blit(self.background, (0, 0))
+
         player = self.get_player()
         player_pos = player.movement.collision_rect.centerx
         # Fighting:
@@ -197,6 +207,16 @@ class Level:
             if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
                 sprite.update()
                 sprite.draw(self.display_surface, self.camera.offset)
+
+        # Animations:
+        print(self.animations)
+        for index, animation in enumerate(self.animations):
+            animation.update(self.camera.offset)
+            animation.draw(self.display_surface, self.camera.offset)
+            if animation.finish:
+                del animation
+                self.animations.pop(index)
+
         # Draw player -----------------------------------------------------------
         if not self.game_over:
             self.player.update()
@@ -226,6 +246,12 @@ class Level:
                 enemy.animations.draw(self.display_surface, self.camera.offset)
             if enemy.properties.dead['status'] and \
                     pygame.time.get_ticks() - enemy.properties.dead['time'] > ENEMY_DEATH_LATENCY:
+                soul_animation = SoulAnimation(
+                    enemy.animations.rect.center,
+                    'soul',
+                    self.display_surface.get_size()
+                )
+                self.animations.append(soul_animation)
                 enemy.kill()
         # Show UI -----------------------------------------------------------
         if not player.properties.dead['status']:
