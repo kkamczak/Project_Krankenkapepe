@@ -6,6 +6,7 @@ class Item:
     def __init__(self, item_id, name, kind, owner, price, active):
         self.item_id = item_id
         self.name = name
+        self.text = 'Default'
         self.kind = kind
         self.owner = owner
         self.price = price
@@ -22,6 +23,7 @@ class Sword(Item):
         self.rect = self.image.get_rect()
 
         # Properties:
+        self.text = 'Obrażenia'
         self.damage = damage
 
 class Bow(Item):
@@ -34,6 +36,7 @@ class Bow(Item):
         self.rect = self.image.get_rect()
 
         # Properties:
+        self.text = 'Obrażenia'
         self.damage = damage
 
 class Shield(Item):
@@ -46,6 +49,7 @@ class Shield(Item):
         self.rect = self.image.get_rect()
 
         # Properties:
+        self.text = 'Pancerz'
         self.damage = damage
 
 class Potion(Item):
@@ -58,6 +62,7 @@ class Potion(Item):
         self.rect = self.image.get_rect()
 
         # Properties:
+        self.text = 'Punkty życia'
         self.damage = damage
 
 def create_items(list) -> list:

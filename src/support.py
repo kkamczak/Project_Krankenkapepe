@@ -52,6 +52,7 @@ def import_csv_file(path):
             terrain_map.append(list(row))
         return terrain_map
 
+
 def import_cut_graphics(path: str, size: tuple[int, int]) -> list:
     """
     Loads an image, divides it into tiles, and returns a list of surfaces.
@@ -82,6 +83,7 @@ def import_cut_graphics(path: str, size: tuple[int, int]) -> list:
 
     return cut_tiles
 
+
 def import_character_assets(animations, path,
                             scale: float = SCALE, flip: bool = False) -> dict:
     """
@@ -101,6 +103,7 @@ def import_character_assets(animations, path,
         animations[animation] = import_folder(full_path, scale, flip)
 
     return animations
+
 
 def import_folder(path: str, scale: float = SCALE, flip: bool = False):
     """
@@ -131,6 +134,7 @@ def import_folder(path: str, scale: float = SCALE, flip: bool = False):
 
     return surface_list
 
+
 def get_new_image_size_scale(width: int, new_width: int) -> float:
     """
     Calculates the scale factor for resizing images.
@@ -144,6 +148,7 @@ def get_new_image_size_scale(width: int, new_width: int) -> float:
     """
     return new_width / width
 
+
 def import_image(path: str) -> pygame.surface.Surface:
     """
     Imports an image file as a Pygame surface.
@@ -155,6 +160,7 @@ def import_image(path: str) -> pygame.surface.Surface:
     - pygame.surface.Surface: The loaded image as a Pygame surface.
     """
     return pygame.image.load(path).convert_alpha()
+
 
 def scale_image(image: pygame.surface.Surface, size: tuple[int, int]) -> pygame.surface.Surface:
     """
@@ -168,6 +174,7 @@ def scale_image(image: pygame.surface.Surface, size: tuple[int, int]) -> pygame.
     - pygame.surface.Surface: The resized Pygame surface.
     """
     return pygame.transform.scale(image, size)
+
 
 def create_bar(size, color):
     """
@@ -184,6 +191,7 @@ def create_bar(size, color):
     bar_surface.fill(color)
     return bar_surface
 
+
 def calculate_animation_speed(fps: int, length: int, cooldown: int) -> float:
     """
     Calculates the length of the animation depending
@@ -199,7 +207,8 @@ def calculate_animation_speed(fps: int, length: int, cooldown: int) -> float:
     """
 
     temp = fps * (cooldown * 1.1 / length) * 1 / 1000
-    return (1 / temp)
+    return 1 / temp
+
 
 def now() -> int:
     """
@@ -209,8 +218,9 @@ def now() -> int:
     """
     return pygame.time.get_ticks()
 
+
 # Drawing function:
-def draw_text(surface, text, font, text_col, x_pos, y_pos):
+def draw_text(surface, text, font, text_col, x_pos, y_pos, left=False):
     """
     Draws text on a Pygame surface with a specified font, color, and position.
 
@@ -223,7 +233,11 @@ def draw_text(surface, text, font, text_col, x_pos, y_pos):
     - y (int): The y-coordinate of the text's center.
     """
     img = font.render(text, True, text_col)
-    surface.blit(img, (x_pos - img.get_width() / 2, y_pos - img.get_height() / 2))
+    if not left:
+        surface.blit(img, (x_pos - img.get_width() / 2, y_pos - img.get_height() / 2))
+    else:
+        surface.blit(img, (x_pos, y_pos))
+
 
 def logs_wrapper(func):
     """
@@ -253,7 +267,8 @@ def logs_wrapper(func):
         return result
     return func_with_wrapper
 
-def puts (text):
+
+def puts(text):
     """
     Logs a message to the console with a timestamp.
 
@@ -261,5 +276,5 @@ def puts (text):
     - text (str): The message to be logged.
     """
     date_time = datetime.now()
-    message = '['+str(date_time.strftime("%Y/%m/%d, %H:%M:%S"))+'] '+ text
+    message = f'[{str(date_time.strftime("%Y/%m/%d, %H:%M:%S"))}] {text}'
     print(message)

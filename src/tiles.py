@@ -14,9 +14,10 @@ Functions:
     - check_for_usable_elements(character, elements): Checks for usable elements near the character.
 """
 import pygame
-from support import import_folder, puts
+from support import import_folder, puts, import_image
 from game_data import CHESTS_CONTENT
 from items import create_items
+
 
 class Tile(pygame.sprite.Sprite):
     """
@@ -32,7 +33,7 @@ class Tile(pygame.sprite.Sprite):
         super().__init__()
         self.kind = 'terrain'
         self.image = pygame.Surface((size, size))
-        self.rect = self.image.get_rect(topleft = (x_pos, y_pos))
+        self.rect = self.image.get_rect(topleft=(x_pos, y_pos))
         self.id = tile_id
 
     def draw(self, surface: pygame.Surface, offset: pygame.math.Vector2) -> None:
@@ -46,6 +47,7 @@ class Tile(pygame.sprite.Sprite):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
 
+
 class StaticTile(Tile):
     """
     Initialize a StaticTile object.
@@ -57,10 +59,11 @@ class StaticTile(Tile):
         y (int): The y-coordinate of the tile's top-left corner.
         surface (pygame.Surface): The surface representing the static tile.
     """
-    def __init__(self, tile_id: int, size: tuple[int, int],
-                 x_pos: int, y_pos: int, surface: pygame.Surface) -> None:
+    def __init__(self, tile_id: int, size: int,
+                 x_pos: int, y_pos: int, surface: pygame.Surface = None) -> None:
         super().__init__(tile_id, size, x_pos, y_pos)
         self.image = surface
+
 
 class AnimatedTile(Tile):
     """
@@ -79,7 +82,6 @@ class AnimatedTile(Tile):
         self.frames = import_folder(path)
         self.frame_index = 0
         self.image = self.frames[self.frame_index]
-        self.usable = False
 
     def animate(self) -> None:
         """Animate the tile by cycling through its frames."""
@@ -91,6 +93,7 @@ class AnimatedTile(Tile):
     def update(self) -> None:
         """Update the animated tile by advancing its animation frames."""
         self.animate()
+
 
 class Chest(AnimatedTile):
     """
@@ -114,7 +117,9 @@ class Chest(AnimatedTile):
         action: Perform an action on the chest (collect its content).
         update: Update the chest's animation frame.
     """
+
     chests = []
+
     def __init__(self, id: int, size: tuple[int, int], x: int, y: int, path: str) -> None:
         """
         Initialize a Chest object.
@@ -128,12 +133,11 @@ class Chest(AnimatedTile):
         """
         super().__init__(id, size, x, y, path)
         self.kind = 'chest'
-        self.collected = False
         self.animated = False
-        self.usable = True
-        self.content = self.create_content()
-        puts(f'Stworzono skrzynie, id {self.id}')
+        self.equipment = TileEquipment(True)
+        self.equipment.content = self.create_content()
         Chest.chests.append(self)
+
     def animate_once(self) -> None:
         """Animate the chest once, then mark it as animated."""
         self.frame_index += 0.15
@@ -141,6 +145,7 @@ class Chest(AnimatedTile):
             self.frame_index = len(self.frames) - 1
             self.animated = True
         self.image = self.frames[int(self.frame_index)]
+
     def create_content(self) -> list:
         """Create the content (items) for the chest."""
         content = []
@@ -150,12 +155,45 @@ class Chest(AnimatedTile):
         for element in create_items(CHESTS_CONTENT[len(Chest.chests)]):
             content.append(element)
         return content
+
     def action(self) -> list:
         """Perform an action on the chest (collect its content)."""
-        return self.content
+        return self.equipment.content
+
     def update(self):
-        if self.collected and not self.animated:
+        if self.equipment.collected and not self.animated:
             self.animate_once()
+
+
+class Bonfire(AnimatedTile):
+    def __init__(self, tile_id: int, size: tuple[int, int], x: int, y: int, path: str):
+        super().__init__(tile_id, size, x, y, path)
+        self.kind = 'bonfire'
+        self.equipment = TileEquipment()
+
+
+class Corpse(StaticTile):
+    """
+    Class for corpse created after defeating enemy.
+    """
+    def __init__(self, tile_id: int, size: int, x_pos: int, y_pos: int) -> None:
+        super().__init__(tile_id, size, x_pos, y_pos)
+        image = import_image('content/graphics/terrain/corpse/1.png')
+        self.kind = 'corpse'
+        self.image = image
+        self.rect = self.image.get_rect(midbottom=(x_pos, y_pos))
+        self.equipment = TileEquipment(True)
+
+
+class TileEquipment:
+    """
+    This is class for Tile Equipment
+    """
+    def __init__(self, usable: bool = False) -> None:
+        self.collected = False
+        self.usable = usable
+        self.content = None
+
 
 def check_for_usable_elements(character, elements) -> list:
     """
@@ -170,12 +208,10 @@ def check_for_usable_elements(character, elements) -> list:
         if a usable element is found and the element itself.
     """
     for element in elements:
-        if not element.usable:
+        if not element.equipment.usable:
             continue
         if abs(character.animations.rect.centerx - element.rect.centerx) < 50 and \
             abs(character.animations.rect.centery - element.rect.centery) < 50 and \
-            not element.collected:
+            not element.equipment.collected:
             return [True, element]
     return [False, None]
-
-

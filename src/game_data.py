@@ -36,14 +36,14 @@ short_bow_1 = {
 wooden_shield_1 = {
             'name': 'Drewniana Tarcza',
             'kind': 'shield',
-            'damage': 0,
+            'damage': 12,
             'price': 56
         }
 
 small_potion_1 = {
-            'name': 'Mała Mikstura Leczenia',
+            'name': 'Mikstura Leczenia',
             'kind': 'item',
-            'damage': 0,
+            'damage': 120,
             'price': 67
         }
 

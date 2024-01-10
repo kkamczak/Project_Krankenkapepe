@@ -32,7 +32,7 @@ class Enemy(pygame.sprite.Sprite):
         self.animations.animate_dead()
 
 
-class EnemyStatus():
+class EnemyStatus:
     def __init__(self, enemy, kind, enemy_id):
         self.enemy = enemy
         self.type = kind
@@ -51,7 +51,7 @@ class EnemyStatus():
         self.facing_right = random.choice([True, False])
 
 
-class EnemyDefense():
+class EnemyDefense:
     def __init__(self, enemy):
         # Get hurt:
         self.enemy = enemy
@@ -99,8 +99,17 @@ class EnemyDefense():
         self.armor_ratio = 1
         self.enemy.fighting.combat_reset()
 
+    def get_stunned(self):
+        self.enemy.animations.set_frame_index(0)
+        temp_direction = self.enemy.movement.direction
+        temp_direction.x = 0
+        self.enemy.movement.set_direction(temp_direction)
+        self.enemy.fighting.change_combat_status('stunned', True)
+        self.enemy.status.set_status('stun')
+        self.armor_ratio = 3
 
-class EnemyProperties():
+
+class EnemyProperties:
     def __init__(self, enemy):
         self.enemy = enemy
         self.health = {
@@ -134,7 +143,7 @@ class EnemyProperties():
         }
 
 
-class EnemyAnimations():
+class EnemyAnimations:
     def __init__(self, enemy):
         self.enemy = enemy
         self.animations = {}
@@ -277,7 +286,7 @@ class EnemyAnimations():
             screen.blit(cur, (rect.left - offset.x, rect.top - 15 - offset.y))
 
 
-class EnemyMovement():
+class EnemyMovement:
     def __init__(self, enemy):
         self.enemy = enemy
 
@@ -362,7 +371,7 @@ class EnemyMovement():
         self.collision_rect.y += self.direction.y
 
 
-class EnemyFighting():
+class EnemyFighting:
     def __init__(self, enemy):
         self.enemy = enemy
         # Attacking:
@@ -429,8 +438,7 @@ class EnemyFighting():
 
         if self.combat['on'] and \
                 pygame.time.get_ticks() - self.combat['start'] > self.combat['preparing'] and \
-                not self.attack['attacking'] and \
-                abs(rect.centerx - player.movement.collision_rect.centerx) < self.attack['range']:
+                not self.attack['attacking']:
             self.attack['able'] = True
             self.do_attack(player.movement.collision_rect)
 

@@ -43,6 +43,7 @@ class Player(pygame.sprite.Sprite):
 
     def update(self):
         if not self.properties.dead['status']:
+            self.fighting.calculate_damage()
             self.fighting.check_sword_attack_cooldown()
             self.fighting.check_arch_attack_cooldown()
             self.defense.check_shield_cooldown()
@@ -273,7 +274,7 @@ class PlayerMovement():
                 self.player.equipment.show_cooldown = pygame.time.get_ticks()
         if keys[pygame.K_e]: # Use element:
             if self.player.status.can_use_object[0]:
-                self.player.status.can_use_object[1].collected = True
+                self.player.status.can_use_object[1].equipment.collected = True
                 if self.player.status.can_use_object[1].kind == 'chest':
                     self.player.collect_items(self.player.status.can_use_object[1].action())
 
@@ -370,7 +371,7 @@ class PlayerStatus():
             return 'shield'
 
 
-class PlayerAttack():
+class PlayerAttack:
     def __init__(self, player, sword_attack, arch_attack):
         self.player = player
         self.attack = {
@@ -452,7 +453,6 @@ class PlayerAttack():
                 self.attack['hit'] = False
                 self.attack['end'] = now()
 
-
     def check_arch_attack_cooldown(self):
         if self.arch['attacking'] and \
                 (now() - self.arch['start']) > self.arch['speed']:
@@ -461,8 +461,12 @@ class PlayerAttack():
             self.arch['attacking'] = False
             self.arch['end'] = now()
 
+    def calculate_damage(self) -> None:
+        self.attack['damage'] = self.player.equipment.active_items['sword'].damage
+        self.arch['damage'] = self.player.equipment.active_items['bow'].damage
 
-class PlayerDefense():
+
+class PlayerDefense:
     def __init__(self, player):
         # Taking hits:
         self.player = player
@@ -523,7 +527,7 @@ class PlayerDefense():
         return False
 
 
-class PlayerProperties():
+class PlayerProperties:
     def __init__(self, player):
         self.player = player
         self.health = {

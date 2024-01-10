@@ -10,11 +10,11 @@ It provides essential functions for running the game loop
 and updating the game state during gameplay.
 """
 import pygame
-from support import import_csv_file, import_cut_graphics, scale_image, import_image
+from support import import_csv_file, import_cut_graphics, scale_image, import_image, now
 from game_data import levels
 from settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH, \
     TERRAIN_PATH, FIREPLACE_PATH, CHEST_PATH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY
-from tiles import StaticTile, AnimatedTile, Chest, check_for_usable_elements
+from tiles import StaticTile, Bonfire, Chest, Corpse, check_for_usable_elements
 from collisions import vertical_movement_collision, horizontal_movement_collision
 from player import Player
 from enemies import Sceleton, Ninja, Wizard, DarkKnight
@@ -118,7 +118,7 @@ class Level:
 
                     if kind == 'terrain_elements':
                         if val == '1':
-                            sprite = AnimatedTile(tile_id, TILE_SIZE, x, y, FIREPLACE_PATH)
+                            sprite = Bonfire(tile_id, TILE_SIZE, x, y, FIREPLACE_PATH)
                             tile_id += 1
                         if val == '0':
                             sprite = Chest(tile_id, TILE_SIZE, x, y, CHEST_PATH)
@@ -209,7 +209,6 @@ class Level:
                 sprite.draw(self.display_surface, self.camera.offset)
 
         # Animations:
-        print(self.animations)
         for index, animation in enumerate(self.animations):
             animation.update(self.camera.offset)
             animation.draw(self.display_surface, self.camera.offset)
@@ -245,13 +244,20 @@ class Level:
                     enemy.fighting.check_for_combat(self.get_player())
                 enemy.animations.draw(self.display_surface, self.camera.offset)
             if enemy.properties.dead['status'] and \
-                    pygame.time.get_ticks() - enemy.properties.dead['time'] > ENEMY_DEATH_LATENCY:
+                    now() - enemy.properties.dead['time'] > ENEMY_DEATH_LATENCY:
                 soul_animation = SoulAnimation(
                     enemy.animations.rect.center,
                     'soul',
                     self.display_surface.get_size()
                 )
                 self.animations.append(soul_animation)
+                corpse = Corpse(
+                    enemy.status.id,
+                    32,
+                    enemy.animations.rect.midbottom[0],
+                    enemy.animations.rect.midbottom[1]
+                )
+                self.terrain_elements_sprite.add(corpse)
                 enemy.kill()
         # Show UI -----------------------------------------------------------
         if not player.properties.dead['status']:

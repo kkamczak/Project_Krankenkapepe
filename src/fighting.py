@@ -99,19 +99,11 @@ class Bullet(pygame.sprite.Sprite):
             on the provided surface with the given offset.
 
     """
-    #def __init__(self, kind, pos, damage, source, source_id, facing_right):
     def __init__(self, kind, position, source):
         """
         Initialize a ranged attack projectile.
         """
         super().__init__()
-        """
-        bullet = Bullet(
-            kind, position, attack['damage'],
-            character.status.type, character.status.id,
-            character.status.facing_right
-        )
-        """
         self.kind = kind
         self.source = source.status.type
         self.source_id = source.status.id
@@ -132,10 +124,6 @@ class Bullet(pygame.sprite.Sprite):
 
 
         self.speed = BULLET_DEFAULT_SPEED[self.kind]
-
-        self.attack_time = pygame.time.get_ticks()
-        self.attack_duration = 1500
-
         if self.source == 'player':
             self.attack_range = source.fighting.arch['range']
             self.damage = source.fighting.arch['damage']
@@ -332,7 +320,6 @@ class Fight_Manager():
             else:
                 position = (rect.left + 20, rect.top + rect.height / 3)
 
-            #def __init__(self, kind, position, source):
             bullet = Bullet(
                 kind, position, character
             )
@@ -376,8 +363,6 @@ class Fight_Manager():
         self.bullet_hits.update()
         for bullet in self.bullet_hits:
             bullet.draw(surface, offset)
-            # if now() - bullet.attack_time > bullet.attack_duration:
-            #     bullet.kill()
             if bullet.rect.x - bullet.start_rect.x > bullet.attack_range:
                 bullet.kill()
 
@@ -457,11 +442,7 @@ class Fight_Manager():
                             self.shield_block_sound.play()
                             hit.shielded = True
                             if not enemy.fighting.combat['stunned'] and kind == 'sword':
-                                enemy.animations.frame_index = 0
-                                enemy.movement.direction.x = 0
-                                enemy.fighting.combat['stunned'] = True
-                                enemy.status.status = 'stun'
-                                enemy.defense.armor_ratio = 3
+                                enemy.defense.get_stunned()
                                 break
                         else:
                             hit.character_collided.append(player.status.id)
