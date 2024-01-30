@@ -17,6 +17,7 @@ import pygame
 from support import import_folder, puts, import_image
 from game_data import CHESTS_CONTENT
 from items import create_items
+from enemies import Enemy
 
 
 class Tile(pygame.sprite.Sprite):
@@ -215,3 +216,14 @@ def check_for_usable_elements(character, elements) -> list:
             not element.equipment.collected:
             return [True, element]
     return [False, None]
+
+
+def create_corpse(enemy: Enemy, group: pygame.sprite.Group) -> None:
+    corpse = Corpse(
+        enemy.status.id,
+        32,
+        enemy.animations.rect.midbottom[0],
+        enemy.animations.rect.midbottom[1]
+    )
+    group.add(corpse)
+

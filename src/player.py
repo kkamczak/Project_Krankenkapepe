@@ -41,7 +41,7 @@ class Player(pygame.sprite.Sprite):
         for item in items:
             self.equipment.add_item(item)
 
-    def update(self):
+    def update(self, screen):
         if not self.properties.dead['status']:
             self.fighting.calculate_damage()
             self.fighting.check_sword_attack_cooldown()
@@ -54,7 +54,7 @@ class Player(pygame.sprite.Sprite):
         self.animations.animate()
 
 
-class PlayerAnimations():
+class PlayerAnimations:
     def __init__(self, player):
         self.player = player
         self.animations_names = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
@@ -171,7 +171,7 @@ class PlayerAnimations():
                       self.rect.bottom + SHOW_STATUS_SPACE * 7 - offset[1])
 
 
-class PlayerMovement():
+class PlayerMovement:
     def __init__(self, player):
         self.player = player
         self.direction = None
@@ -182,6 +182,7 @@ class PlayerMovement():
         self.on_ground = False
         self.on_left = False
         self.on_right = False
+
     def set_direction(self, new_direction: pygame.math.Vector2) -> None:
         self.direction = new_direction
 
@@ -270,13 +271,29 @@ class PlayerMovement():
             if pygame.time.get_ticks() - self.player.equipment.show_cooldown > 400:
                 if self.player.equipment.show:
                     self.player.equipment.show = False
-                else: self.player.equipment.show = True
+                    self.player.equipment.loot_window.show = False
+                else:
+                    self.player.equipment.show = True
+                self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
+                self.player.equipment.show_cooldown = pygame.time.get_ticks()
+        if keys[pygame.K_x]: # Show Equipment
+            if pygame.time.get_ticks() - self.player.equipment.loot_window.show_cooldown > 400:
+                if self.player.equipment.loot_window.show:
+                    self.player.equipment.loot_window.show = False
+                else:
+                    self.player.equipment.loot_window.show = True
+                    self.player.equipment.show = True
+                self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
                 self.player.equipment.show_cooldown = pygame.time.get_ticks()
         if keys[pygame.K_e]: # Use element:
             if self.player.status.can_use_object[0]:
-                self.player.status.can_use_object[1].equipment.collected = True
-                if self.player.status.can_use_object[1].kind == 'chest':
-                    self.player.collect_items(self.player.status.can_use_object[1].action())
+                element = self.player.status.can_use_object[1]
+                if element.kind == 'chest':
+                    element.equipment.collected = True
+                    self.player.collect_items(element.action())
+                elif element.kind == 'corpse':
+                    print('Corpse collected')
+                    element.equipment.collected = True
 
     def not_in_fight(self):
         if not self.player.fighting.attack['attacking'] and \
@@ -293,7 +310,7 @@ class PlayerMovement():
         self.direction.y = self.jump_speed
 
 
-class PlayerStatus():
+class PlayerStatus:
     def __init__(self, player):
         self.player = player
         self.type = 'player'

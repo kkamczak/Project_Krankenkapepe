@@ -14,7 +14,7 @@ from support import import_csv_file, import_cut_graphics, scale_image, import_im
 from game_data import levels
 from settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH, \
     TERRAIN_PATH, FIREPLACE_PATH, CHEST_PATH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY
-from tiles import StaticTile, Bonfire, Chest, Corpse, check_for_usable_elements
+from tiles import StaticTile, Bonfire, Chest, Corpse, check_for_usable_elements, create_corpse
 from collisions import vertical_movement_collision, horizontal_movement_collision
 from player import Player
 from enemies import Sceleton, Ninja, Wizard, DarkKnight
@@ -218,7 +218,7 @@ class Level:
 
         # Draw player -----------------------------------------------------------
         if not self.game_over:
-            self.player.update()
+            self.player.update(self.display_surface)
             horizontal_movement_collision(player.movement, self.terrain_sprite)
             vertical_movement_collision(player.movement, self.terrain_sprite)
             self.camera.scroll_camera(self.display_surface.get_size(), player.movement)
@@ -251,14 +251,9 @@ class Level:
                     self.display_surface.get_size()
                 )
                 self.animations.append(soul_animation)
-                corpse = Corpse(
-                    enemy.status.id,
-                    32,
-                    enemy.animations.rect.midbottom[0],
-                    enemy.animations.rect.midbottom[1]
-                )
-                self.terrain_elements_sprite.add(corpse)
+                create_corpse(enemy, self.terrain_elements_sprite)
                 enemy.kill()
         # Show UI -----------------------------------------------------------
         if not player.properties.dead['status']:
             player.ui.show_ui(self.display_surface, self.camera.offset, player)
+        player.equipment.update_show(self.display_surface)

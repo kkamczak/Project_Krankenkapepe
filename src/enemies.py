@@ -404,9 +404,9 @@ class EnemyFighting:
     def check_for_combat(self, player):
         rect = self.enemy.movement.collision_rect
         is_close = abs(rect.centerx - player.movement.collision_rect.centerx) < self.combat['range'] \
-                   and abs(rect.centery - player.movement.collision_rect.centery) < self.combat['range']
+                   and abs(rect.centery - player.movement.collision_rect.centery) < self.enemy.animations.rect.height
         is_close_to_attack = abs(rect.centerx - player.movement.collision_rect.centerx) < self.attack['range'] \
-                   and abs(rect.centery - player.movement.collision_rect.centery) < self.attack['range']
+                   and abs(rect.centery - player.movement.collision_rect.centery) < self.enemy.animations.rect.height
         if is_close_to_attack and not self.combat['on'] and not player.properties.dead['status']:
             self.combat['on'] = True
             self.combat['start'] = pygame.time.get_ticks()

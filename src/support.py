@@ -33,7 +33,7 @@ from csv import reader
 from os import walk
 from datetime import datetime
 import pygame
-from settings import SCALE
+from settings import SCALE, BUTTON_SIZE
 
 def import_csv_file(path):
     """
@@ -217,6 +217,23 @@ def now() -> int:
     - int: ticks
     """
     return pygame.time.get_ticks()
+
+
+def create_header():
+    """
+    Creates header like 'Equipment' or 'Loot'.
+    """
+    path = 'content/graphics/ui/button.png'
+    image = import_image(path)
+    image = scale_image(image, BUTTON_SIZE)
+    return image
+
+
+def cursor() -> tuple[int, int]:
+    """
+    This function returns mouse cursor position.
+    """
+    return pygame.mouse.get_pos()
 
 
 # Drawing function:

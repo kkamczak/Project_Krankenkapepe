@@ -149,9 +149,8 @@ class UI:
                 int(position[1]+height/2-UI_ITEM_IMAGE_SIZE[1]/2)
             ]
             return new_position
-        for kind in active_equipment:
-            #puts(str(active_equipment))
 
+        for kind in active_equipment:
             if kind == 'sword' and active_equipment[kind] is not None:
                 surface.blit(
                     active_equipment[kind].image,
@@ -244,7 +243,3 @@ class UI:
 
         # Outfit
         self.show_active_equipment(screen, player.equipment.active_items)
-
-        # Show equipment:
-        if player.equipment.show:
-            player.equipment.show_equipment(screen)
