@@ -33,7 +33,7 @@ from csv import reader
 from os import walk
 from datetime import datetime
 import pygame
-from settings import SCALE, BUTTON_SIZE
+from tools.settings import SCALE, BUTTON_SIZE
 
 def import_csv_file(path):
     """
@@ -267,7 +267,7 @@ def logs_wrapper(func):
     - func_with_wrapper: The wrapped function with logging.
     """
     def func_with_wrapper(*args, **kwargs):
-        file = open(r'D:\GitHub\Projekt_Krankenkapepe\logs.txt', "a", encoding='utf-8')
+        file = open(r'/logs.txt', "a", encoding='utf-8')
         file.write("-" * 30 + "\n")
         file.write(
             f'Function "{func.__name__}" started at '
@@ -295,3 +295,6 @@ def puts(text):
     date_time = datetime.now()
     message = f'[{str(date_time.strftime("%Y/%m/%d, %H:%M:%S"))}] {text}'
     print(message)
+    with open(r'/logs.txt', 'a', encoding='utf-8') as file:
+        file.write("\n")
+        file.write(message)

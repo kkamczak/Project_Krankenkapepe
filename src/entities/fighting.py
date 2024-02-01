@@ -12,9 +12,9 @@ Classes:
 
 """
 import pygame
-from settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, BULLET_DEFAULT_SPEED, \
+from tools.settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, BULLET_DEFAULT_SPEED, \
     SCREEN_HEIGHT, ENEMY_ATTACK_SIZE
-from support import now
+from tools.support import now
 
 class Hit(pygame.sprite.Sprite):
     """

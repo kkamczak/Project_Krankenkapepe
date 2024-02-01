@@ -10,16 +10,16 @@ It provides essential functions for running the game loop
 and updating the game state during gameplay.
 """
 import pygame
-from support import import_csv_file, import_cut_graphics, scale_image, import_image, now
-from game_data import levels
-from settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH, \
+from tools.support import import_csv_file, import_cut_graphics, scale_image, import_image, now
+from tools.game_data import levels
+from tools.settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH, \
     TERRAIN_PATH, FIREPLACE_PATH, CHEST_PATH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY
-from tiles import StaticTile, Bonfire, Chest, Corpse, check_for_usable_elements, create_corpse
-from collisions import vertical_movement_collision, horizontal_movement_collision
-from player import Player
-from enemies import Sceleton, Ninja, Wizard, DarkKnight
-from fighting import Fight_Manager
-from camera import Camera
+from tiles import StaticTile, Bonfire, Chest, check_for_usable_elements, create_corpse
+from terrain.collisions import vertical_movement_collision, horizontal_movement_collision
+from player.player import Player
+from entities.enemies import Sceleton, Ninja, Wizard, DarkKnight
+from entities.fighting import Fight_Manager
+from terrain.camera import Camera
 from animations import SoulAnimation
 
 

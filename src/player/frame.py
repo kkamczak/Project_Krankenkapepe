@@ -1,7 +1,7 @@
 import pygame
-from settings import BLACK, WHITE, GREEN, EQUIPMENT_ALPHA, EQUIPMENT_INFO_SIZE, EQUIPMENT_INFO_ALPHA, \
+from tools.settings import BLACK, WHITE, GREEN, EQUIPMENT_ALPHA, EQUIPMENT_INFO_SIZE, EQUIPMENT_INFO_ALPHA, \
     UI_FRAME_FONT, EQUIPMENT_SHOW_IDS, UI_EQUIPMENT_ACTIVE_FONT
-from support import draw_text, scale_image, cursor
+from tools.support import draw_text, scale_image
 
 
 class Frame(pygame.sprite.Sprite):
@@ -52,6 +52,17 @@ class Frame(pygame.sprite.Sprite):
             self.status['selected'] = True
         self.image.set_alpha(EQUIPMENT_ALPHA)
 
+    def reset_status(self) -> None:
+        """
+        Reset status of frame to not clicked and not selected
+        """
+        self.status = {
+            'clicked': False,
+            'selected': False
+        }
+        self.image.fill(BLACK)
+        self.image.set_alpha(EQUIPMENT_ALPHA)
+
     def check_click(self) -> bool:
         """
         Check if frame is clicked.
@@ -89,13 +100,17 @@ class Frame(pygame.sprite.Sprite):
         frame.set_alpha(EQUIPMENT_INFO_ALPHA)
         display_surface.blit(frame, position)
         tags = [
-            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 2 / 20),
-            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 8 / 20),
-            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 14 / 20),
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 2 / 30),
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 8 / 30),
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 14 / 30),
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 20 / 30),
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 26 / 30)
         ]
         draw_text(display_surface, f'Nazwa: {self.item.name}', UI_FRAME_FONT, BLACK, tags[0][0], tags[0][1], left=True)
         draw_text(display_surface, f'{self.item.text}: {self.item.damage}', UI_FRAME_FONT, BLACK, tags[1][0], tags[1][1], left=True)
         draw_text(display_surface, f'Wartość: {self.item.price}', UI_FRAME_FONT, BLACK, tags[2][0], tags[2][1], left=True)
+        draw_text(display_surface, f'Id: {self.item.item_id}', UI_FRAME_FONT, BLACK, tags[3][0], tags[3][1], left=True)
+        draw_text(display_surface, f'Owner: {self.item.owner[1]}', UI_FRAME_FONT, BLACK, tags[4][0], tags[4][1], left=True)
 
     def draw(self, screen: pygame.Surface) -> None:
         """

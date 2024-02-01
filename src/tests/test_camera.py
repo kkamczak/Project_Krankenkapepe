@@ -1,7 +1,7 @@
 import pygame.math
 import pygame.rect
 import pytest
-from camera import Camera
+from terrain.camera import Camera
 
 
 class MockPlayerMovement():

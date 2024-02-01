@@ -1,16 +1,16 @@
 import pygame
 from typing import Any
-from settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
+from tools.settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_GRAVITY, PLAYER_JUMP_SPEED, \
     PLAYER_SWORD_COOLDOWN, PLAYER_IMMUNITY_FROM_HIT, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
     PLAYER_DEATH_ANIMATION_SPEED, PLAYER_SWORD_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE, FPS, \
     PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN, PLAYER_ARCH_DAMAGE, PLAYER_SWORD_DAMAGE, PLAYER_SWORD_HIT_TIME, \
     PLAYER_ARCH_SPEED
-from support import draw_text, import_character_assets, calculate_animation_speed, now
+from tools.support import draw_text, import_character_assets, calculate_animation_speed, now
 from ui import UI
-from items import create_items
-from equipment import Equipment
-from game_data import START_ITEMS_LIST
+from terrain.items import create_items
+from player.equipment import PlayerEquipment
+from tools.game_data import START_ITEMS_LIST
 
 
 class Player(pygame.sprite.Sprite):
@@ -21,7 +21,7 @@ class Player(pygame.sprite.Sprite):
         self.movement = PlayerMovement(self)
         self.status = PlayerStatus(self)
         self.fighting = PlayerAttack(self, sword_attack, arch_attack)
-        self.equipment = Equipment(self.status.id)
+        self.equipment = PlayerEquipment(self)
         self.defense = PlayerDefense(self)
         self.properties = PlayerProperties(self)
         self.ui = UI()
@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.movement.init_movement()
         self.status.reset_status()
         self.fighting.reset_attack_properties()
-        for item in create_items(START_ITEMS_LIST):
+        for item in create_items(START_ITEMS_LIST, (self, 'player')):
             self.equipment.add_item(item)
         self.properties.reset_properties()
 
@@ -231,9 +231,11 @@ class PlayerMovement:
         if keys[pygame.K_RIGHT] and self.not_in_fight():
             self.direction.x = 1
             self.player.status.set_facing(True)
+            self.player.equipment.close()
         elif keys[pygame.K_LEFT] and self.not_in_fight():
             self.direction.x = -1
             self.player.status.set_facing(False)
+            self.player.equipment.close()
         else:
             self.direction.x = 0
 
@@ -244,6 +246,7 @@ class PlayerMovement:
                 self.not_in_fight():
             self.player.movement.jump()
             self.player.status.set_jumped_status(True)
+            self.player.equipment.close()
         if not keys[pygame.K_SPACE]: # Player isn't jumping anymore
             self.player.status.set_jumped_status(False)
 
@@ -267,33 +270,31 @@ class PlayerMovement:
             self.player.fighting.arch_start_attack()
 
     def input_equipment(self, keys):
+        if keys[pygame.K_p]: # Key for development testing:
+            pass
         if keys[pygame.K_i]: # Show Equipment
             if pygame.time.get_ticks() - self.player.equipment.show_cooldown > 400:
                 if self.player.equipment.show:
-                    self.player.equipment.show = False
-                    self.player.equipment.loot_window.show = False
+                    self.player.equipment.close()
                 else:
-                    self.player.equipment.show = True
-                self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
-                self.player.equipment.show_cooldown = pygame.time.get_ticks()
-        if keys[pygame.K_x]: # Show Equipment
-            if pygame.time.get_ticks() - self.player.equipment.loot_window.show_cooldown > 400:
-                if self.player.equipment.loot_window.show:
-                    self.player.equipment.loot_window.show = False
-                else:
-                    self.player.equipment.loot_window.show = True
-                    self.player.equipment.show = True
+                    self.player.equipment.open()
                 self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
                 self.player.equipment.show_cooldown = pygame.time.get_ticks()
         if keys[pygame.K_e]: # Use element:
             if self.player.status.can_use_object[0]:
                 element = self.player.status.can_use_object[1]
-                if element.kind == 'chest':
-                    element.equipment.collected = True
-                    self.player.collect_items(element.action())
-                elif element.kind == 'corpse':
-                    print('Corpse collected')
-                    element.equipment.collected = True
+                if element.kind == 'corpse' or element.kind == 'chest':
+                    if pygame.time.get_ticks() - self.player.equipment.loot_window.show_cooldown > 400:
+                        if self.player.equipment.loot_window.show:
+                            self.player.equipment.close()
+                        else:
+                            self.player.equipment.loot_window.load_items(
+                                element.equipment.content,
+                                element
+                            )
+                            self.player.equipment.open(True)
+                        self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
+                        self.player.equipment.show_cooldown = pygame.time.get_ticks()
 
     def not_in_fight(self):
         if not self.player.fighting.attack['attacking'] and \
@@ -479,8 +480,10 @@ class PlayerAttack:
             self.arch['end'] = now()
 
     def calculate_damage(self) -> None:
-        self.attack['damage'] = self.player.equipment.active_items['sword'].damage
-        self.arch['damage'] = self.player.equipment.active_items['bow'].damage
+        if self.player.equipment.active_items['sword'] is not None:
+            self.attack['damage'] = self.player.equipment.active_items['sword'].damage
+        if self.player.equipment.active_items['bow'] is not None:
+            self.arch['damage'] = self.player.equipment.active_items['bow'].damage
 
 
 class PlayerDefense:

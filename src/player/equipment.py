@@ -1,16 +1,16 @@
 import pygame
-from settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZE, EQUIPMENT_FRAME_SPACE, EQUIPMENT_ROWS, \
-    EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_SIZE, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
-    EQUIPMENT_ACTIVE_FRAME_SPACE, UI_EQUIPMENT_ACTIVE_FONT
-from support import import_image, draw_text, scale_image, puts, create_header, cursor
+from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZE, EQUIPMENT_FRAME_SPACE, EQUIPMENT_ROWS, \
+    EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
+    EQUIPMENT_ACTIVE_FRAME_SPACE
+from tools.support import draw_text, puts, create_header, cursor
 from lootwindow import LootWindow
 from frame import Frame
-import items
+from terrain import items
 
 
-class Equipment:
-    def __init__(self, id: int) -> None:
-        self.owner_id = id
+class PlayerEquipment:
+    def __init__(self, player) -> None:
+        self.player = player
         self.show = False
         self.show_cooldown = pygame.time.get_ticks()
         self.header = create_header()
@@ -20,6 +20,19 @@ class Equipment:
         self.active_items = {'sword': None, 'bow': None, 'shield': None, 'item': None}
         self.create_equipment_panel()
         self.loot_window = LootWindow()
+
+    def open(self, both: bool = False):
+        self.show = True
+        if both:
+            self.loot_window.show = True
+
+    def close(self):
+        self.loot_window.show = False
+        self.loot_window.clear_items()
+        self.show = False
+        if self.selected_frame is not None:
+            self.selected_frame.reset_status()
+            self.selected_frame = None
 
     def add_item(self, item: items.Item) -> None:
         if not item.active:
@@ -56,41 +69,57 @@ class Equipment:
             self.active_items[item.kind] = None
 
     def transfer_item(self, frame) -> None:
-        if self.selected_frame != frame: # If selected frame is not same that before.
-            if self.selected_frame is not None:# If there was already selected frame
-                self.selected_frame.change_frame_status() # Change it status.
-                if self.selected_frame.item is not None: # If there was item on selected frame
-                    item_to_transfer = self.selected_frame.item # Create copy of item to transfer
-                    if frame.item is None:
-                        if self.selected_frame.kind == 'regular' and frame.kind == 'active':
-                            if frame.name.lower() == self.selected_frame.item.kind:
-                                self.delete_item(item_to_transfer)
-                                self.active_item(item_to_transfer)
-                                self.selected_frame.item = None
-                                puts('Item was succesfully transfered.')
-                            else:
-                                puts('This is not the same kind frame!')
-                        elif self.selected_frame.kind == 'active' and frame.kind == 'regular':
-                            self.deactivate_item(item_to_transfer, frame)
-                            self.selected_frame.item = None
-                            puts('Item was succesfully transfered.')
-                        elif self.selected_frame.kind == 'regular' and frame.kind == 'regular':
-                            item_to_transfer.active = False
-                            frame.item = item_to_transfer
-                            self.selected_frame.item = None
-                            puts('Item was succesfully transfered.')
-                        else:
-                            puts('There was problem with transfering item.')
-                    else:
-                        puts('This frame is occupied by other item!')
+        if self.selected_frame != frame:  # If selected frame is not same that before.
+            if self.selected_frame is not None:  # If there was already selected frame
+                self.selected_frame.change_frame_status()  # Change it status.
+                if self.selected_frame.item is not None:  # If there was item on selected frame
+                    self.process_transfer(frame)
                 else:
                     puts('There was not item to transfer.')
                 frame.change_frame_status()
                 self.selected_frame = None
             else:
-                self.selected_frame = frame # New selected frame is already clicked frame.
-        elif self.selected_frame == frame: # If selected frame is the same that before.
+                self.selected_frame = frame  # New selected frame is already clicked frame.
+        elif self.selected_frame == frame:  # If selected frame is the same that before.
             self.selected_frame = None # Cancel selected frame.
+
+    def process_transfer(self, frame):
+        """
+        Function transfers an object from one frame to another.
+
+        :param frame: new frame for item
+        :return: None
+        """
+        item = self.selected_frame.item  # Creates a reference to the object to be transferred
+        if frame.item is None:  # Frame is empty - you can put an object in it
+            if self.selected_frame.kind == 'regular' and frame.kind == 'active':  # Transfer to active frame
+                if frame.name.lower() == item.kind:
+                    self.delete_item(item)
+                    self.active_item(item)
+                    self.selected_frame.item = None
+                    puts('Item was succesfully transfered.')
+                else:
+                    puts('This is not the same kind frame!')
+            elif self.selected_frame.kind == 'active' and frame.kind == 'regular':  # Transfer to regular frame
+                self.deactivate_item(item, frame)
+                self.selected_frame.item = None
+                puts('Item was succesfully transfered.')
+            elif self.selected_frame.kind == 'regular' and frame.kind == 'regular':  # Transfer to regular frame
+                item.active = False
+                frame.item = item
+                self.selected_frame.item = None
+                puts('Item was succesfully transfered.')
+            else:
+                puts('There was problem with transfering item.')
+                return
+            if item.owner[1] != 'player' and frame.id < 100:  # Transfer from loot window to equipment
+                item.owner[0].equipment.delete_item(item)
+                item.owner = (self.player, 'player')
+            elif item.owner[1] == 'player' and frame.id >= 100:  # Transfer from equipment to loot window
+                item.owner = (self.loot_window.container, self.loot_window.container.kind)
+                item.owner[0].equipment.add_item(item)
+        else:
+            puts('This frame is occupied by other item!')
 
     def create_equipment_panel(self) -> None:
 

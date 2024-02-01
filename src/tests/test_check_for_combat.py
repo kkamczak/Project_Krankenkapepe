@@ -1,7 +1,7 @@
 import pytest
 import pygame
-from player import Player
-from enemies import Sceleton
+from player.player import Player
+from entities.enemies import Sceleton
 
 def mock_function():
     pass

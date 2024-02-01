@@ -1,11 +1,11 @@
 import pygame
 import sys
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, \
+from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, \
     WHITE, SKY, FPS, FPS_FONT, FPS_SHOW_POS, SOUND_PLAY_MUSIC, \
     BIG_FONT, MASK_ALPHA, MUSIC_VOLUME
-from level import Level
-from support import draw_text
-from overworld import Pause, MainMenu, DeathScene
+from terrain.level import Level
+from tools.support import draw_text
+from menu.overworld import Pause, MainMenu, DeathScene
 
 class Game:
     def __init__(self, screen, clock) -> None:

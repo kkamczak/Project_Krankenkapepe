@@ -14,10 +14,10 @@ Functions:
     - check_for_usable_elements(character, elements): Checks for usable elements near the character.
 """
 import pygame
-from support import import_folder, puts, import_image
-from game_data import CHESTS_CONTENT
+from tools.support import import_folder, puts, import_image
+from tools.game_data import CHESTS_CONTENT, CORPSE_CONTENT
 from items import create_items
-from enemies import Enemy
+from entities.enemies import Enemy
 
 
 class Tile(pygame.sprite.Sprite):
@@ -136,7 +136,7 @@ class Chest(AnimatedTile):
         self.kind = 'chest'
         self.animated = False
         self.equipment = TileEquipment(True)
-        self.equipment.content = self.create_content()
+        self.equipment.content = create_content((self, 'chest'))
         Chest.chests.append(self)
 
     def animate_once(self) -> None:
@@ -146,16 +146,6 @@ class Chest(AnimatedTile):
             self.frame_index = len(self.frames) - 1
             self.animated = True
         self.image = self.frames[int(self.frame_index)]
-
-    def create_content(self) -> list:
-        """Create the content (items) for the chest."""
-        content = []
-        Chest.chests = []
-
-        puts(str(len(Chest.chests)))
-        for element in create_items(CHESTS_CONTENT[len(Chest.chests)]):
-            content.append(element)
-        return content
 
     def action(self) -> list:
         """Perform an action on the chest (collect its content)."""
@@ -184,6 +174,7 @@ class Corpse(StaticTile):
         self.image = image
         self.rect = self.image.get_rect(midbottom=(x_pos, y_pos))
         self.equipment = TileEquipment(True)
+        self.equipment.content = create_content((self, 'corpse'))
 
 
 class TileEquipment:
@@ -194,6 +185,18 @@ class TileEquipment:
         self.collected = False
         self.usable = usable
         self.content = None
+
+    def add_item(self, new_item) -> None:
+        for item in self.content:
+            if item is new_item:
+                return
+        self.content.append(new_item)
+
+    def delete_item(self, item) -> None:
+        for item_owned in self.content:
+            if item is item_owned:
+                self.content.remove(item_owned)
+                break
 
 
 def check_for_usable_elements(character, elements) -> list:
@@ -226,4 +229,20 @@ def create_corpse(enemy: Enemy, group: pygame.sprite.Group) -> None:
         enemy.animations.rect.midbottom[1]
     )
     group.add(corpse)
+
+
+def create_content(owner) -> list:
+    """
+    Create the content (items) for the container.
+    """
+    content = []
+    if owner[0].kind == 'chest':
+        index = len(Chest.chests)
+        puts(f'Utworzono skrzynię o id: {index}')
+        for element in create_items(CHESTS_CONTENT[index], owner):
+            content.append(element)
+    elif owner[0].kind == 'corpse':
+        for element in create_items(CORPSE_CONTENT[0], owner):
+            content.append(element)
+    return content
 

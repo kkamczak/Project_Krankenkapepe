@@ -1,7 +1,7 @@
 import pytest
 import pygame
 from unittest.mock import patch
-from buttons import Button
+from menu.buttons import Button
 
 
 class TestButtons():

@@ -57,6 +57,7 @@ START_ITEMS_LIST = [
 ]
 
 chest_1 = [short_bow_1, small_potion_1]
-chest_2 = []
+chest_2 = [straight_sword_1]
 chest_3 = [wooden_shield_1]
-CHESTS_CONTENT = [chest_1, chest_2, chest_3]
+CHESTS_CONTENT = [chest_1, chest_2, chest_3, chest_1, chest_2, chest_3, chest_1, chest_2, chest_3]
+CORPSE_CONTENT = [chest_1, chest_2, chest_3, chest_1, chest_2, chest_3, chest_1, chest_2, chest_3]

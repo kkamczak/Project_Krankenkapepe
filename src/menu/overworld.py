@@ -1,6 +1,6 @@
-from buttons import *
-from settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED, BUTTON_FONT, DEATH_FONT
-from support import draw_text, scale_image
+from menu.buttons import *
+from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED, BUTTON_FONT, DEATH_FONT
+from tools.support import draw_text, scale_image
 
 
 class Overworld:

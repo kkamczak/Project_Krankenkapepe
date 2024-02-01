@@ -1,6 +1,6 @@
-import pygame, sys
-from support import draw_text, scale_image, import_image
-from settings import WHITE, BUTTON_BASIC_COLOR, BUTTON_ACTIVE_COLOR, BUTTON_SIZE
+import pygame
+from tools.support import draw_text, scale_image, import_image
+from tools.settings import WHITE, BUTTON_BASIC_COLOR, BUTTON_ACTIVE_COLOR, BUTTON_SIZE
 
 
 class Button(pygame.sprite.Sprite):

@@ -2,7 +2,7 @@ import pytest
 import pygame.rect
 import pygame.math
 import pygame.sprite
-from collisions import horizontal_movement_collision, vertical_movement_collision
+from terrain.collisions import horizontal_movement_collision, vertical_movement_collision
 
 class MockCharacter():
     def __init__(self):

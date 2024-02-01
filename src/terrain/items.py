@@ -1,8 +1,11 @@
 import pygame
-from settings import UI_ITEM_IMAGE_SIZE
-from support import scale_image
+from tools.settings import UI_ITEM_IMAGE_SIZE
+from tools.support import scale_image, puts
+
 
 class Item:
+    items = []
+
     def __init__(self, item_id, name, kind, owner, price, active):
         self.item_id = item_id
         self.name = name
@@ -26,6 +29,7 @@ class Sword(Item):
         self.text = 'Obrażenia'
         self.damage = damage
 
+
 class Bow(Item):
     def __init__(self, item_id, name, kind, owner, price, damage, active=False):
         super().__init__(item_id, name, kind, owner, price, active)
@@ -38,6 +42,7 @@ class Bow(Item):
         # Properties:
         self.text = 'Obrażenia'
         self.damage = damage
+
 
 class Shield(Item):
     def __init__(self, item_id, name, kind, owner, price, damage, active=False):
@@ -52,6 +57,7 @@ class Shield(Item):
         self.text = 'Pancerz'
         self.damage = damage
 
+
 class Potion(Item):
     def __init__(self, item_id, name, kind, owner, price, damage, active=False):
         super().__init__(item_id, name, kind, owner, price, active)
@@ -65,22 +71,33 @@ class Potion(Item):
         self.text = 'Punkty życia'
         self.damage = damage
 
-def create_items(list) -> list:
+
+def create_items(item_list: list, owner: tuple) -> list:
+    """
+    Creates items from a list
+
+    :param item_list: list of items
+    :param owner: owner, like player or chest
+    :return: list of items as objects
+    """
     items = []
-    for item_id, item in enumerate(list):
+    for item in item_list:
+        new_id = len(Item.items)
         if item['kind'] == 'sword':
-            item_x = Sword(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'],
+            item_x = Sword(new_id, item['name'], item['kind'], owner, item['price'], item['damage'],
                            active=True)
         elif item['kind'] == 'bow':
-            item_x = Bow(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'], active=True)
+            item_x = Bow(new_id, item['name'], item['kind'], owner, item['price'], item['damage'], active=True)
         elif item['kind'] == 'shield':
-            item_x = Shield(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'],
+            item_x = Shield(new_id, item['name'], item['kind'], owner, item['price'], item['damage'],
                             active=True)
         elif item['kind'] == 'item':
-            item_x = Potion(item_id, item['name'], item['kind'], 'player', item['price'], item['damage'],
+            item_x = Potion(new_id, item['name'], item['kind'], owner, item['price'], item['damage'],
                             active=True)
             # item_id, name, kind, owner, price, damage
         else:
             continue
         items.append(item_x)
+        Item.items.append(item_x)
+        puts(f'Utworzono item {item["name"]} o ID: {new_id}')
     return items
