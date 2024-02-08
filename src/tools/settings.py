@@ -1,4 +1,5 @@
 import pygame.font
+from tools.game_data import SWORD_NAMES, BOW_NAMES, ARMOR_NAMES
 pygame.font.init()
 
 # Sounds:
@@ -36,10 +37,10 @@ SCALE = TILE_SIZE / PRIMAL_TILE_SIZE
 
 # Player settings:
 PLAYER_SIZE = (30*SCALE, 57*SCALE)
-PLAYER_SPEED = 4*SCALE
+PLAYER_SPEED = 8*SCALE
 PLAYER_GRAVITY = 0.8*SCALE
 PLAYER_JUMP_SPEED = -12*SCALE
-PLAYER_MAX_HEALTH = 1000
+PLAYER_MAX_HEALTH = 10000
 
 PLAYER_ANIMATIONS_PATH = 'content/graphics/character/'
 PLAYER_DEATH_ANIMATION_SPEED = 0.15*SCALE
@@ -110,7 +111,7 @@ ENEMY_DEATH_LATENCY = 1500
 BULLET_DEFAULT_SPEED = {'arrow': 10*SCALE, 'death_bullet': 5*SCALE}
 
 # Frames Per Seconds:
-FPS = 60
+FPS = 63
 FPS_SHOW_POS = (60, 25)
 
 # Buttons:
@@ -128,6 +129,59 @@ UI_SKELETON_POINTS_SPACE = (120, 50)
 TERRAIN_PATH = 'content/graphics/terrain/terrain_tiles.png'
 FIREPLACE_PATH = 'content/graphics/terrain/fireplace/'
 CHEST_PATH = 'content/graphics/terrain/chest/'
+
+# Items:
+ITEM_LEVEL_WEIGHT = [0.6, 0.25, 0.15]
+ITEM_DMG_MULTIPLIERS = [1.0, 5.0, 0.1]
+ITEM_BASE_DMG = {
+    'sword': 60,
+    'bow': 90,
+    'shield': 50,
+    'item': 120
+}
+ITEM_BASE_PRICE = {
+    'sword': 99,
+    'bow': 76,
+    'shield': 67,
+    'item': 32
+}
+ITEM_NAMES = {
+    'sword': SWORD_NAMES,
+    'bow': BOW_NAMES,
+    'shield': ARMOR_NAMES,
+    'item': ['Potion']
+}
+ITEM_LOOT_ODDS_1 = {
+    0: 0.5,
+    1: 0.3,
+    2: 0.1,
+    3: 0.05,
+    4: 0.03,
+    5: 0.015,
+    6: 0.005
+}
+ITEM_LOOT_ODDS_2 = {
+    'sword': 0.2,
+    'bow': 0.15,
+    'shield': 0.15,
+    'item': 0.5
+}
+
+ITEM_PATH = {
+    'sword': 'content/graphics/items/straight_sword_1.png',
+    'bow': 'content/graphics/items/short_bow_1.png',
+    'shield': 'content/graphics/items/wooden_shield_1.png',
+    'item': 'content/graphics/items/small_health_potion.png'
+}
+ITEM_IMAGES = {}
+# Level:
+
+LEVEL_AREA_DISTANCE = 3000
+
+# Keyboard:
+KEY_CD = {
+    'v': 400
+}
 
 # Developing:
 

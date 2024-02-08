@@ -3,19 +3,20 @@ from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZ
     EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
     EQUIPMENT_ACTIVE_FRAME_SPACE
 from tools.support import draw_text, puts, create_header, cursor
-from lootwindow import LootWindow
-from frame import Frame
+from player.lootwindow import LootWindow
+from player.frame import Frame
 from terrain import items
 
 
 class PlayerEquipment:
-    def __init__(self, player) -> None:
+    def __init__(self, player, items_images) -> None:
         self.player = player
         self.show = False
         self.show_cooldown = pygame.time.get_ticks()
         self.header = create_header()
         self.frames = []
         self.items = []
+        self.items_images = items_images
         self.selected_frame = None
         self.active_items = {'sword': None, 'bow': None, 'shield': None, 'item': None}
         self.create_equipment_panel()

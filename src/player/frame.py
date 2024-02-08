@@ -104,13 +104,15 @@ class Frame(pygame.sprite.Sprite):
             (position[0] + size[0] * 1 / 10, position[1] + size[1] * 8 / 30),
             (position[0] + size[0] * 1 / 10, position[1] + size[1] * 14 / 30),
             (position[0] + size[0] * 1 / 10, position[1] + size[1] * 20 / 30),
-            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 26 / 30)
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 26 / 30),
+            (position[0] + size[0] * 1 / 10, position[1] + size[1] * 32 / 30)
         ]
         draw_text(display_surface, f'Nazwa: {self.item.name}', UI_FRAME_FONT, BLACK, tags[0][0], tags[0][1], left=True)
         draw_text(display_surface, f'{self.item.text}: {self.item.damage}', UI_FRAME_FONT, BLACK, tags[1][0], tags[1][1], left=True)
         draw_text(display_surface, f'Wartość: {self.item.price}', UI_FRAME_FONT, BLACK, tags[2][0], tags[2][1], left=True)
         draw_text(display_surface, f'Id: {self.item.item_id}', UI_FRAME_FONT, BLACK, tags[3][0], tags[3][1], left=True)
-        draw_text(display_surface, f'Owner: {self.item.owner[1]}', UI_FRAME_FONT, BLACK, tags[4][0], tags[4][1], left=True)
+        draw_text(display_surface, f'Level: {self.item.level}', UI_FRAME_FONT, BLACK, tags[4][0], tags[4][1], left=True)
+        draw_text(display_surface, f'Owner: {self.item.owner[1]}', UI_FRAME_FONT, BLACK, tags[5][0], tags[5][1], left=True)
 
     def draw(self, screen: pygame.Surface) -> None:
         """

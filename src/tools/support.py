@@ -35,6 +35,7 @@ from datetime import datetime
 import pygame
 from tools.settings import SCALE, BUTTON_SIZE
 
+
 def import_csv_file(path):
     """
     Imports a CSV file and returns its content as a list.
@@ -295,6 +296,6 @@ def puts(text):
     date_time = datetime.now()
     message = f'[{str(date_time.strftime("%Y/%m/%d, %H:%M:%S"))}] {text}'
     print(message)
-    with open(r'/logs.txt', 'a', encoding='utf-8') as file:
-        file.write("\n")
-        file.write(message)
+    # with open(r'/logs.txt', 'a', encoding='utf-8') as file:
+    #     file.write("\n")
+    #     file.write(message)

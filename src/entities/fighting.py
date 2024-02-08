@@ -237,7 +237,7 @@ class Thunder(pygame.sprite.Sprite):
         surface.blit(self.image, pos)
 
 
-class Fight_Manager():
+class FightManager():
     """
     Manages and handles combat-related interactions.
 
@@ -271,6 +271,7 @@ class Fight_Manager():
         # Sounds:
         self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
         self.shield_block_sound.set_volume(0.05)
+
     def sword_attack(self, character):
         """
         Perform a sword attack.

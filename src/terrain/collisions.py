@@ -3,6 +3,8 @@ def horizontal_movement_collision(character, sprites):
     collidable_sprites = sprites.sprites()
 
     for sprite in collidable_sprites:
+        # if -300 > sprite.rect.centerx - character.collision_rect.centerx > 300:
+        #     continue
         if sprite.rect.colliderect(character.collision_rect):
             if sprite.rect.centerx < character.collision_rect.centerx:
                 character.collision_rect.left = sprite.rect.right
@@ -20,6 +22,8 @@ def vertical_movement_collision(character, sprites):
     collidable_sprites = sprites.sprites()
 
     for sprite in collidable_sprites:
+        # if -300 > sprite.rect.centery - character.collision_rect.centery > 300:
+        #     continue
         if sprite.rect.colliderect(character.collision_rect):
             if character.direction.y > 0 and sprite.rect.centery > character.collision_rect.centery:  # Falling
                 character.collision_rect.bottom = sprite.rect.top

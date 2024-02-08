@@ -5,23 +5,24 @@ from tools.settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
     PLAYER_DEATH_ANIMATION_SPEED, PLAYER_SWORD_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE, FPS, \
     PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN, PLAYER_ARCH_DAMAGE, PLAYER_SWORD_DAMAGE, PLAYER_SWORD_HIT_TIME, \
-    PLAYER_ARCH_SPEED
-from tools.support import draw_text, import_character_assets, calculate_animation_speed, now
-from ui import UI
-from terrain.items import create_items
-from player.equipment import PlayerEquipment
+    PLAYER_ARCH_SPEED, KEY_CD
+from tools.support import draw_text, import_character_assets, calculate_animation_speed, now, puts
 from tools.game_data import START_ITEMS_LIST
+from player.ui import UI
+from player.equipment import PlayerEquipment
+from terrain.items import create_items
+from terrain.tiles import change_loot_priority
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos, create_pause, sword_attack, arch_attack):
+    def __init__(self, pos, level):
         super().__init__()
 
         self.animations = PlayerAnimations(self)
         self.movement = PlayerMovement(self)
         self.status = PlayerStatus(self)
-        self.fighting = PlayerAttack(self, sword_attack, arch_attack)
-        self.equipment = PlayerEquipment(self)
+        self.fighting = PlayerAttack(self, level.fight_manager.sword_attack, level.fight_manager.arch_attack)
+        self.equipment = PlayerEquipment(self, level.images.items)
         self.defense = PlayerDefense(self)
         self.properties = PlayerProperties(self)
         self.ui = UI()
@@ -30,12 +31,12 @@ class Player(pygame.sprite.Sprite):
         self.movement.init_movement()
         self.status.reset_status()
         self.fighting.reset_attack_properties()
-        for item in create_items(START_ITEMS_LIST, (self, 'player')):
+        for item in create_items(level, START_ITEMS_LIST, (self, 'player')):
             self.equipment.add_item(item)
         self.properties.reset_properties()
 
         # Methods:
-        self.create_pause = create_pause
+        self.create_pause = level.create_pause
 
     def collect_items(self, items):
         for item in items:
@@ -182,6 +183,9 @@ class PlayerMovement:
         self.on_ground = False
         self.on_left = False
         self.on_right = False
+        self.key_pressed = {
+            'v': 0
+        }
 
     def set_direction(self, new_direction: pygame.math.Vector2) -> None:
         self.direction = new_direction
@@ -272,6 +276,11 @@ class PlayerMovement:
     def input_equipment(self, keys):
         if keys[pygame.K_p]: # Key for development testing:
             pass
+        if keys[pygame.K_v]: # Change loot priority:
+            if now() - self.key_pressed['v'] > KEY_CD['v']:
+                change_loot_priority(self.player.status.can_use_object[1])
+                self.key_pressed['v'] = now()
+                self.player.equipment.close()
         if keys[pygame.K_i]: # Show Equipment
             if pygame.time.get_ticks() - self.player.equipment.show_cooldown > 400:
                 if self.player.equipment.show:
@@ -281,8 +290,9 @@ class PlayerMovement:
                 self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
                 self.player.equipment.show_cooldown = pygame.time.get_ticks()
         if keys[pygame.K_e]: # Use element:
+            index = self.player.status.usable_priority
             if self.player.status.can_use_object[0]:
-                element = self.player.status.can_use_object[1]
+                element = self.player.status.can_use_object[1][index]
                 if element.kind == 'corpse' or element.kind == 'chest':
                     if pygame.time.get_ticks() - self.player.equipment.loot_window.show_cooldown > 400:
                         if self.player.equipment.loot_window.show:
@@ -320,9 +330,11 @@ class PlayerStatus:
         self.facing_right = True
         self.just_jumped = False
         self.can_use_object = [False, None]
+        self.usable_priority = 0
 
     def set_status(self, new_status: str) -> None:
         self.status = new_status
+
     def set_facing(self, new_facing: bool) -> None:
         self.facing_right = new_facing
 

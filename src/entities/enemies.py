@@ -1,28 +1,29 @@
 import random
 import pygame
+import math
 from typing import Any
 from tools.settings import GREY, RED, ENEMY_IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     ENEMY_GRAVITY, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, \
     SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, ENEMY_ANIMATION_SPEED, ENEMY_SIZE, ENEMY_HEALTH, ENEMY_ATTACK_SPEED, \
     ENEMY_TRIGGER_LENGTH, ENEMY_ATTACK_SPACE, ENEMY_ATTACK_RANGE, ENEMY_ULTIMATE_ATTACK_COOLDOWN, ENEMY_DAMAGE, \
-    ENEMY_EXPERIENCE, ENEMY_ATTACK_SIZE, SCALE
-from tools.support import draw_text, import_character_assets
+    ENEMY_EXPERIENCE, ENEMY_ATTACK_SIZE, SCALE, LEVEL_AREA_DISTANCE
+from tools.support import draw_text, import_character_assets, puts
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, enemy_id, pos, kind):
+    def __init__(self, enemy_id, pos, kind, frames):
         super().__init__()
 
         self.status = EnemyStatus(self, kind, enemy_id)
         self.defense = EnemyDefense(self)
-        self.properties = EnemyProperties(self)
         self.animations = EnemyAnimations(self)
+        self.properties = EnemyProperties(self)
         self.movement = EnemyMovement(self)
         self.fighting = EnemyFighting(self)
 
         self.status.reset_status()
+        self.animations.load_animations(pos, frames)
         self.properties.reset_properties()
-        self.animations.load_animations(pos)
         self.movement.init_movement()
 
     def update(self):
@@ -82,7 +83,6 @@ class EnemyDefense:
         self.enemy.movement.set_direction(temp_direction)
         self.enemy.status.set_status('dead')
 
-
     def hurt(self, damage) -> bool:
         self.just_hurt = True
         self.just_hurt_time = pygame.time.get_ticks()
@@ -119,6 +119,7 @@ class EnemyProperties:
         self.experience = {
             'current': ENEMY_EXPERIENCE[self.enemy.status.type]
         }
+        self.level = 1
         self.dead = {
             'status': False,
             'time': 0
@@ -134,6 +135,7 @@ class EnemyProperties:
         self.dead[key] = value
 
     def reset_properties(self):
+        self.level = math.floor(self.enemy.animations.rect.x / LEVEL_AREA_DISTANCE + 1)
         self.health = {
             'current': ENEMY_HEALTH[self.enemy.status.type],
             'max': ENEMY_HEALTH[self.enemy.status.type]
@@ -147,6 +149,7 @@ class EnemyAnimations:
     def __init__(self, enemy):
         self.enemy = enemy
         self.animations = {}
+        self.flipped_animations = {}
         self.frame_index = 0
         self.animation_speed = 0
         self.image = None
@@ -164,32 +167,27 @@ class EnemyAnimations:
     def set_animation_speed(self, new_speed: float) -> None:
         self.animation_speed = new_speed
 
-    def load_animations(self, position):
+    def load_animations(self, position, frames):
         type = self.enemy.status.type
-        self.animations = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
-                           'stun': []}
-        if type == 'dark_knight':
-            import_character_assets(
-                self.animations, f'{ENEMY_ANIMATIONS_PATH}/{type}/', scale=SCALE * 0.2, flip=True
-            )
-        else:
-            import_character_assets(self.animations, f'{ENEMY_ANIMATIONS_PATH}/{type}/')
-
+        self.animations = frames[0]
+        self.flipped_animations = frames[1]
         self.frame_index = 0
         self.animation_speed = ENEMY_ANIMATION_SPEED[type]
         self.image = self.animations['idle'][self.frame_index]
         self.rect = self.image.get_rect(topleft=position)
+
     def animate(self):
         if self.enemy.status.status == 'attack' or self.enemy.properties.dead['status']:
             return
         animation_speed = self.animation_speed
+        animations = self.check_for_flip()
         if self.enemy.defense.just_hurt:
-            animation = self.animations['hit']
+            animation = animations['hit']
         elif self.enemy.fighting.combat['stunned']:
-            animation = self.animations['stun']
+            animation = animations['stun']
             animation_speed = 0.1
         else:
-            animation = self.animations[self.enemy.status.status]
+            animation = animations[self.enemy.status.status]
 
         # Loop over frame index
         self.frame_index += animation_speed
@@ -198,8 +196,7 @@ class EnemyAnimations:
             if self.enemy.status.status == 'stun':
                 self.enemy.defense.reset_stun()
 
-        image = animation[int(self.frame_index)]
-        self.flip_image(image)
+        self.calculate_rect(animation[int(self.frame_index)])
 
     def animate_attack(self):
         if self.enemy.status.status == 'attack' and \
@@ -207,7 +204,8 @@ class EnemyAnimations:
                 not self.enemy.properties.dead['status'] and \
                 not self.enemy.fighting.combat['stunned']:
             animation_speed = self.enemy.fighting.attack['speed']
-            animation = self.animations['attack']
+            animation = self.check_for_flip()['attack']
+            #animation = self.animations['attack']
 
             # Loop over frame index
             self.frame_index += animation_speed
@@ -217,35 +215,35 @@ class EnemyAnimations:
             if self.frame_index >= len(animation):
                 self.enemy.fighting.reset_attack()
 
-            image = animation[int(self.frame_index)]
-            self.flip_image(image)
+            self.calculate_rect(animation[int(self.frame_index)])
 
     def animate_dead(self):
         if self.enemy.status.status == 'dead' and self.enemy.properties.dead['status']:
             self.enemy.movement.set_direction(pygame.math.Vector2(0, 0))
             animation_speed = 0.15
 
-            animation = self.animations['dead']
+            animation = self.check_for_flip()['dead']
 
             # Loop over frame index
             self.frame_index += animation_speed
             if self.frame_index >= len(animation):
                 self.frame_index = len(animation) - 1
 
-            image = animation[int(self.frame_index)]
-            self.flip_image(image)
+            self.calculate_rect(animation[int(self.frame_index)])
 
-    def flip_image(self, image):
+    def check_for_flip(self):
         if self.enemy.status.facing_right:
-            self.image = image
+            return self.animations
         else:
-            flipped_image = pygame.transform.flip(image, True, False)
-            self.image = flipped_image
+            return self.flipped_animations
 
+    def calculate_rect(self, animation):
+        self.image = animation
         self.rect.midbottom = self.enemy.movement.collision_rect.midbottom
         self.rect = self.image.get_rect(midbottom=self.rect.midbottom)
 
     def draw(self, surface, offset):
+        #puts(f'{self.enemy.status.type}, id: {self.enemy.status.id}, adres: {id(self.image)}')
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
 
@@ -269,7 +267,7 @@ class EnemyAnimations:
             draw_text(surface, 'Pos: ' + str(self.rect.center),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
 
-            draw_text(surface, 'Combat: ' + str(int(self.enemy.fighting.combat['on'])),
+            draw_text(surface, 'Level: ' + str(int(self.enemy.properties.level)),
                       SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
 
     def draw_health_bar(self, screen, offset):
@@ -477,8 +475,8 @@ class EnemyFightingThunder(EnemyFighting):
 
 
 class Sceleton(Enemy):
-    def __init__(self, enemy_id, pos, sword_attack):
-        super().__init__(enemy_id, pos, 'sceleton')
+    def __init__(self, enemy_id, pos, frames, sword_attack):
+        super().__init__(enemy_id, pos, 'sceleton', frames)
 
         # Methods:
         self.sword_attack = sword_attack
@@ -498,8 +496,8 @@ class Sceleton(Enemy):
 
 
 class Ninja(Enemy):
-    def __init__(self, enemy_id, pos, arch_attack):
-        super().__init__(enemy_id, pos, 'ninja')
+    def __init__(self, enemy_id, pos, frames, arch_attack):
+        super().__init__(enemy_id, pos, 'ninja', frames)
 
         # Methods:
         self.arch_attack = arch_attack
@@ -519,8 +517,8 @@ class Ninja(Enemy):
 
 
 class Wizard(Enemy):
-    def __init__(self, enemy_id, pos, arch_attack, thunder_attack):
-        super().__init__(enemy_id, pos, 'wizard')
+    def __init__(self, enemy_id, pos, frames, arch_attack, thunder_attack):
+        super().__init__(enemy_id, pos, 'wizard', frames)
         self.thunder = {
             'time': pygame.time.get_ticks(),
             'cooldown': ENEMY_ULTIMATE_ATTACK_COOLDOWN[self.status.type]
@@ -549,8 +547,8 @@ class Wizard(Enemy):
 
 
 class DarkKnight(Enemy):
-    def __init__(self, enemy_id, pos, sword_attack):
-        super().__init__(enemy_id, pos, 'dark_knight')
+    def __init__(self, enemy_id, pos, frames, sword_attack):
+        super().__init__(enemy_id, pos, 'dark_knight', frames)
 
         # Methods:
         self.sword_attack = sword_attack

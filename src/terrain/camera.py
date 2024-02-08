@@ -1,4 +1,6 @@
 import pygame
+from tools.settings import SCREEN_WIDTH, TILE_SIZE
+from tools.support import puts
 
 
 class Camera():
@@ -10,6 +12,7 @@ class Camera():
             'top': 0,
             'bottom': border_bottom
         }
+        self.view = [-SCREEN_WIDTH/2-TILE_SIZE, SCREEN_WIDTH/2+TILE_SIZE]
 
     def scroll_camera(self, screen_size, player_movement):
         half_w = screen_size[0] / 2
@@ -21,10 +24,13 @@ class Camera():
 
         # Check X offset
         if self.border['right'] - half_w > player.collision_rect.centerx > half_w:
+            self.view = [-half_w-TILE_SIZE, half_w+TILE_SIZE]
             offset_x = player.collision_rect.centerx - half_w
         if player.collision_rect.centerx < half_w:
+            self.view = [-half_w*2, half_w*2]
             offset_x = 0
         if player.collision_rect.centerx > self.border['right'] - half_w:
+            self.view = [-half_w*2, half_w*2]
             offset_x = self.border['right'] - 2 * half_w
         # Check Y offset
         if self.border['bottom'] - half_h > player.collision_rect.centery > half_h:

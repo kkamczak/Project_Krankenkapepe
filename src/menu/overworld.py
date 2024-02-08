@@ -55,6 +55,7 @@ class Overworld:
 
     def draw_wallpaper(self):
         self.display_surface.blit(self.wallpaper, (0, 0))
+
     def draw_buttons(self):
         self.buttons_sprite.draw(self.display_surface)
         for button in self.buttons_sprite:
@@ -128,9 +129,9 @@ class DeathScene(Overworld):
     def check_action(self):
         super().check_action()
         if self.action == 'Main Menu':
-            self.create_main_menu()
+            self.create_main_menu(respawn=True)
         if self.action == 'Respawn':
-            self.create_level()
+            self.create_level(respawn=True)
 
     def run(self):
 

@@ -65,5 +65,3 @@ class SoulAnimation(Animation):
         if self.target[0] + offset.x - self.rect.centerx < 10 or \
             self.target[1] + offset.y - self.rect.centery < 10:
             self.finish = True
-
-

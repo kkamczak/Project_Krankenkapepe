@@ -14,10 +14,7 @@ Functions:
     - check_for_usable_elements(character, elements): Checks for usable elements near the character.
 """
 import pygame
-from tools.support import import_folder, puts, import_image
-from tools.game_data import CHESTS_CONTENT, CORPSE_CONTENT
-from items import create_items
-from entities.enemies import Enemy
+from tools.support import import_folder
 
 
 class Tile(pygame.sprite.Sprite):
@@ -36,6 +33,19 @@ class Tile(pygame.sprite.Sprite):
         self.image = pygame.Surface((size, size))
         self.rect = self.image.get_rect(topleft=(x_pos, y_pos))
         self.id = tile_id
+        self.pickable = False
+
+    def show_pickable(self):
+
+        image = self.image.copy()
+        glow_color = (255, 165, 0)
+        alpha = 180
+
+        glow_surface = pygame.Surface((image.get_width(), image.get_height()), pygame.SRCALPHA)
+        glow_surface.fill((glow_color[0], glow_color[1], glow_color[2], alpha))
+
+        image.blit(glow_surface, (0, 0), special_flags=pygame.BLEND_RGBA_ADD)
+        return image
 
     def draw(self, surface: pygame.Surface, offset: pygame.math.Vector2) -> None:
         """
@@ -46,7 +56,10 @@ class Tile(pygame.sprite.Sprite):
             offset (pygame.math.Vector2): The offset to apply to the tile's position.
         """
         pos = self.rect.topleft - offset
-        surface.blit(self.image, pos)
+        if self.pickable:
+            surface.blit(self.show_pickable(), pos)
+        else:
+            surface.blit(self.image, pos)
 
 
 class StaticTile(Tile):
@@ -78,9 +91,9 @@ class AnimatedTile(Tile):
         path (str): The path to the folder containing animation frames.
     """
     def __init__(self, tile_id: int, size: tuple[int, int],
-                 x_pos: int, y_pos: int, path: str) -> None:
+                 x_pos: int, y_pos: int, images: list) -> None:
         super().__init__(tile_id, size, x_pos, y_pos)
-        self.frames = import_folder(path)
+        self.frames = images
         self.frame_index = 0
         self.image = self.frames[self.frame_index]
 
@@ -96,85 +109,11 @@ class AnimatedTile(Tile):
         self.animate()
 
 
-class Chest(AnimatedTile):
-    """
-    Represents a chest tile in the game.
-
-    Chests can contain items and are animated. Players can interact with chests to collect their content.
-
-    Attributes:
-        chests (list[Chest]): A list to keep track of all created chest instances.
-
-    Args:
-        id (int): The unique identifier for the chest.
-        size (tuple[int, int]): The size of the chest (width, height).
-        x (int): The x-coordinate of the chest's top-left corner.
-        y (int): The y-coordinate of the chest's top-left corner.
-        path (str): The path to the folder containing animation frames for the chest.
-
-    Methods:
-        animate_once: Animate the chest once and mark it as animated.
-        create_content: Create the content (items) for the chest.
-        action: Perform an action on the chest (collect its content).
-        update: Update the chest's animation frame.
-    """
-
-    chests = []
-
-    def __init__(self, id: int, size: tuple[int, int], x: int, y: int, path: str) -> None:
-        """
-        Initialize a Chest object.
-
-        Args:
-            id (int): The unique identifier for the chest.
-            size (tuple[int, int]): The size of the chest (width, height).
-            x (int): The x-coordinate of the chest's top-left corner.
-            y (int): The y-coordinate of the chest's top-left corner.
-            path (str): The path to the folder containing animation frames for the chest.
-        """
-        super().__init__(id, size, x, y, path)
-        self.kind = 'chest'
-        self.animated = False
-        self.equipment = TileEquipment(True)
-        self.equipment.content = create_content((self, 'chest'))
-        Chest.chests.append(self)
-
-    def animate_once(self) -> None:
-        """Animate the chest once, then mark it as animated."""
-        self.frame_index += 0.15
-        if self.frame_index >= len(self.frames):
-            self.frame_index = len(self.frames) - 1
-            self.animated = True
-        self.image = self.frames[int(self.frame_index)]
-
-    def action(self) -> list:
-        """Perform an action on the chest (collect its content)."""
-        return self.equipment.content
-
-    def update(self):
-        if self.equipment.collected and not self.animated:
-            self.animate_once()
-
-
 class Bonfire(AnimatedTile):
-    def __init__(self, tile_id: int, size: tuple[int, int], x: int, y: int, path: str):
-        super().__init__(tile_id, size, x, y, path)
+    def __init__(self, tile_id: int, size: tuple[int, int], x: int, y: int, images: list):
+        super().__init__(tile_id, size, x, y, images)
         self.kind = 'bonfire'
         self.equipment = TileEquipment()
-
-
-class Corpse(StaticTile):
-    """
-    Class for corpse created after defeating enemy.
-    """
-    def __init__(self, tile_id: int, size: int, x_pos: int, y_pos: int) -> None:
-        super().__init__(tile_id, size, x_pos, y_pos)
-        image = import_image('content/graphics/terrain/corpse/1.png')
-        self.kind = 'corpse'
-        self.image = image
-        self.rect = self.image.get_rect(midbottom=(x_pos, y_pos))
-        self.equipment = TileEquipment(True)
-        self.equipment.content = create_content((self, 'corpse'))
 
 
 class TileEquipment:
@@ -211,38 +150,42 @@ def check_for_usable_elements(character, elements) -> list:
         list: A list containing a boolean indicating
         if a usable element is found and the element itself.
     """
+    current_usable = character.status.can_use_object[1]
+    new_usable = []
+
+    def is_close(current) -> bool:
+        if abs(character.animations.rect.centerx - current.rect.centerx) < 50 and \
+            abs(character.animations.rect.centery - current.rect.centery) < 50 and \
+            not current.equipment.collected:
+            return True
+        return False
+    if current_usable is not None:
+        for element in current_usable:
+            if is_close(element):
+                new_usable.append(element)
     for element in elements:
         if not element.equipment.usable:
+            continue
+        element.pickable = False
+        if element in new_usable:
             continue
         if abs(character.animations.rect.centerx - element.rect.centerx) < 50 and \
             abs(character.animations.rect.centery - element.rect.centery) < 50 and \
             not element.equipment.collected:
-            return [True, element]
+            new_usable.append(element)
+    if len(new_usable) > 0:
+        return [True, new_usable]
     return [False, None]
 
 
-def create_corpse(enemy: Enemy, group: pygame.sprite.Group) -> None:
-    corpse = Corpse(
-        enemy.status.id,
-        32,
-        enemy.animations.rect.midbottom[0],
-        enemy.animations.rect.midbottom[1]
-    )
-    group.add(corpse)
-
-
-def create_content(owner) -> list:
-    """
-    Create the content (items) for the container.
-    """
-    content = []
-    if owner[0].kind == 'chest':
-        index = len(Chest.chests)
-        puts(f'Utworzono skrzynię o id: {index}')
-        for element in create_items(CHESTS_CONTENT[index], owner):
-            content.append(element)
-    elif owner[0].kind == 'corpse':
-        for element in create_items(CORPSE_CONTENT[0], owner):
-            content.append(element)
-    return content
+def change_loot_priority(elements_list) -> None:
+    if len(elements_list) > 0:
+        place_holder = elements_list[0]
+        for index, element in enumerate(elements_list):
+            element.pickable = False
+            if index+1 < len(elements_list):
+                elements_list[index] = elements_list[index+1]
+            else:
+                elements_list[index] = place_holder
+        elements_list[0].pickable = True
 

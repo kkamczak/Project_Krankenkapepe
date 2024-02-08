@@ -10,17 +10,23 @@ It provides essential functions for running the game loop
 and updating the game state during gameplay.
 """
 import pygame
-from tools.support import import_csv_file, import_cut_graphics, scale_image, import_image, now
+import tracemalloc
+from terrain.images_manager import ImagesManager
+from terrain.map_generator import generate_map
+from tools.support import import_csv_file, now, draw_text, puts
 from tools.game_data import levels
-from tools.settings import PRIMAL_TILE_SIZE, TILE_SIZE, SCREEN_WIDTH, \
-    TERRAIN_PATH, FIREPLACE_PATH, CHEST_PATH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY
-from tiles import StaticTile, Bonfire, Chest, check_for_usable_elements, create_corpse
+from tools.settings import TILE_SIZE, SCREEN_WIDTH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY, GREY, \
+    SMALL_STATUS_FONT
+from terrain.tiles import StaticTile, Bonfire, check_for_usable_elements
+from terrain.chest import Chest
+from terrain.corpse import create_corpse
 from terrain.collisions import vertical_movement_collision, horizontal_movement_collision
+from terrain.items import Item
 from player.player import Player
 from entities.enemies import Sceleton, Ninja, Wizard, DarkKnight
-from entities.fighting import Fight_Manager
+from entities.fighting import FightManager
 from terrain.camera import Camera
-from animations import SoulAnimation
+from terrain.animations import SoulAnimation
 
 
 class Level:
@@ -38,9 +44,6 @@ class Level:
         self.pause = False
         self.game_over = False
 
-        # Load level data:
-        level_data = levels[self.current_level]
-
         # Methods:
         self.create_pause = game.create_pause
         self.create_main_menu = game.create_main_menu
@@ -50,35 +53,69 @@ class Level:
         loading_counter = pygame.time.get_ticks()
 
         # Fighting:
-        self.fight_manager = Fight_Manager()
+        self.fight_manager = FightManager()
 
-        # Background:
-        self.background = import_image('content/graphics/terrain/background.png')
-        self.background = scale_image(self.background, self.display_surface.get_size())
+        # Images:
+        self.images = ImagesManager(self.display_surface)
+
+        #generate_map()
+        self.animations = []
+        self.player = pygame.sprite.GroupSingle()
+        self.terrain_sprite = pygame.sprite.Group()
+        self.ter_near_sprites = pygame.sprite.Group()
+        self.collideable_sprites = pygame.sprite.Group()
+        self.col_near_sprites = pygame.sprite.Group()
+        self.terrain_elements_sprite = pygame.sprite.Group()
+        self.enemy_sprites = pygame.sprite.Group()
+        self.camera = None
+
+        self.configure_level()
+
+        # Check for game loading time
+        loading_time = str((pygame.time.get_ticks() - loading_counter) / 1000)
+        print('Loading game time: ' + loading_time)
+
+    def clear_groups(self, player: bool = False):
+        if player:
+            pygame.sprite.GroupSingle.empty(self.player)
+        self.animations = []
+
+        pygame.sprite.Group.empty(self.terrain_sprite)
+        pygame.sprite.Group.empty(self.ter_near_sprites)
+        pygame.sprite.Group.empty(self.collideable_sprites)
+        pygame.sprite.Group.empty(self.col_near_sprites)
+        pygame.sprite.Group.empty(self.terrain_elements_sprite)
+        pygame.sprite.Group.empty(self.enemy_sprites)
+        self.camera = None
+        self.images = None
+        Chest.chests = []
+        Item.items = []
+        puts('Zresetowano level')
+
+    def configure_level(self):
+        # Load level data:
+        level_data = levels[self.current_level]
 
         # Animations:
         self.animations = []
 
         # Player import:
         player_layout = import_csv_file(level_data['player'])
-        self.player = pygame.sprite.GroupSingle()
         self.player_setup(player_layout)
 
         # Terrain import
-        terrain_layout = import_csv_file(level_data['terrain'])
+        #terrain_layout = import_csv_file(level_data['terrain'])
+        terrain_layout, terrain_elements_layout = generate_map()
         self.terrain_sprite = self.create_tile_group(terrain_layout, 'terrain')
+        self.collideable_sprites = self.create_tile_group(terrain_layout, 'collideable')
 
         # Terrain elements import
-        terrain_elements_layout = import_csv_file(level_data['terrain_elements'])
+        #terrain_elements_layout = import_csv_file(level_data['terrain_elements'])
         self.terrain_elements_sprite = self.create_tile_group(terrain_elements_layout, 'terrain_elements')
 
         # Enemy
         enemy_layout = import_csv_file(level_data['enemies'])
         self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
-
-        # Check for game loading time
-        loading_time = str((pygame.time.get_ticks() - loading_counter) / 1000)
-        print('Loading game time: ' + loading_time)
 
         # Map camera configuration:
         self.camera = Camera(len(terrain_layout[0]) * TILE_SIZE,len(terrain_layout) * TILE_SIZE)
@@ -95,33 +132,34 @@ class Level:
             pygame.sprite.Group: A group of sprite objects representing the tiles.
         """
         sprite_group = pygame.sprite.Group()
-        terrain_tile_list: list = []
         enemy_id: int = 0
         tile_id: int = 0
         sprite: object = None
-
-        # Load tile sets:
-        if kind == 'terrain':
-            terrain_tile_list = import_cut_graphics(TERRAIN_PATH, (PRIMAL_TILE_SIZE, PRIMAL_TILE_SIZE))
 
         for row_index, row in enumerate(layout):
             for col_index, val in enumerate(row):
                 if val != str(-1):
                     x = col_index * TILE_SIZE
                     y = row_index * TILE_SIZE
+                    # Load tile sets:
 
                     if kind == 'terrain':
-                        tile_surface = terrain_tile_list[int(val)]
-                        tile_surface = scale_image(tile_surface, (TILE_SIZE, TILE_SIZE))
-                        sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
-                        tile_id += 1
+                        if int(val) == 11:
+                            tile_surface = self.images.terrain_tiles[int(val)]
+                            sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
+                            tile_id += 1
 
+                    if kind == 'collideable':
+                        if int(val) != 11:
+                            tile_surface = self.images.terrain_tiles[int(val)]
+                            sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
+                            tile_id += 1
                     if kind == 'terrain_elements':
                         if val == '1':
-                            sprite = Bonfire(tile_id, TILE_SIZE, x, y, FIREPLACE_PATH)
+                            sprite = Bonfire(tile_id, TILE_SIZE, x, y, self.images.terrain_elements['bonfire'])
                             tile_id += 1
                         if val == '0':
-                            sprite = Chest(tile_id, TILE_SIZE, x, y, CHEST_PATH)
+                            sprite = Chest(tile_id, TILE_SIZE, x, y, self.images.terrain_elements['chest'], self)
                             tile_id += 1
 
                     if kind == 'enemies':
@@ -129,6 +167,7 @@ class Level:
                             sprite = Sceleton(
                                 enemy_id,
                                 (x, y),
+                                (self.images.enemies[0]['sceleton'], self.images.enemies[1]['sceleton']),
                                 self.fight_manager.sword_attack
                             )
                             enemy_id += 1
@@ -136,6 +175,7 @@ class Level:
                             sprite = Ninja(
                                 enemy_id,
                                 (x, y),
+                                (self.images.enemies[0]['ninja'], self.images.enemies[1]['ninja']),
                                 self.fight_manager.arch_attack
                             )
                             enemy_id += 1
@@ -143,6 +183,7 @@ class Level:
                             sprite = Wizard(
                                 enemy_id,
                                 (x, y),
+                                (self.images.enemies[0]['wizard'], self.images.enemies[1]['wizard']),
                                 self.fight_manager.arch_attack,
                                 self.fight_manager.thunder_attack
                             )
@@ -151,10 +192,12 @@ class Level:
                             sprite = DarkKnight(
                                 enemy_id,
                                 (x, y),
+                                (self.images.enemies[0]['dark_knight'], self.images.enemies[1]['dark_knight']),
                                 self.fight_manager.sword_attack
                             )
                             enemy_id += 1
-                    sprite_group.add(sprite)
+                    if sprite is not None:
+                        sprite_group.add(sprite)
         return sprite_group
 
     def player_setup(self, layout):
@@ -171,9 +214,7 @@ class Level:
                 if val == '0':
                     sprite = Player(
                         (x, y),
-                        self.create_pause,
-                        self.fight_manager.sword_attack,
-                        self.fight_manager.arch_attack
+                        self
                     )
                     self.player.add(sprite)
 
@@ -187,27 +228,43 @@ class Level:
         for player in self.player:
             return player
 
+    def find_near_tiles(self, player_pos):
+        pygame.sprite.Group.empty(self.col_near_sprites)
+        pygame.sprite.Group.empty(self.ter_near_sprites)
+
+        for sprite in self.collideable_sprites:
+            if self.camera.view[0] < sprite.rect.centerx - player_pos < self.camera.view[1]:
+                self.col_near_sprites.add(sprite)
+        for sprite in self.terrain_sprite:
+            if self.camera.view[0] < sprite.rect.centerx - player_pos < self.camera.view[1]:
+                self.ter_near_sprites.add(sprite)
+
     def run(self):
         """
         Run the game loop for the level.
         """
-        self.display_surface.blit(self.background, (0, 0))
+        drawing_all = now()
+        self.display_surface.blit(self.images.background, (0, 0))
 
         player = self.get_player()
         player_pos = player.movement.collision_rect.centerx
+        self.find_near_tiles(player_pos)
+
         # Fighting:
         self.fight_manager.attack_update(self.display_surface, self.camera.offset)
         self.fight_manager.check_damage(self.get_player(), self.enemy_sprites)
-        # Draw terrain  -----------------------------------------------------------
-        for sprite in self.terrain_sprite:
-            if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
-                sprite.update()
-                sprite.draw(self.display_surface, self.camera.offset)
-        for sprite in self.terrain_elements_sprite:
-            if abs(sprite.rect.centerx - player_pos) < SCREEN_WIDTH:
-                sprite.update()
-                sprite.draw(self.display_surface, self.camera.offset)
 
+        # Draw terrain  -----------------------------------------------------------
+        for sprite in self.col_near_sprites:
+            sprite.update()
+            sprite.draw(self.display_surface, self.camera.offset)
+        for sprite in self.ter_near_sprites:
+            sprite.update()
+            sprite.draw(self.display_surface, self.camera.offset)
+        for sprite in self.terrain_elements_sprite:
+            if self.camera.view[0] < sprite.rect.centerx - player_pos < self.camera.view[1]:
+                sprite.update()
+                sprite.draw(self.display_surface, self.camera.offset)
         # Animations:
         for index, animation in enumerate(self.animations):
             animation.update(self.camera.offset)
@@ -219,14 +276,16 @@ class Level:
         # Draw player -----------------------------------------------------------
         if not self.game_over:
             self.player.update(self.display_surface)
-            horizontal_movement_collision(player.movement, self.terrain_sprite)
-            vertical_movement_collision(player.movement, self.terrain_sprite)
+            horizontal_movement_collision(player.movement, self.col_near_sprites)
+            vertical_movement_collision(player.movement, self.col_near_sprites)
             self.camera.scroll_camera(self.display_surface.get_size(), player.movement)
 
             player.status.can_use_object = check_for_usable_elements(
                 player,
                 self.terrain_elements_sprite
             )
+            if player.status.can_use_object[1] is not None and len(player.status.can_use_object[1]) > 0:
+                player.status.can_use_object[1][0].pickable = True
 
             player.animations.draw(self.display_surface, self.camera.offset)
             if player.properties.dead['status'] and \
@@ -234,26 +293,41 @@ class Level:
                 self.create_death_scene()
                 self.game_over = True
         # Draw enemies -----------------------------------------------------------
+        enemy_counter = 0
         for enemy in self.enemy_sprites:
-            enemy.update()
-            if abs(enemy.animations.rect.centerx - player_pos) < SCREEN_WIDTH:
-                horizontal_movement_collision(enemy.movement, self.terrain_sprite)
-                vertical_movement_collision(enemy.movement, self.terrain_sprite)
+            if self.camera.view[0] < enemy.animations.rect.centerx - player_pos < self.camera.view[1]:
+                enemy_counter += 1
+                enemy.update()
+                horizontal_movement_collision(enemy.movement, self.col_near_sprites)
+                vertical_movement_collision(enemy.movement, self.col_near_sprites)
                 if not enemy.properties.dead['status']:
                     enemy.animations.draw_health_bar(self.display_surface, self.camera.offset)
                     enemy.fighting.check_for_combat(self.get_player())
                 enemy.animations.draw(self.display_surface, self.camera.offset)
-            if enemy.properties.dead['status'] and \
-                    now() - enemy.properties.dead['time'] > ENEMY_DEATH_LATENCY:
-                soul_animation = SoulAnimation(
-                    enemy.animations.rect.center,
-                    'soul',
-                    self.display_surface.get_size()
-                )
-                self.animations.append(soul_animation)
-                create_corpse(enemy, self.terrain_elements_sprite)
-                enemy.kill()
+                if enemy.properties.dead['status'] and \
+                        now() - enemy.properties.dead['time'] > ENEMY_DEATH_LATENCY:
+                    soul_animation = SoulAnimation(
+                        enemy.animations.rect.center,
+                        'soul',
+                        self.display_surface.get_size()
+                    )
+                    self.animations.append(soul_animation)
+                    create_corpse(self, enemy, self.terrain_elements_sprite)
+                    enemy.kill()
         # Show UI -----------------------------------------------------------
         if not player.properties.dead['status']:
             player.ui.show_ui(self.display_surface, self.camera.offset, player)
         player.equipment.update_show(self.display_surface)
+
+        # Developing
+        memory_stats = tracemalloc.get_traced_memory()
+        used_memory = round(memory_stats[0] / (1024 ** 2), 4)
+        all_time = str((now() - drawing_all) / 1000)
+
+        show_info(self.display_surface, f'Terrain elements: {self.terrain_elements_sprite}', 0)
+        show_info(self.display_surface, f'Klocków: {len(self.col_near_sprites) + len(self.ter_near_sprites)}, enemies: {enemy_counter}', 1)
+        show_info(self.display_surface, f'Memory use [MB]: {used_memory}, loop time: {all_time} s.', 2)
+
+
+def show_info(screen, info, place) -> None:
+    draw_text(screen, f'{info}', SMALL_STATUS_FONT, GREY, 750, 800+20*place, left=True)

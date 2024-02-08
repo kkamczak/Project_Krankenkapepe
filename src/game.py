@@ -1,11 +1,13 @@
 import pygame
 import sys
+import tracemalloc
 from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, \
     WHITE, SKY, FPS, FPS_FONT, FPS_SHOW_POS, SOUND_PLAY_MUSIC, \
     BIG_FONT, MASK_ALPHA, MUSIC_VOLUME
-from terrain.level import Level
 from tools.support import draw_text
+from terrain.level import Level
 from menu.overworld import Pause, MainMenu, DeathScene
+
 
 class Game:
     def __init__(self, screen, clock) -> None:
@@ -25,14 +27,18 @@ class Game:
         self.level_bg_music = pygame.mixer.Sound('content/sounds/background.mp3')
         self.level_bg_music.set_volume(MUSIC_VOLUME)
 
-    def create_level(self) -> None:
+    def create_level(self, respawn: bool = False) -> None:
         self.screen.fill(BLACK)
         draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        if respawn:
+            self.level.clear_groups(player=True)
         self.level = Level(1, self.screen, self)
         self.status = 'level'
         if SOUND_PLAY_MUSIC: self.level_bg_music.play(loops=-1)
 
-    def create_main_menu(self) -> None:
+    def create_main_menu(self, respawn: bool = False) -> None:
+        if respawn:
+            self.level.clear_groups(player=True)
         self.main_menu = MainMenu(self.screen, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
         self.status = 'main_menu'
 
@@ -67,15 +73,20 @@ class Game:
         pygame.quit()
         sys.exit()
 
+
 def print_mask(screen):
     mask = pygame.Surface((SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2))
     mask.fill(GREY)
     mask.set_alpha(MASK_ALPHA)
     screen.blit(mask, (SCREEN_WIDTH / 2 - mask.get_width() / 2, SCREEN_HEIGHT / 2 - mask.get_height() / 2))
 
+
 def start_game():
+    # Memory used:
+    tracemalloc.start()
     # Pygame setup
     pygame.init()
+    pygame.event.set_allowed([pygame.QUIT, pygame.KEYDOWN, pygame.KEYUP])
     SCREEN = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
     CLOCK = pygame.time.Clock()
 
@@ -106,3 +117,5 @@ def start_game():
         pygame.display.update()
 
         CLOCK.tick(FPS)
+
+    tracemalloc.stop()
