@@ -18,6 +18,10 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos, level):
         super().__init__()
 
+        # Methods:
+        self.create_pause = level.create_pause
+        self.next_level = level.next_level
+
         self.animations = PlayerAnimations(self)
         self.movement = PlayerMovement(self)
         self.status = PlayerStatus(self)
@@ -35,8 +39,7 @@ class Player(pygame.sprite.Sprite):
             self.equipment.add_item(item)
         self.properties.reset_properties()
 
-        # Methods:
-        self.create_pause = level.create_pause
+
 
     def collect_items(self, items):
         for item in items:
@@ -52,7 +55,7 @@ class Player(pygame.sprite.Sprite):
             self.equipment.update()
             self.status.get_status()
             self.defense.check_if_hurt()
-        self.animations.animate()
+        self.animations.animate(self.status, self.fighting, self.defense, self.movement)
 
 
 class PlayerAnimations:
@@ -61,6 +64,7 @@ class PlayerAnimations:
         self.animations_names = {'idle': [], 'run': [], 'jump': [], 'fall': [], 'attack': [], 'dead': [], 'hit': [],
                                  'shield': [], 'arch': []}
         self.animations = {}
+        self.flip_animations = {}
         self.image = None
         self.rect = None
         self.frame_index = 0
@@ -79,78 +83,73 @@ class PlayerAnimations:
         self.animation_speed = new_speed
 
     def load_animations(self, position):
-        self.animations = import_character_assets(self.animations_names, PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE / 32)
+        self.animations = import_character_assets(self.animations_names.copy(), PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE / 32)
+        self.flip_animations = import_character_assets(self.animations_names.copy(), PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE / 32, flip=True)
         self.set_image(self.animations['idle'][self.frame_index])
         self.set_rect(self.image.get_rect(topleft=position))
 
-    def animate(self):  # Animate method
-        animation = self.animations[self.player.status.status]
+    def animate(self, player_status, player_attack, player_defence, player_movement):  # Animate method
+        animation = self.flip_character(player_status)[player_status.status]
 
-        if self.player.status.status == 'dead':
+        if player_status.status == 'dead':
             animation_speed = PLAYER_DEATH_ANIMATION_SPEED
-        elif self.player.status.status == 'attack':
+        elif player_status.status == 'attack':
             animation_speed = calculate_animation_speed(
                 FPS,
                 len(animation),
-                self.player.fighting.attack['speed']
+                player_attack.attack['speed']
             )
-        elif self.player.status.status == 'arch':
+        elif player_status.status == 'arch':
             animation_speed = calculate_animation_speed(
                 FPS,
                 len(animation),
-                self.player.fighting.arch['speed']
+                player_attack.arch['speed']
             )
-        elif self.player.status.status == 'shield':
+        elif player_status.status == 'shield':
             animation_speed = self.animation_speed
         else:
             animation_speed = self.animation_speed
         # Loop over frame index
         if self.frame_index + animation_speed >= len(animation):
-            self.change_status(len(animation) - 1)
+            self.change_status(len(animation) - 1, player_status, player_defence)
         else:
             self.set_frame_index(self.frame_index + animation_speed)
 
-        image = animation[int(self.frame_index)]
-        self.flip_character(image)
+        self.set_image(animation[int(self.frame_index)])
+        temp_rect = self.image.get_rect()
+        temp_rect.midbottom = player_movement.collision_rect.midbottom
+        self.set_rect(temp_rect)
 
-    def change_status(self, new_index):
-        if self.player.status.status == 'dead':
+    def change_status(self, new_index, player_status, player_defence):
+        if player_status.status == 'dead':
             self.set_frame_index(new_index)
         else:
-            if self.player.status.status == 'shield':  # Is that shield animation?
-                self.player.defense.change_shield_status('shielding', False)
+            if player_status.status == 'shield':  # Is that shield animation?
+                player_defence.change_shield_status('shielding', False)
             self.set_frame_index(0)
-            self.player.status.set_status('idle')
+            player_status.set_status('idle')
 
-
-    def flip_character(self, image):
-        if self.player.status.facing_right:
-            self.set_image(image)
-            temp_rect = self.image.get_rect()
-            temp_rect.midbottom = self.player.movement.collision_rect.midbottom
-            self.set_rect(temp_rect)
+    def flip_character(self, player_status):
+        if player_status.facing_right:
+            return self.animations
         else:
-            flipped_image = pygame.transform.flip(image, True, False)
-            self.set_image(flipped_image)
-            temp_rect = self.image.get_rect()
-            temp_rect.midbottom = self.player.movement.collision_rect.midbottom
-            self.set_rect(temp_rect)
+            return self.flip_animations
 
-    def draw(self, surface, offset):
+    def draw(self, surface, offset, player_status, player_movement):
         pos = self.rect.topleft - offset
         surface.blit(self.image, pos)
-        if self.player.status.can_use_object[0] is True:
-            frame = pygame.Surface(self.player.movement.collision_rect.size)
+        if player_status.can_use_object[0] is True:
+            frame = pygame.Surface(player_movement.collision_rect.size)
             frame.fill(YELLOW)
             frame.set_alpha(70)
-            surface.blit(frame, self.player.movement.collision_rect.topleft - offset)
+            surface.blit(frame, player_movement.collision_rect.topleft - offset)
 
         # ------- FOR DEVELOPING:------------------------------------------------------------------------------------
         # Show collision rectangles:
         if SHOW_COLLISION_RECTANGLES:
             collide_surface = pygame.Surface(PLAYER_SIZE)
             collide_surface.set_alpha(40)
-            surface.blit(collide_surface, self.player.movement.collision_rect.topleft - offset)
+            surface.blit(collide_surface, player_movement.collision_rect.topleft - offset)
 
         # Show image rectangles:
         if SHOW_IMAGE_RECTANGLES:
@@ -186,6 +185,11 @@ class PlayerMovement:
         self.key_pressed = {
             'v': 0
         }
+
+    def set_position(self, position) -> None:
+        self.player.animations.rect.midbottom = position
+        self.collision_rect.midbottom = position
+        self.player.status.set_facing(True)
 
     def set_direction(self, new_direction: pygame.math.Vector2) -> None:
         self.direction = new_direction
@@ -305,6 +309,8 @@ class PlayerMovement:
                             self.player.equipment.open(True)
                         self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
                         self.player.equipment.show_cooldown = pygame.time.get_ticks()
+                elif element.kind == 'portal':
+                    self.player.next_level()
 
     def not_in_fight(self):
         if not self.player.fighting.attack['attacking'] and \

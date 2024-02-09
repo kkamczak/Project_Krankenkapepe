@@ -129,7 +129,7 @@ class DeathScene(Overworld):
     def check_action(self):
         super().check_action()
         if self.action == 'Main Menu':
-            self.create_main_menu(respawn=True)
+            self.create_main_menu()
         if self.action == 'Respawn':
             self.create_level(respawn=True)
 

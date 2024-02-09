@@ -1,32 +1,30 @@
 import pygame
 from tools.support import import_image, scale_image, import_cut_graphics, import_folder, import_character_assets
 from tools.settings import TERRAIN_PATH, PRIMAL_TILE_SIZE, TILE_SIZE, CHEST_PATH, FIREPLACE_PATH, \
-    SCALE, ENEMY_ANIMATIONS_PATH, ITEM_PATH, UI_ITEM_IMAGE_SIZE
+    SCALE, ENEMY_ANIMATIONS_PATH, ITEM_PATH, UI_ITEM_IMAGE_SIZE, PORTAL_PATH
 
 
 class ImagesManager:
     """
     This class is used to store and manage all the images in the game
     """
-    images = 0
-
     def __init__(self, screen):
         self.display_surface = screen
-        self.background = self.load_background()
+        self.background = self.load_background(self.display_surface.get_size(), 'content/graphics/overworld/background.png')
         self.terrain_tiles = self.load_terrain()
         self.terrain_elements = self.load_terrain_elements()
         self.enemies = self.load_enemies_animations()
         self.items = self.load_items()
 
-    def load_background(self) -> pygame.surface.Surface:
+    @staticmethod
+    def load_background(size, path) -> pygame.surface.Surface:
         """
         This method loads background
 
         :return: background image
         """
-        ImagesManager.images += 1
-        background = import_image('content/graphics/terrain/background.png')
-        background = scale_image(background, self.display_surface.get_size())
+        background = import_image(path)
+        background = scale_image(background, size)
         return background
 
     @staticmethod
@@ -36,7 +34,6 @@ class ImagesManager:
 
         :return: list of images
         """
-        ImagesManager.images += 1
         terrain_tiles = import_cut_graphics(TERRAIN_PATH, (PRIMAL_TILE_SIZE, PRIMAL_TILE_SIZE))
         scaled_tiles = []
         for tile in terrain_tiles:
@@ -51,10 +48,10 @@ class ImagesManager:
 
         :return: Returns a dictionary containing lists of images
         """
-        ImagesManager.images += 1
         images = {
             'bonfire': import_folder(FIREPLACE_PATH),
-            'chest': import_folder(CHEST_PATH)
+            'chest': import_folder(CHEST_PATH),
+            'portal': import_folder(PORTAL_PATH)
         }
         return images
 
@@ -77,7 +74,7 @@ class ImagesManager:
         return animations, flip_animations
 
     @staticmethod
-    def load_items():
+    def load_items() -> dict:
         """
         This method loads items images.
 
@@ -87,5 +84,4 @@ class ImagesManager:
         for item, path in ITEM_PATH.items():
             items[item] = pygame.image.load(path).convert_alpha()
             items[item] = scale_image(items[item], UI_ITEM_IMAGE_SIZE)
-        print(items)
         return items

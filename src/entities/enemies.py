@@ -7,7 +7,7 @@ from tools.settings import GREY, RED, ENEMY_IMMUNITY_FROM_HIT, ENEMY_SPEED, \
     SHOW_STATUS_SPACE, ENEMY_ANIMATIONS_PATH, ENEMY_ANIMATION_SPEED, ENEMY_SIZE, ENEMY_HEALTH, ENEMY_ATTACK_SPEED, \
     ENEMY_TRIGGER_LENGTH, ENEMY_ATTACK_SPACE, ENEMY_ATTACK_RANGE, ENEMY_ULTIMATE_ATTACK_COOLDOWN, ENEMY_DAMAGE, \
     ENEMY_EXPERIENCE, ENEMY_ATTACK_SIZE, SCALE, LEVEL_AREA_DISTANCE
-from tools.support import draw_text, import_character_assets, puts
+from tools.support import draw_text, import_character_assets, puts, now
 
 
 class Enemy(pygame.sprite.Sprite):
@@ -31,6 +31,8 @@ class Enemy(pygame.sprite.Sprite):
             self.defense.check_if_hurt()
             self.animations.animate()
         self.animations.animate_dead()
+        if not self.status.spawned:
+            self.status.set_spawned()
 
 
 class EnemyStatus:
@@ -40,6 +42,9 @@ class EnemyStatus:
         self.id = enemy_id
         self.status = 'idle'
         self.facing_right = True
+        self.spawned = False
+        self.spawn_sound = pygame.mixer.Sound('content/sounds/enemies/spawn.mp3')
+        self.spawn_sound.set_volume(0.05)
 
     def set_status(self, new_status: str) -> None:
         self.status = new_status
@@ -47,9 +52,14 @@ class EnemyStatus:
     def set_facing(self, facing: bool) -> None:
         self.facing_right = facing
 
+    def set_spawned(self) -> None:
+        self.spawn_sound.play()
+        self.spawned = True
+
     def reset_status(self):
         self.status = 'run'
         self.facing_right = random.choice([True, False])
+        self.spawned = False
 
 
 class EnemyDefense:
@@ -205,7 +215,6 @@ class EnemyAnimations:
                 not self.enemy.fighting.combat['stunned']:
             animation_speed = self.enemy.fighting.attack['speed']
             animation = self.check_for_flip()['attack']
-            #animation = self.animations['attack']
 
             # Loop over frame index
             self.frame_index += animation_speed
@@ -401,26 +410,20 @@ class EnemyFighting:
 
     def check_for_combat(self, player):
         rect = self.enemy.movement.collision_rect
-        is_close = abs(rect.centerx - player.movement.collision_rect.centerx) < self.combat['range'] \
-                   and abs(rect.centery - player.movement.collision_rect.centery) < self.enemy.animations.rect.height
-        is_close_to_attack = abs(rect.centerx - player.movement.collision_rect.centerx) < self.attack['range'] \
-                   and abs(rect.centery - player.movement.collision_rect.centery) < self.enemy.animations.rect.height
-        if is_close_to_attack and not self.combat['on'] and not player.properties.dead['status']:
-            self.combat['on'] = True
-            self.combat['start'] = pygame.time.get_ticks()
-            self.enemy.status.set_status('idle')
-            temp_dir = self.enemy.movement.direction
-            temp_dir.x = 0
-            self.enemy.movement.set_direction(temp_dir)
-            if rect.centerx > player.movement.collision_rect.centerx:
-                self.enemy.status.set_facing(False)
-            else:
-                self.enemy.status.set_facing(True)
+        height = self.enemy.animations.rect.height
+        player_rect = player.movement.collision_rect
+        player_dead = player.properties.dead['status']
 
-        if is_close and not is_close_to_attack and not self.attack['attacking'] and not player.properties.dead['status']:
+        dx = abs(rect.centerx - player_rect.centerx)
+        dy = abs(rect.centery - player_rect.centery)
+        is_close = dx < self.combat['range'] and dy < height
+        is_close_to_attack = dx < self.attack['range'] and dy < height
+
+        # --- Enemy will run towards player --
+        if is_close and not is_close_to_attack and not self.attack['attacking'] and not player_dead:
             self.combat['trigger'] = True
             temp_dir = self.enemy.movement.direction
-            if rect.centerx > player.movement.collision_rect.centerx:
+            if rect.centerx > player_rect.centerx:
                 self.enemy.status.set_facing(False)
                 temp_dir.x = -1
             else:
@@ -430,13 +433,26 @@ class EnemyFighting:
         else:
             self.combat['trigger'] = False
 
-        if abs(rect.centerx - player.movement.collision_rect.centerx) > self.combat['range'] \
-                and self.combat['on'] and not self.attack['attacking']:
+        # --- Enemy will attack player --
+        if is_close_to_attack and not self.combat['on'] and not player_dead:
+            self.combat['on'] = True
+            self.combat['start'] = now()
+            self.enemy.status.set_status('idle')
+            temp_dir = self.enemy.movement.direction
+            temp_dir.x = 0
+            self.enemy.movement.set_direction(temp_dir)
+            if rect.centerx > player_rect.centerx:
+                self.enemy.status.set_facing(False)
+            else:
+                self.enemy.status.set_facing(True)
+
+        # --- Player runs away --
+        if dx > self.combat['range'] and self.combat['on'] and not self.attack['attacking']:
             self.combat_reset()
 
-        if self.combat['on'] and \
-                pygame.time.get_ticks() - self.combat['start'] > self.combat['preparing'] and \
-                not self.attack['attacking']:
+        # -- Make an attack with weapon
+        attack_loaded = now() - self.combat['start'] > self.combat['preparing']
+        if self.combat['on'] and attack_loaded and not self.attack['attacking']:
             self.attack['able'] = True
             self.do_attack(player.movement.collision_rect)
 

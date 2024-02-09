@@ -86,3 +86,9 @@ def create_items(level_ref, item_list: list, owner: tuple) -> list:
         Item.items.append(item_x)
         puts(f'Item created: {item_info["name"]}  -  ID: {new_id}')
     return items
+
+
+def clean_items(item_list) -> None:
+    for item in item_list:
+        item_list.remove(item)
+        del item

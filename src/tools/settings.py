@@ -40,8 +40,9 @@ PLAYER_SIZE = (30*SCALE, 57*SCALE)
 PLAYER_SPEED = 8*SCALE
 PLAYER_GRAVITY = 0.8*SCALE
 PLAYER_JUMP_SPEED = -12*SCALE
-PLAYER_MAX_HEALTH = 10000
+PLAYER_MAX_HEALTH = 2000
 
+PLAYER_SPAWN_POSITION = (400, 300)
 PLAYER_ANIMATIONS_PATH = 'content/graphics/character/'
 PLAYER_DEATH_ANIMATION_SPEED = 0.15*SCALE
 
@@ -106,12 +107,12 @@ ENEMY_ATTACK_RANGE = {'sceleton': 60*SCALE, 'ninja': 300*SCALE, 'wizard': 400*SC
 ENEMY_ULTIMATE_ATTACK_COOLDOWN = {'wizard': 3000, 'dark_knight': 5000}
 ENEMY_IMMUNITY_FROM_HIT = 300
 
-ENEMY_DEATH_LATENCY = 1500
+ENEMY_DEATH_LATENCY = 700
 
 BULLET_DEFAULT_SPEED = {'arrow': 10*SCALE, 'death_bullet': 5*SCALE}
 
 # Frames Per Seconds:
-FPS = 63
+FPS = 60
 FPS_SHOW_POS = (60, 25)
 
 # Buttons:
@@ -129,6 +130,7 @@ UI_SKELETON_POINTS_SPACE = (120, 50)
 TERRAIN_PATH = 'content/graphics/terrain/terrain_tiles.png'
 FIREPLACE_PATH = 'content/graphics/terrain/fireplace/'
 CHEST_PATH = 'content/graphics/terrain/chest/'
+PORTAL_PATH = 'content/graphics/terrain/portal/'
 
 # Items:
 ITEM_LEVEL_WEIGHT = [0.6, 0.25, 0.15]
@@ -177,6 +179,9 @@ ITEM_IMAGES = {}
 # Level:
 
 LEVEL_AREA_DISTANCE = 3000
+LEVEL_SPAWN = 1500
+LEVEL_SPAWN_HEIGHT = 300
+LEVEL_SPAWN_SPACE = 400
 
 # Keyboard:
 KEY_CD = {

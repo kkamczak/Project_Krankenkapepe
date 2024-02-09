@@ -36,7 +36,7 @@ import pygame
 from tools.settings import SCALE, BUTTON_SIZE
 
 
-def import_csv_file(path):
+def import_csv_file(path) -> list[list]:
     """
     Imports a CSV file and returns its content as a list.
 

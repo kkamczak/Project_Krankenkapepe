@@ -6,6 +6,7 @@ from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, \
     BIG_FONT, MASK_ALPHA, MUSIC_VOLUME
 from tools.support import draw_text
 from terrain.level import Level
+from terrain.images_manager import ImagesManager
 from menu.overworld import Pause, MainMenu, DeathScene
 
 
@@ -13,6 +14,7 @@ class Game:
     def __init__(self, screen, clock) -> None:
         # Overworld creation
         self.screen = screen
+        self.loading_screen = ImagesManager.load_background(self.screen.get_size(), 'content/graphics/overworld/loading_screen.png')
         self.clock = clock
         self.main_menu = MainMenu(self.screen, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
         self.status = 'main_menu'
@@ -28,17 +30,30 @@ class Game:
         self.level_bg_music.set_volume(MUSIC_VOLUME)
 
     def create_level(self, respawn: bool = False) -> None:
-        self.screen.fill(BLACK)
+        self.screen.blit(self.loading_screen, (0, 0))
         draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
-        if respawn:
-            self.level.clear_groups(player=True)
-        self.level = Level(1, self.screen, self)
+        pygame.display.update()
+        if respawn or self.level is not None:
+            self.level.clear_groups(player=False)
+            self.level.configure_level(player=False)
+        else:
+            self.level = Level(1, self.screen, self)
+        self.status = 'level'
+        if SOUND_PLAY_MUSIC: self.level_bg_music.play(loops=-1)
+
+    def next_level(self) -> None:
+        self.screen.blit(self.loading_screen, (0, 0))
+        draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        pygame.display.update()
+        self.level.clear_groups(player=True)
+        self.level.configure_level(player=True)
         self.status = 'level'
         if SOUND_PLAY_MUSIC: self.level_bg_music.play(loops=-1)
 
     def create_main_menu(self, respawn: bool = False) -> None:
-        if respawn:
-            self.level.clear_groups(player=True)
+        # if respawn:
+        #     self.level.clear_groups(player=False)
+        #     self.level.configure_level(player=False)
         self.main_menu = MainMenu(self.screen, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
         self.status = 'main_menu'
 

@@ -70,6 +70,7 @@ class Hit(pygame.sprite.Sprite):
            Update the melee hit's state.
         """
         pass
+
     def draw(self, surface, offset):
         """
         Draw the melee hit on a surface with an offset.
@@ -271,6 +272,11 @@ class FightManager():
         # Sounds:
         self.shield_block_sound = pygame.mixer.Sound('content/sounds/character/shield_block.mp3')
         self.shield_block_sound.set_volume(0.05)
+
+    def clear_groups(self) -> None:
+        pygame.sprite.Group.empty(self.sword_hits)
+        pygame.sprite.Group.empty(self.bullet_hits)
+        pygame.sprite.Group.empty(self.thunder_hits)
 
     def sword_attack(self, character):
         """
