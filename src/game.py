@@ -33,7 +33,12 @@ class Game:
         self.screen.blit(self.loading_screen, (0, 0))
         draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
         pygame.display.update()
-        if respawn or self.level is not None:
+        if respawn:
+            print('DUPA')
+            self.level.clear_groups(player=False)
+            self.level.configure_level(player=False)
+        elif not respawn and self.level is not None:
+            print('SEX')
             self.level.clear_groups(player=False)
             self.level.configure_level(player=False)
         else:

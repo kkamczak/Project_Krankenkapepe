@@ -35,8 +35,8 @@ class Player(pygame.sprite.Sprite):
         self.movement.init_movement()
         self.status.reset_status()
         self.fighting.reset_attack_properties()
-        for item in create_items(level, START_ITEMS_LIST, (self, 'player')):
-            self.equipment.add_item(item)
+        # for item in create_items(level, START_ITEMS_LIST, (self, 'player')):
+        #     self.equipment.add_item(item)
         self.properties.reset_properties()
 
 

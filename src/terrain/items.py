@@ -84,11 +84,22 @@ def create_items(level_ref, item_list: list, owner: tuple) -> list:
             continue
         items.append(item_x)
         Item.items.append(item_x)
-        puts(f'Item created: {item_info["name"]}  -  ID: {new_id}')
     return items
 
 
 def clean_items(item_list) -> None:
+    """
+    This functions removes items if don't belongs to player.
+
+    :param item_list: list of all items
+    :return: None
+    """
+    counter = 0
+    items_to_remove = []
     for item in item_list:
+        if item.owner[1] != 'player':
+            items_to_remove.append(item)
+            counter += 1
+    for item in items_to_remove:
         item_list.remove(item)
         del item

@@ -34,7 +34,6 @@ class LootWindow:
                 index += 1
 
     def load_items(self, items: list, container):
-        puts('Załadowano itemy do content window')
         self.container = container
         if items is None or items == []:
             return
@@ -43,6 +42,7 @@ class LootWindow:
                 if frame.kind == 'regular' and frame.item is None:
                     frame.item = item
                     break
+        puts('Załadowano itemy do content window')
 
     def clear_items(self):
         self.container = None

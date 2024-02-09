@@ -22,7 +22,7 @@ from terrain.chest import Chest
 from terrain.corpse import create_corpse
 from terrain.portal import Portal
 from terrain.collisions import vertical_movement_collision, horizontal_movement_collision
-from terrain.items import Item
+from terrain.items import Item, clean_items
 from player.player import Player
 from entities.enemies import Sceleton, Ninja, Wizard, DarkKnight
 from entities.fighting import FightManager
@@ -78,7 +78,9 @@ class Level:
         print('Loading game time: ' + loading_time)
 
     def clear_groups(self, player: bool = False):
+        clean_items(Item.items)
         if not player:
+            puts('Wyczyszczono gracza')
             pygame.sprite.GroupSingle.empty(self.player)
         self.animations = []
 
@@ -91,19 +93,22 @@ class Level:
         self.camera = None
         #self.images = None
         Chest.chests = []
-        Item.items = []
+        #Item.items = []
+
         self.fight_manager.clear_groups()
         puts('Zresetowano level')
 
     def configure_level(self, player: bool = False):
         # Load level data:
         level_data = levels[self.current_level]
+        self.game_over = False
 
         # Animations:
         self.animations = []
 
         # Player import:
         if not player:
+            puts('Skonfigurowano gracza')
             player_layout = import_csv_file(level_data['player'])
             self.player_setup(player_layout)
         self.get_player().movement.set_position(PLAYER_SPAWN_POSITION)
@@ -121,7 +126,7 @@ class Level:
         # Enemy
         enemy_layout = generate_enemies(len(terrain_layout[0]) * TILE_SIZE)
         enemy_layout_2 = import_csv_file(level_data['enemies'])
-        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
+        #self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
 
         # Map camera configuration:
         self.camera = Camera(len(terrain_layout[0]) * TILE_SIZE, len(terrain_layout) * TILE_SIZE)
@@ -341,7 +346,11 @@ class Level:
         show_info(self.display_surface, f'Terrain elements: {self.terrain_elements_sprite}', 0)
         show_info(self.display_surface, f'Klocków: {len(self.col_near_sprites) + len(self.ter_near_sprites)}, enemies: {enemy_counter}/{len(self.enemy_sprites)}', 1)
         show_info(self.display_surface, f'Memory use [MB]: {used_memory}, loop time: {all_time} s.', 2)
-        show_info(self.display_surface, f'Items: {len(Item.items)}', 3)
+        show_info(self.display_surface, f'Items: {len(Item.items)}, skrzynie: {len(Chest.chests)}', 3)
+        info = []
+        for item in Item.items:
+            info.append((item.name, item.owner[1]))
+        #puts(info)
 
 
 def show_info(screen, info, place) -> None:
