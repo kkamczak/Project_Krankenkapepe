@@ -133,6 +133,7 @@ TERRAIN_PATH = 'content/graphics/terrain/terrain_tiles.png'
 FIREPLACE_PATH = 'content/graphics/terrain/fireplace/'
 CHEST_PATH = 'content/graphics/terrain/chest/'
 PORTAL_PATH = 'content/graphics/terrain/portal/'
+CORPSE_PATH = 'content/graphics/terrain/corpse/1.png'
 
 # Items:
 ITEM_LEVEL_WEIGHT = [0.6, 0.25, 0.15]

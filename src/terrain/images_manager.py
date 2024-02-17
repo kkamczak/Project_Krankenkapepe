@@ -1,7 +1,7 @@
 import pygame
 from tools.support import import_image, scale_image, import_cut_graphics, import_folder, import_character_assets
 from tools.settings import TERRAIN_PATH, PRIMAL_TILE_SIZE, TILE_SIZE, CHEST_PATH, FIREPLACE_PATH, \
-    SCALE, ENEMY_ANIMATIONS_PATH, ITEM_PATH, UI_ITEM_IMAGE_SIZE, PORTAL_PATH
+    SCALE, ENEMY_ANIMATIONS_PATH, ITEM_PATH, UI_ITEM_IMAGE_SIZE, PORTAL_PATH, CORPSE_PATH
 
 
 class ImagesManager:
@@ -51,7 +51,8 @@ class ImagesManager:
         images = {
             'bonfire': import_folder(FIREPLACE_PATH),
             'chest': import_folder(CHEST_PATH),
-            'portal': import_folder(PORTAL_PATH)
+            'portal': import_folder(PORTAL_PATH),
+            'corpse': import_image(CORPSE_PATH)
         }
         return images
 

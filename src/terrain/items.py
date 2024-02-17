@@ -1,15 +1,7 @@
 
-
 class Item:
     """
-    item = {
-        'name': item_name,
-        'kind': kind,
-        'damage': item_dmg,
-        'price': item_price,
-        'level': item_lvl
-    }
-
+    Item
     """
     items = []
 
@@ -25,11 +17,6 @@ class Item:
         self.image = images[self.kind]
         self.rect = self.image.get_rect()
         self.active = active
-
-    def make_used(self) -> None:
-        print(self.owner)
-        print(self.owner[1])
-        self.owner[1] = 'garbage'
 
 
 class Sword(Item):
@@ -62,48 +49,3 @@ class Potion(Item):
 
         # Properties:
         self.text = 'Punkty życia'
-
-
-def create_items(level_ref, item_list: list, owner: list) -> list:
-    """
-    Creates items from a list
-
-    :param level: reference to level
-    :param item_list: list of items
-    :param owner: owner, like player or chest
-    :return: list of items as objects
-    """
-    items = []
-    for item_info in item_list:
-        new_id = len(Item.items)
-        if item_info['kind'] == 'sword':
-            item_x = Sword(new_id, item_info, owner, level_ref.images.items)
-        elif item_info['kind'] == 'bow':
-            item_x = Bow(new_id, item_info, owner, level_ref.images.items)
-        elif item_info['kind'] == 'shield':
-            item_x = Shield(new_id, item_info, owner, level_ref.images.items)
-        elif item_info['kind'] == 'item':
-            item_x = Potion(new_id, item_info, owner, level_ref.images.items)
-        else:
-            continue
-        items.append(item_x)
-        Item.items.append(item_x)
-    return items
-
-
-def clean_items(item_list) -> None:
-    """
-    This functions removes items if don't belongs to player.
-
-    :param item_list: list of all items
-    :return: None
-    """
-    counter = 0
-    items_to_remove = []
-    for item in item_list:
-        if item.owner[1] != 'player':
-            items_to_remove.append(item)
-            counter += 1
-    for item in items_to_remove:
-        item_list.remove(item)
-        del item

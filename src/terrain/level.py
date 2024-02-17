@@ -22,7 +22,8 @@ from terrain.chest import Chest
 from terrain.corpse import create_corpse
 from terrain.portal import Portal
 from terrain.collisions import vertical_movement_collision, horizontal_movement_collision
-from terrain.items import Item, clean_items
+from terrain.items import Item
+from terrain.items_generator import clean_items
 from player.player import Player
 from entities.enemies import Sceleton, Ninja, Wizard, DarkKnight
 from entities.fighting import FightManager
@@ -60,7 +61,6 @@ class Level:
         # Images:
         self.images = ImagesManager(self.display_surface)
 
-        #generate_map()
         self.animations = []
         self.player = pygame.sprite.GroupSingle()
         self.terrain_sprite = pygame.sprite.Group()
@@ -80,7 +80,7 @@ class Level:
     def clear_groups(self, player: bool = False):
         clean_items(Item.items)
         if not player:
-            puts('Wyczyszczono gracza')
+            puts('There has been a reset of the player')
             pygame.sprite.GroupSingle.empty(self.player)
         self.animations = []
 
@@ -148,7 +148,6 @@ class Level:
                 if val != str(-1):
                     x = col_index * TILE_SIZE
                     y = row_index * TILE_SIZE
-                    # Load tile sets:
 
                     if kind == 'terrain':
                         if int(val) == 11:
@@ -156,23 +155,23 @@ class Level:
                             sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
                             tile_id += 1
 
-                    if kind == 'collideable':
+                    elif kind == 'collideable':
                         if int(val) != 11:
                             tile_surface = self.images.terrain_tiles[int(val)]
                             sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
                             tile_id += 1
-                    if kind == 'terrain_elements':
+                    elif kind == 'terrain_elements':
                         if val == '0':
                             sprite = Chest(tile_id, TILE_SIZE, x, y, self.images.terrain_elements['chest'], self)
                             tile_id += 1
-                        if val == '1':
+                        elif val == '1':
                             sprite = Bonfire(tile_id, TILE_SIZE, x, y, self.images.terrain_elements['bonfire'])
                             tile_id += 1
-                        if val == '2':
+                        elif val == '2':
                             sprite = Portal(tile_id, TILE_SIZE, (x, y), self.images.terrain_elements['portal'])
                             tile_id += 1
 
-                    if kind == 'enemies':
+                    elif kind == 'enemies':
                         pos = (int(val), LEVEL_SPAWN_HEIGHT)
                         if col_index < len(layout[0]) - 1:
                             value = generate_enemy_kind()
@@ -187,7 +186,7 @@ class Level:
                                 self.fight_manager.sword_attack
                             )
                             enemy_id += 1
-                        if value == '1':
+                        elif value == '1':
                             sprite = Ninja(
                                 self.current_level,
                                 enemy_id,
@@ -196,7 +195,7 @@ class Level:
                                 self.fight_manager.arch_attack
                             )
                             enemy_id += 1
-                        if value == '2':
+                        elif value == '2':
                             sprite = Wizard(
                                 self.current_level,
                                 enemy_id,
@@ -206,7 +205,7 @@ class Level:
                                 self.fight_manager.thunder_attack
                             )
                             enemy_id += 1
-                        if value == '3':
+                        elif value == '3':
                             sprite = DarkKnight(
                                 self.current_level,
                                 enemy_id,

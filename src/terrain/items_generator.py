@@ -1,7 +1,7 @@
 import random
 from tools.settings import ITEM_LEVEL_WEIGHT, ITEM_DMG_MULTIPLIERS, ITEM_BASE_DMG, ITEM_BASE_PRICE, \
     ITEM_NAMES, ITEM_LOOT_ODDS_1, ITEM_LOOT_ODDS_2
-from terrain.items import create_items
+from terrain.items import Item, Sword, Bow, Shield, Potion
 
 
 def generate_content_amount() -> int:
@@ -66,3 +66,48 @@ def generate_loot_content(level, amount: int, owner: list) -> list:
     for element in create_items(level, items_generated, owner):
         content.append(element)
     return content
+
+
+def create_items(level_ref, item_list: list, owner: list) -> list:
+    """
+    Creates items from a list
+
+    :param level_ref: reference to map level
+    :param item_list: list of items
+    :param owner: owner, like player or chest
+    :return: list of items as objects
+    """
+    items = []
+    for item_info in item_list:
+        new_id = len(Item.items)
+        if item_info['kind'] == 'sword':
+            item_x = Sword(new_id, item_info, owner, level_ref.images.items)
+        elif item_info['kind'] == 'bow':
+            item_x = Bow(new_id, item_info, owner, level_ref.images.items)
+        elif item_info['kind'] == 'shield':
+            item_x = Shield(new_id, item_info, owner, level_ref.images.items)
+        elif item_info['kind'] == 'item':
+            item_x = Potion(new_id, item_info, owner, level_ref.images.items)
+        else:
+            continue
+        items.append(item_x)
+        Item.items.append(item_x)
+    return items
+
+
+def clean_items(item_list) -> None:
+    """
+    This functions removes items, if it doesn't belong to player.
+
+    :param item_list: list of all items
+    :return: None
+    """
+    counter = 0
+    items_to_remove = []
+    for item in item_list:
+        if item.owner[1] != 'player':
+            items_to_remove.append(item)
+            counter += 1
+    for item in items_to_remove:
+        item_list.remove(item)
+        del item

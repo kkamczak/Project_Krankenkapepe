@@ -52,18 +52,23 @@ class PlayerEquipment:
             self.active_item(item)
 
     def delete_item(self, item: items.Item) -> None:
-        for item_owned in self.items:
+        for item_owned in self.items:  # Remove item from players item list
             if item is item_owned:
                 self.items.remove(item_owned)
+                puts('Item removed from players item list.')
                 break
-        for frame in self.frames:
+        for frame in self.frames:  # Remove item from frame
             if frame.item is item:
                 frame.item = None
-        if self.active_items[item.kind] is item:
+                puts('Item removed from frame.')
+                break
+        if self.active_items[item.kind] is item:  # Remove item from active frame
+            puts('Item removed from active frame.')
             self.active_items[item.kind] = None
 
     def active_item(self, item: items.Item) -> None:
         if self.active_items[item.kind] is not None:
+            puts('TEST - active item if statement')
             self.active_items[item.kind].active = False
             self.add_item(self.active_items[item.kind])
         item.active = True
@@ -93,7 +98,7 @@ class PlayerEquipment:
             else:
                 self.selected_frame = frame  # New selected frame is already clicked frame.
         elif self.selected_frame == frame:  # If selected frame is the same that before.
-            self.selected_frame = None # Cancel selected frame.
+            self.selected_frame = None  # Cancel selected frame.
 
     def process_transfer(self, frame):
         """
