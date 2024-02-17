@@ -1,6 +1,6 @@
 import pytest
 import pygame
-from player.player import Player
+from character.player import Player
 from entities.enemies import Sceleton
 
 def mock_function():

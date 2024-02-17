@@ -39,14 +39,14 @@ class Hit(pygame.sprite.Sprite):
         Args:
             pos (tuple): The position where the hit occurs.
             damage (int): The amount of damage the hit deals.
-            source (str): The source of the hit (e.g., 'player' or 'enemy').
+            source (str): The source of the hit (e.g., 'management' or 'enemy').
             source_id (int): The unique identifier of the source.
         """
         super().__init__()
         # Create surface
         self.source = source
         self.source_id = source_id
-        if self.source == 'player':
+        if self.source == 'management':
             size = PLAYER_ATTACK_SIZE
         else:
             size = ENEMY_ATTACK_SIZE[self.source]
@@ -125,7 +125,7 @@ class Bullet(pygame.sprite.Sprite):
 
 
         self.speed = BULLET_DEFAULT_SPEED[self.kind]
-        if self.source == 'player':
+        if self.source == 'management':
             self.attack_range = source.fighting.arch['range']
             self.damage = source.fighting.arch['damage']
         else:
@@ -180,7 +180,7 @@ class Thunder(pygame.sprite.Sprite):
         Args:
             pos (pygame.Rect): The area where the thunderstorm occurs.
             damage (int): The amount of damage the attack deals.
-            source (str): The source of the attack (e.g., 'player' or 'enemy').
+            source (str): The source of the attack (e.g., 'management' or 'enemy').
             source_id (int): The unique identifier of the source.
         """
         super().__init__()
@@ -255,7 +255,7 @@ class FightManager():
 
         - attack_update(surface, offset): Update combat-related elements.
 
-        - check_damage(player, enemies): Check and apply damage to characters.
+        - check_damage(management, enemies): Check and apply damage to characters.
 
     """
     def __init__(self):
@@ -290,7 +290,7 @@ class FightManager():
         """
         attack = character.fighting.attack
         rect = character.movement.collision_rect
-        if attack['able'] or (character.status.type == 'player' and attack['attacking']):
+        if attack['able'] or (character.status.type == 'management' and attack['attacking']):
             if character.status.facing_right:
                 position = (
                     rect.centerx + attack['space'],
@@ -316,12 +316,12 @@ class FightManager():
         This method creates and manages an archery attack based on the character's parameters,
         including position, direction, and damage.
         """
-        if character.status.type == 'player':
+        if character.status.type == 'management':
             attack = character.fighting.arch
         else:
             attack = character.fighting.attack
         rect = character.movement.collision_rect
-        if attack['able'] or (character.status.type == 'player' and attack['attacking']):
+        if attack['able'] or (character.status.type == 'management' and attack['attacking']):
             if character.status.facing_right:
                 position = (rect.right, rect.top + rect.height / 3)
             else:
@@ -337,7 +337,7 @@ class FightManager():
         Perform a thunderstorm attack.
 
         Args:
-            source (str): The source of the attack (e.g., 'player' or 'enemy').
+            source (str): The source of the attack (e.g., 'management' or 'enemy').
             source_id (int): The unique identifier of the source.
             position (pygame.Rect): The position of the thunderstorm.
             damage (int): The amount of damage the attack deals.
@@ -384,7 +384,7 @@ class FightManager():
         Check and apply damage to characters.
 
         Args:
-            player: The player character.
+            player: The management character.
             enemies: A list of enemy characters.
 
         This method checks for collisions between attacks and characters, calculates damage,
@@ -409,15 +409,15 @@ class FightManager():
         """
         Check and handle collisions between hits and characters.
 
-        This method checks for collisions between hits and characters, such as enemies and the player.
+        This method checks for collisions between hits and characters, such as enemies and the management.
         It calculates and records damage and manages various hit conditions and interactions.
         """
         for hit in hits:  # Check for any hits collisions
             point = False  # if kind of hits is 'bullets'
             for enemy in enemies:
                 if hit.rect.colliderect(enemy.movement.collision_rect) and \
-                        hit.source == 'player' and \
-                        not enemy.properties.dead['status']:  # If enemy get hit by player
+                        hit.source == 'management' and \
+                        not enemy.properties.dead['status']:  # If enemy get hit by management
                     if kind == 'thunder' and hit.attack is False:
                         break
                     elif kind == 'thunder' and hit.attack is True and player.status.id in hit.character_collided:
@@ -429,8 +429,8 @@ class FightManager():
 
             if hit.rect.colliderect(player.movement.collision_rect) and \
                     not hit.shielded and \
-                    hit.source != 'player' and \
-                    not player.properties.dead['status']:  # If player get hit by enemy
+                    hit.source != 'management' and \
+                    not player.properties.dead['status']:  # If management get hit by enemy
                 for enemy in enemies:
                     if enemy.status.id != hit.source_id:
                         continue
@@ -475,8 +475,8 @@ class FightManager():
                 damage = collision[1]
                 source = collision[2].lower()
 
-                if not character.defense.just_hurt and character.status.type.lower() != 'player' and source == 'player':
+                if not character.defense.just_hurt and character.status.type.lower() != 'management' and source == 'management':
                     if character.defense.hurt(damage):
                         player.properties.add_experience(character.properties.experience['current'])
-                if not character.defense.just_hurt and character.status.type.lower() == 'player' and source != 'player':
+                if not character.defense.just_hurt and character.status.type.lower() == 'management' and source != 'management':
                     character.defense.hurt(damage)

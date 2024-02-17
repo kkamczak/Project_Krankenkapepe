@@ -421,7 +421,7 @@ class EnemyFighting:
         is_close = dx < self.combat['range'] and dy < height
         is_close_to_attack = dx < self.attack['range'] and dy < height
 
-        # --- Enemy will run towards player --
+        # --- Enemy will run towards management --
         if is_close and not is_close_to_attack and not self.attack['attacking'] and not player_dead:
             self.combat['trigger'] = True
             temp_dir = self.enemy.movement.direction
@@ -435,7 +435,7 @@ class EnemyFighting:
         else:
             self.combat['trigger'] = False
 
-        # --- Enemy will attack player --
+        # --- Enemy will attack management --
         if is_close_to_attack and not self.combat['on'] and not player_dead:
             self.combat['on'] = True
             self.combat['start'] = now()

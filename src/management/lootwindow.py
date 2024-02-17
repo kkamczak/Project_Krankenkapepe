@@ -1,13 +1,13 @@
 from tools.settings import LOOT_WIN_SIZE, LOOT_WIN_POS, LOOT_FRAME_SIZE, LOOT_INDEX, LOOT_KIND, LOOT_SPACE, \
     LOOT_HEADER_POS, BUTTON_FONT, WHITE
 from tools.support import create_header, draw_text, puts, cursor
-from player.frame import Frame
+from management.frame import Frame
 
 
 class LootWindow:
     """
     This is class of loot window. It's a temporary container
-    for exchanging items between the player and items such as chests or corpses.
+    for exchanging items between the management and items such as chests or corpses.
     """
     def __init__(self):
         self.header = create_header()

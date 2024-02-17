@@ -74,7 +74,7 @@ def create_items(level_ref, item_list: list, owner: list) -> list:
 
     :param level_ref: reference to map level
     :param item_list: list of items
-    :param owner: owner, like player or chest
+    :param owner: owner, like management or chest
     :return: list of items as objects
     """
     items = []
@@ -97,7 +97,7 @@ def create_items(level_ref, item_list: list, owner: list) -> list:
 
 def clean_items(item_list) -> None:
     """
-    This functions removes items, if it doesn't belong to player.
+    This functions removes items, if it doesn't belong to management.
 
     :param item_list: list of all items
     :return: None
@@ -105,7 +105,7 @@ def clean_items(item_list) -> None:
     counter = 0
     items_to_remove = []
     for item in item_list:
-        if item.owner[1] != 'player':
+        if item.owner[1] != 'management':
             items_to_remove.append(item)
             counter += 1
     for item in items_to_remove:

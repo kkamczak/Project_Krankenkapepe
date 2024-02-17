@@ -2,9 +2,9 @@ import pygame
 from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZE, EQUIPMENT_FRAME_SPACE, EQUIPMENT_ROWS, \
     EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
     EQUIPMENT_ACTIVE_FRAME_SPACE
-from tools.support import draw_text, puts, create_header, cursor, now
-from player.lootwindow import LootWindow
-from player.frame import Frame
+from tools.support import draw_text, puts, create_header, cursor
+from management.lootwindow import LootWindow
+from management.frame import Frame
 from terrain import items
 
 
@@ -134,11 +134,11 @@ class PlayerEquipment:
             else:
                 puts('There was problem with transferring item.')
                 return
-            if item.owner[1] != 'player' and frame.id < 100:  # Transfer from loot window to equipment
+            if item.owner[1] != 'management' and frame.id < 100:  # Transfer from loot window to equipment
                 item.owner[0].equipment.delete_item(item)
-                item.owner = [self.player, 'player']
+                item.owner = [self.player, 'management']
                 item.owner[0].equipment.add_item(item)
-            elif item.owner[1] == 'player' and frame.id >= 100:  # Transfer from equipment to loot window
+            elif item.owner[1] == 'management' and frame.id >= 100:  # Transfer from equipment to loot window
                 item.owner[0].equipment.delete_item(item)
                 item.owner = [self.loot_window.container, self.loot_window.container.kind]
                 item.owner[0].equipment.add_item(item)

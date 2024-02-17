@@ -8,7 +8,7 @@ class Frame(pygame.sprite.Sprite):
     """
     This is a class for a single frame of equipment panel.
     """
-    def __init__(self, id: int, kind: str, position: tuple[int, int], size: tuple[int, int], name: str='') -> None:
+    def __init__(self, id: int, kind: str, position: tuple[int, int], size: tuple[int, int], name: str = '') -> None:
         super().__init__()
         self.id = id
         self.kind = kind

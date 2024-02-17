@@ -7,8 +7,8 @@ from tools.settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_
     PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN, PLAYER_ARCH_DAMAGE, PLAYER_SWORD_DAMAGE, PLAYER_SWORD_HIT_TIME, \
     PLAYER_ARCH_SPEED, KEY_DELAY
 from tools.support import now, import_character_assets, calculate_animation_speed, draw_text
-from player.ui import UI
-from player.equipment import PlayerEquipment
+from management.ui import UI
+from management.equipment import PlayerEquipment
 from terrain.tiles import change_loot_priority
 
 
@@ -33,7 +33,7 @@ class Player(pygame.sprite.Sprite):
         self.movement.init_movement()
         self.status.reset_status()
         self.fighting.reset_attack_properties()
-        # for item in create_items(level, START_ITEMS_LIST, (self, 'player')):
+        # for item in create_items(level, START_ITEMS_LIST, (self, 'management')):
         #     self.equipment.add_item(item)
         self.properties.reset_properties()
 
@@ -333,7 +333,7 @@ class PlayerMovement:
 class PlayerStatus:
     def __init__(self, player):
         self.player = player
-        self.type = 'player'
+        self.type = 'management'
         self.id = 999
         self.status = 'idle'
         self.facing_right = True
@@ -354,7 +354,7 @@ class PlayerStatus:
         self.can_use_object = can_use
 
     def reset_status(self):
-        self.type = 'player'
+        self.type = 'management'
         self.id = 999
         self.status = 'idle'
         self.facing_right = True
