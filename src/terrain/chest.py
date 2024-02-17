@@ -44,10 +44,10 @@ class Chest(AnimatedTile):
         """
         super().__init__(id, size, x, y, images)
         self.kind = 'chest'
-        self.level = 1
+        self.level = level_ref.current_level
         self.animated = False
         self.equipment = TileEquipment(True)
-        self.equipment.content = create_content((self, 'chest'), level_ref)
+        self.equipment.content = create_content([self, 'chest'], level_ref)
         Chest.chests.append(self)
 
     def animate_once(self) -> None:
@@ -67,7 +67,7 @@ class Chest(AnimatedTile):
             self.animate_once()
 
 
-def create_content(owner, level_ref) -> list:
+def create_content(owner: list, level_ref) -> list:
     """
     Create the content (items) for the container.
 
@@ -77,5 +77,4 @@ def create_content(owner, level_ref) -> list:
     """
     owner[0].level = math.floor(owner[0].rect.x / LEVEL_AREA_DISTANCE + 1)
     content = generate_loot_content(level_ref, generate_content_amount(), owner)
-    puts(f'Utworzono skrzynię o id: {len(Chest.chests)} i lvl {owner[0].level} bo x={owner[0].rect.x}')
     return content

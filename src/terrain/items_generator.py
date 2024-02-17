@@ -19,29 +19,6 @@ def generate_content_amount() -> int:
     return amount
 
 
-def generate_loot_content(level, amount: int, owner: tuple) -> list:
-    """
-    This function generates items that will be placed in the corpse
-
-    :param amount: items amount
-    :param owner: corpse for which a list is generated (object, 'kind of object')
-    :return: list of items
-    """
-    items_generated = []
-    for place in range(0, amount):
-        weights = []
-        items = []
-        for key, value in ITEM_LOOT_ODDS_2.items():
-            items.append(key)
-            weights.append(value)
-        item_kind = random.choices(items, weights=weights)[0]  # What item dropped
-        items_generated.append(generate_item(owner[0].level, item_kind))
-    content = []
-    for element in create_items(level, items_generated, owner):
-        content.append(element)
-    return content
-
-
 def generate_item(level: int, kind: str) -> dict:
     """
     Generating dictionary with parameters for new item
@@ -66,3 +43,26 @@ def generate_item(level: int, kind: str) -> dict:
         'level': item_lvl
     }
     return item
+
+
+def generate_loot_content(level, amount: int, owner: list) -> list:
+    """
+    This function generates items that will be placed in the corpse
+    :param level: reference to map level
+    :param amount: items amount
+    :param owner: corpse for which a list is generated [object, 'kind of object']
+    :return: list of items
+    """
+    items_generated = []
+    for place in range(0, amount):
+        weights = []
+        items = []
+        for key, value in ITEM_LOOT_ODDS_2.items():
+            items.append(key)
+            weights.append(value)
+        item_kind = random.choices(items, weights=weights)[0]  # What item dropped
+        items_generated.append(generate_item(owner[0].level, item_kind))
+    content = []
+    for element in create_items(level, items_generated, owner):
+        content.append(element)
+    return content

@@ -5,12 +5,10 @@ from tools.settings import PLAYER_MAX_HEALTH, PLAYER_SIZE, PLAYER_SPEED, PLAYER_
     PLAYER_SHIELD_COOLDOWN, SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
     PLAYER_DEATH_ANIMATION_SPEED, PLAYER_SWORD_SPEED, PLAYER_ATTACK_SIZE, PLAYER_ATTACK_SPACE, TILE_SIZE, FPS, \
     PLAYER_ARCH_RANGE, PLAYER_ARCH_COOLDOWN, PLAYER_ARCH_DAMAGE, PLAYER_SWORD_DAMAGE, PLAYER_SWORD_HIT_TIME, \
-    PLAYER_ARCH_SPEED, KEY_CD
-from tools.support import draw_text, import_character_assets, calculate_animation_speed, now, puts
-from tools.game_data import START_ITEMS_LIST
+    PLAYER_ARCH_SPEED, KEY_DELAY
+from tools.support import now, import_character_assets, calculate_animation_speed, draw_text
 from player.ui import UI
 from player.equipment import PlayerEquipment
-from terrain.items import create_items
 from terrain.tiles import change_loot_priority
 
 
@@ -183,7 +181,8 @@ class PlayerMovement:
         self.on_left = False
         self.on_right = False
         self.key_pressed = {
-            'v': 0
+            'v': 0,
+            'f': 0
         }
 
     def set_position(self, position) -> None:
@@ -264,14 +263,14 @@ class PlayerMovement:
                 self.player.fighting.attack['able'] and \
                 now() - self.player.fighting.attack['end'] > self.player.fighting.attack['cooldown']:
             self.player.fighting.sword_start_attack()
-        if keys[pygame.K_s] and \
+        elif keys[pygame.K_s] and \
                 self.not_in_fight() and \
                 self.player.defense.shield['able'] and \
                 not self.player.defense.just_hurt: # Player use SHIELD
             self.player.defense.change_shield_status('shielding', True)
             self.player.defense.change_shield_status('able', False)
             self.player.defense.change_shield_status('start', pygame.time.get_ticks())
-        if keys[pygame.K_a] and \
+        elif keys[pygame.K_a] and \
                 self.not_in_fight() and \
                 self.player.fighting.arch['able'] and \
                 now() - self.player.fighting.arch['end'] > self.player.fighting.arch['cooldown']:
@@ -280,25 +279,25 @@ class PlayerMovement:
     def input_equipment(self, keys):
         if keys[pygame.K_p]: # Key for development testing:
             pass
-        if keys[pygame.K_v]: # Change loot priority:
-            if now() - self.key_pressed['v'] > KEY_CD['v']:
+        elif keys[pygame.K_v]: # Change loot priority:
+            if now() - self.key_pressed['v'] > KEY_DELAY:
                 change_loot_priority(self.player.status.can_use_object[1])
                 self.key_pressed['v'] = now()
                 self.player.equipment.close()
-        if keys[pygame.K_i]: # Show Equipment
-            if pygame.time.get_ticks() - self.player.equipment.show_cooldown > 400:
+        elif keys[pygame.K_i]: # Show Equipment
+            if now() - self.player.equipment.show_cooldown > KEY_DELAY:
                 if self.player.equipment.show:
                     self.player.equipment.close()
                 else:
                     self.player.equipment.open()
-                self.player.equipment.loot_window.show_cooldown = pygame.time.get_ticks()
-                self.player.equipment.show_cooldown = pygame.time.get_ticks()
-        if keys[pygame.K_e]: # Use element:
+                self.player.equipment.loot_window.show_cooldown = now()
+                self.player.equipment.show_cooldown = now()
+        elif keys[pygame.K_e]: # Use element:
             index = self.player.status.usable_priority
             if self.player.status.can_use_object[0]:
                 element = self.player.status.can_use_object[1][index]
                 if element.kind == 'corpse' or element.kind == 'chest':
-                    if pygame.time.get_ticks() - self.player.equipment.loot_window.show_cooldown > 400:
+                    if now() - self.player.equipment.loot_window.show_cooldown > 400:
                         if self.player.equipment.loot_window.show:
                             self.player.equipment.close()
                         else:
@@ -311,6 +310,10 @@ class PlayerMovement:
                         self.player.equipment.show_cooldown = pygame.time.get_ticks()
                 elif element.kind == 'portal':
                     self.player.next_level()
+        elif keys[pygame.K_f]: # Use item
+            if now() - self.key_pressed['f'] > KEY_DELAY:
+                self.key_pressed['f'] = now()
+                self.player.equipment.use_item()
 
     def not_in_fight(self):
         if not self.player.fighting.attack['attacking'] and \
@@ -499,9 +502,13 @@ class PlayerAttack:
 
     def calculate_damage(self) -> None:
         if self.player.equipment.active_items['sword'] is not None:
-            self.attack['damage'] = self.player.equipment.active_items['sword'].damage
+            self.attack['damage'] = PLAYER_SWORD_DAMAGE + self.player.equipment.active_items['sword'].damage
+        else:
+            self.attack['damage'] = PLAYER_SWORD_DAMAGE
         if self.player.equipment.active_items['bow'] is not None:
-            self.arch['damage'] = self.player.equipment.active_items['bow'].damage
+            self.arch['damage'] = PLAYER_ARCH_DAMAGE + self.player.equipment.active_items['bow'].damage
+        else:
+            self.arch['damage'] = PLAYER_ARCH_DAMAGE
 
 
 class PlayerDefense:
@@ -584,6 +591,11 @@ class PlayerProperties:
 
     def set_health(self, key: str, value: int) -> None:
         self.health[key] = value
+
+    def add_health(self, value: int) -> None:
+        self.health['current'] += value
+        if self.health['current'] > self.health['max']:
+            self.health['current'] = self.health['max']
 
     def set_level(self, new_level: int) -> None:
         self.player_level = new_level

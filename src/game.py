@@ -50,15 +50,13 @@ class Game:
         self.screen.blit(self.loading_screen, (0, 0))
         draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
         pygame.display.update()
+        self.level.current_level += 1
         self.level.clear_groups(player=True)
         self.level.configure_level(player=True)
         self.status = 'level'
         if SOUND_PLAY_MUSIC: self.level_bg_music.play(loops=-1)
 
-    def create_main_menu(self, respawn: bool = False) -> None:
-        # if respawn:
-        #     self.level.clear_groups(player=False)
-        #     self.level.configure_level(player=False)
+    def create_main_menu(self) -> None:
         self.main_menu = MainMenu(self.screen, ['Start', 'Exit'], self.create_level, self.exit_game, 0)
         self.status = 'main_menu'
 

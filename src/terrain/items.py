@@ -1,4 +1,3 @@
-from tools.support import puts
 
 
 class Item:
@@ -26,6 +25,11 @@ class Item:
         self.image = images[self.kind]
         self.rect = self.image.get_rect()
         self.active = active
+
+    def make_used(self) -> None:
+        print(self.owner)
+        print(self.owner[1])
+        self.owner[1] = 'garbage'
 
 
 class Sword(Item):
@@ -60,7 +64,7 @@ class Potion(Item):
         self.text = 'Punkty życia'
 
 
-def create_items(level_ref, item_list: list, owner: tuple) -> list:
+def create_items(level_ref, item_list: list, owner: list) -> list:
     """
     Creates items from a list
 

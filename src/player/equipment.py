@@ -35,6 +35,12 @@ class PlayerEquipment:
             self.selected_frame.reset_status()
             self.selected_frame = None
 
+    def use_item(self):
+        item = self.active_items['item']
+        if item is not None and item.kind == 'item':
+            self.player.properties.add_health(item.damage)
+            self.delete_item(item)
+
     def add_item(self, item: items.Item) -> None:
         if not item.active:
             self.items.append(item)
@@ -50,6 +56,11 @@ class PlayerEquipment:
             if item is item_owned:
                 self.items.remove(item_owned)
                 break
+        for frame in self.frames:
+            if frame.item is item:
+                frame.item = None
+        if self.active_items[item.kind] is item:
+            self.active_items[item.kind] = None
 
     def active_item(self, item: items.Item) -> None:
         if self.active_items[item.kind] is not None:
@@ -115,9 +126,9 @@ class PlayerEquipment:
                 return
             if item.owner[1] != 'player' and frame.id < 100:  # Transfer from loot window to equipment
                 item.owner[0].equipment.delete_item(item)
-                item.owner = (self.player, 'player')
+                item.owner = [self.player, 'player']
             elif item.owner[1] == 'player' and frame.id >= 100:  # Transfer from equipment to loot window
-                item.owner = (self.loot_window.container, self.loot_window.container.kind)
+                item.owner = [self.loot_window.container, self.loot_window.container.kind]
                 item.owner[0].equipment.add_item(item)
         else:
             puts('This frame is occupied by other item!')

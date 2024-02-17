@@ -15,7 +15,7 @@ from terrain.images_manager import ImagesManager
 from terrain.map_generator import generate_map, generate_enemies, generate_enemy_kind
 from tools.support import import_csv_file, now, draw_text, puts
 from tools.game_data import levels
-from tools.settings import TILE_SIZE, SCREEN_WIDTH, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY, GREY, \
+from tools.settings import TILE_SIZE, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY, GREY, \
     SMALL_STATUS_FONT, LEVEL_SPAWN_HEIGHT, PLAYER_SPAWN_POSITION
 from terrain.tiles import StaticTile, Bonfire, check_for_usable_elements
 from terrain.chest import Chest
@@ -91,16 +91,14 @@ class Level:
         pygame.sprite.Group.empty(self.terrain_elements_sprite)
         pygame.sprite.Group.empty(self.enemy_sprites)
         self.camera = None
-        #self.images = None
         Chest.chests = []
-        #Item.items = []
 
         self.fight_manager.clear_groups()
         puts('Zresetowano level')
 
     def configure_level(self, player: bool = False):
         # Load level data:
-        level_data = levels[self.current_level]
+        level_data = levels[1]
         self.game_over = False
 
         # Animations:
@@ -108,25 +106,23 @@ class Level:
 
         # Player import:
         if not player:
+            self.current_level = 1
             puts('Skonfigurowano gracza')
             player_layout = import_csv_file(level_data['player'])
             self.player_setup(player_layout)
         self.get_player().movement.set_position(PLAYER_SPAWN_POSITION)
 
         # Terrain import
-        #terrain_layout = import_csv_file(level_data['terrain'])
         terrain_layout, terrain_elements_layout = generate_map()
         self.terrain_sprite = self.create_tile_group(terrain_layout, 'terrain')
         self.collideable_sprites = self.create_tile_group(terrain_layout, 'collideable')
 
         # Terrain elements import
-        #terrain_elements_layout = import_csv_file(level_data['terrain_elements'])
         self.terrain_elements_sprite = self.create_tile_group(terrain_elements_layout, 'terrain_elements')
 
         # Enemy
         enemy_layout = generate_enemies(len(terrain_layout[0]) * TILE_SIZE)
-        enemy_layout_2 = import_csv_file(level_data['enemies'])
-        #self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
+        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
 
         # Map camera configuration:
         self.camera = Camera(len(terrain_layout[0]) * TILE_SIZE, len(terrain_layout) * TILE_SIZE)
@@ -184,6 +180,7 @@ class Level:
                             value = generate_enemy_kind(boss=True)
                         if value == '0':
                             sprite = Sceleton(
+                                self.current_level,
                                 enemy_id,
                                 pos,
                                 (self.images.enemies[0]['sceleton'], self.images.enemies[1]['sceleton']),
@@ -192,6 +189,7 @@ class Level:
                             enemy_id += 1
                         if value == '1':
                             sprite = Ninja(
+                                self.current_level,
                                 enemy_id,
                                 pos,
                                 (self.images.enemies[0]['ninja'], self.images.enemies[1]['ninja']),
@@ -200,6 +198,7 @@ class Level:
                             enemy_id += 1
                         if value == '2':
                             sprite = Wizard(
+                                self.current_level,
                                 enemy_id,
                                 pos,
                                 (self.images.enemies[0]['wizard'], self.images.enemies[1]['wizard']),
@@ -209,6 +208,7 @@ class Level:
                             enemy_id += 1
                         if value == '3':
                             sprite = DarkKnight(
+                                self.current_level,
                                 enemy_id,
                                 pos,
                                 (self.images.enemies[0]['dark_knight'], self.images.enemies[1]['dark_knight']),
@@ -343,10 +343,10 @@ class Level:
         used_memory = round(memory_stats[0] / (1024 ** 2), 4)
         all_time = str((now() - drawing_all) / 1000)
 
-        show_info(self.display_surface, f'Terrain elements: {self.terrain_elements_sprite}', 0)
+        show_info(self.display_surface, f'Terrain elements: {self.terrain_elements_sprite}, lvl: {self.current_level}', 0)
         show_info(self.display_surface, f'Klocków: {len(self.col_near_sprites) + len(self.ter_near_sprites)}, enemies: {enemy_counter}/{len(self.enemy_sprites)}', 1)
         show_info(self.display_surface, f'Memory use [MB]: {used_memory}, loop time: {all_time} s.', 2)
-        show_info(self.display_surface, f'Items: {len(Item.items)}, skrzynie: {len(Chest.chests)}', 3)
+        show_info(self.display_surface, f'Damage: {player.fighting.attack["damage"]}, skrzynie: {len(Chest.chests)}', 3)
         info = []
         for item in Item.items:
             info.append((item.name, item.owner[1]))

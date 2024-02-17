@@ -20,7 +20,7 @@ class Corpse(StaticTile):
         self.create_content(level_ref, amount)
 
     def create_content(self, level_ref, amount) -> None:
-        self.equipment.content = generate_loot_content(level_ref, amount, (self, self.kind))
+        self.equipment.content = generate_loot_content(level_ref, amount, [self, self.kind])
         puts(f'Generated content for corpse id={self.id}')
 
     def update(self):
