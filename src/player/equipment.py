@@ -2,7 +2,7 @@ import pygame
 from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZE, EQUIPMENT_FRAME_SPACE, EQUIPMENT_ROWS, \
     EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
     EQUIPMENT_ACTIVE_FRAME_SPACE
-from tools.support import draw_text, puts, create_header, cursor
+from tools.support import draw_text, puts, create_header, cursor, now
 from player.lootwindow import LootWindow
 from player.frame import Frame
 from terrain import items
@@ -43,20 +43,24 @@ class PlayerEquipment:
 
     def add_item(self, item: items.Item) -> None:
         if not item.active:
-            self.items.append(item)
+            if item not in self.items:
+                self.items.append(item)
+            for frame in self.frames:
+                if frame.item is item:
+                    puts('Already in equipment.')
+                    return
             for frame in self.frames:
                 if frame.kind == 'regular' and frame.item is None:
+                    puts('Item added')
                     frame.item = item
                     break
         else:
             self.active_item(item)
 
     def delete_item(self, item: items.Item) -> None:
-        for item_owned in self.items:  # Remove item from players item list
-            if item is item_owned:
-                self.items.remove(item_owned)
-                puts('Item removed from players item list.')
-                break
+        if item in self.items:
+            self.items.remove(item)
+            puts('Item removed from players item list.')
         for frame in self.frames:  # Remove item from frame
             if frame.item is item:
                 frame.item = None
@@ -67,12 +71,11 @@ class PlayerEquipment:
             self.active_items[item.kind] = None
 
     def active_item(self, item: items.Item) -> None:
-        if self.active_items[item.kind] is not None:
-            puts('TEST - active item if statement')
-            self.active_items[item.kind].active = False
-            self.add_item(self.active_items[item.kind])
         item.active = True
         self.active_items[item.kind] = item
+        if item not in self.items:
+            puts('Active item added to item list.')
+            self.items.append(item)
         for frame in self.frames:
             if frame.kind == 'active' and frame.name.lower() == item.kind.lower():
                 frame.item = item
@@ -81,7 +84,9 @@ class PlayerEquipment:
     def deactivate_item(self, item: items.Item, frame) -> None:
         if self.active_items[item.kind] == item:
             item.active = False
-            self.items.append(item)
+            if item not in self.items:
+                puts('Deactivated item added to item list.')
+                self.items.append(item)
             frame.item = item
             self.active_items[item.kind] = None
 
@@ -109,30 +114,32 @@ class PlayerEquipment:
         """
         item = self.selected_frame.item  # Creates a reference to the object to be transferred
         if frame.item is None:  # Frame is empty - you can put an object in it
-            if self.selected_frame.kind == 'regular' and frame.kind == 'active':  # Transfer to active frame
+            if self.selected_frame.kind == 'regular' and frame.kind == 'active':  # Transfer from regular to active frame
                 if frame.name.lower() == item.kind:
                     self.delete_item(item)
                     self.active_item(item)
                     self.selected_frame.item = None
-                    puts('Item was succesfully transfered.')
+                    puts('Item transferred to active frame.')
                 else:
                     puts('This is not the same kind frame!')
-            elif self.selected_frame.kind == 'active' and frame.kind == 'regular':  # Transfer to regular frame
+            elif self.selected_frame.kind == 'active' and frame.kind == 'regular':  # Transfer from active to regular frame
                 self.deactivate_item(item, frame)
                 self.selected_frame.item = None
-                puts('Item was succesfully transfered.')
+                puts('Item transferred to regular frame.')
             elif self.selected_frame.kind == 'regular' and frame.kind == 'regular':  # Transfer to regular frame
                 item.active = False
                 frame.item = item
                 self.selected_frame.item = None
-                puts('Item was succesfully transfered.')
+                puts('Item transferred between regular frames.')
             else:
-                puts('There was problem with transfering item.')
+                puts('There was problem with transferring item.')
                 return
             if item.owner[1] != 'player' and frame.id < 100:  # Transfer from loot window to equipment
                 item.owner[0].equipment.delete_item(item)
                 item.owner = [self.player, 'player']
+                item.owner[0].equipment.add_item(item)
             elif item.owner[1] == 'player' and frame.id >= 100:  # Transfer from equipment to loot window
+                item.owner[0].equipment.delete_item(item)
                 item.owner = [self.loot_window.container, self.loot_window.container.kind]
                 item.owner[0].equipment.add_item(item)
         else:

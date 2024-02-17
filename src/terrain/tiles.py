@@ -132,10 +132,8 @@ class TileEquipment:
         self.content.append(new_item)
 
     def delete_item(self, item) -> None:
-        for item_owned in self.content:
-            if item is item_owned:
-                self.content.remove(item_owned)
-                break
+        if item in self.content:
+            self.content.remove(item)
 
 
 def check_for_usable_elements(character, elements) -> list:
