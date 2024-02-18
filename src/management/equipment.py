@@ -5,6 +5,7 @@ from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZ
 from tools.support import draw_text, puts, create_header, cursor
 from management.lootwindow import LootWindow
 from management.frame import Frame
+from management.item_info import ItemInfo
 from terrain import items
 
 
@@ -21,6 +22,7 @@ class PlayerEquipment:
         self.active_items = {'sword': None, 'bow': None, 'shield': None, 'item': None}
         self.create_equipment_panel()
         self.loot_window = LootWindow()
+        self.info_window = ItemInfo()
 
     def open(self, both: bool = False):
         self.show = True
@@ -184,7 +186,7 @@ class PlayerEquipment:
                 info_frame = frame
 
         if info_frame is not None:
-            info_frame.show_info(display_surface, cursor())
+            self.info_window.show_window(display_surface, cursor(), info_frame.item)
 
         # Show header:
         rect = self.header.get_rect(topleft=(EQUIPMENT_POSITION[0], EQUIPMENT_POSITION[1] - EQUIPMENT_FRAME_SIZE[1]))
@@ -192,7 +194,7 @@ class PlayerEquipment:
         draw_text(display_surface, 'Equipment', BUTTON_FONT, WHITE, rect.centerx, rect.centery)
 
         if self.loot_window.show:
-            self.loot_window.show_window(display_surface)
+            self.loot_window.show_window(display_surface, self.info_window.show_window)
 
     def update(self) -> None:
         if self.show:

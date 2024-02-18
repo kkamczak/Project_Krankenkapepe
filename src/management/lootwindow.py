@@ -42,14 +42,14 @@ class LootWindow:
                 if frame.kind == 'regular' and frame.item is None:
                     frame.item = item
                     break
-        puts('Załadowano itemy do content window')
+        puts('Item loaded to loot window.')
 
     def clear_items(self):
         self.container = None
         for frame in self.frames:
             frame.item = None
 
-    def show_window(self, surface):
+    def show_window(self, surface, info_window):
         if self.show:
             # Show header:
             rect = self.header.get_rect(topleft=(LOOT_HEADER_POS[0], LOOT_HEADER_POS[1]))
@@ -65,6 +65,5 @@ class LootWindow:
                     info_frame = frame
 
             if info_frame is not None:
-                info_frame.show_info(surface, cursor())
-
+                info_window(surface, cursor(), info_frame.item)
 
