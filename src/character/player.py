@@ -19,7 +19,7 @@ class Player(Sprite):
 
         self.animations = PlayerAnimations(self)
         self.movement = PlayerMovement(self)
-        self.status = PlayerStatus(self)
+        self.status = PlayerStatus()
         self.fighting = PlayerAttack(self, level.fight_manager.sword_attack, level.fight_manager.arch_attack)
         self.equipment = PlayerEquipment(self, level.images.items)
         self.defense = PlayerDefense(self)
@@ -44,6 +44,12 @@ class Player(Sprite):
             self.defense.check_shield_cooldown()
             self.movement.get_input()
             self.equipment.update()
-            self.status.get_status(self.movement.direction, self.animations.set_frame_index)
+            self.status.get_status(
+                self.movement.direction,
+                self.animations.set_frame_index,
+                self.fighting.attack['attacking'],
+                self.fighting.arch['attacking'],
+                self.defense.shield['shielding']
+            )
             self.defense.check_if_hurt()
         self.animations.animate(self.status, self.fighting, self.defense, self.movement)
