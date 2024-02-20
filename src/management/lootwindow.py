@@ -7,7 +7,7 @@ from management.frame import Frame
 class LootWindow:
     """
     This is class of loot window. It's a temporary container
-    for exchanging items between the management and items such as chests or corpses.
+    for exchanging items between the player and items such as chests or corpses.
     """
     def __init__(self):
         self.header = create_header()

@@ -2,14 +2,14 @@ level_0 = {
         'terrain': 'content/levels/0/level_0._terrain.csv',
         'terrain_elements': 'content/levels/0/level_0._terrain_elements.csv',
         'enemies': 'content/levels/0/level_0._enemies.csv',
-        'management': 'content/levels/0/level_0._player.csv',
+        'player': 'content/levels/0/level_0._player.csv',
         'unlock': 1
 }
 level_1 = {
         'terrain': 'content/levels/1/level_1._terrain.csv',
         'terrain_elements': 'content/levels/1/level_1._terrain_elements.csv',
         'enemies': 'content/levels/1/level_1._enemies.csv',
-        'management': 'content/levels/1/level_1._player.csv',
+        'player': 'content/levels/1/level_1._player.csv',
         'unlock': 1
 }
 level_render = {

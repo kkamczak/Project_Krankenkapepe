@@ -41,7 +41,7 @@ class UI:
 
     def show_health(self, surface: pygame.surface.Surface, hp_max: int, current: int) -> None:
         """
-        Display the management's health bar on the given surface.
+        Display the player's health bar on the given surface.
 
         Args:
             surface: The surface to display the health bar on.
@@ -65,7 +65,7 @@ class UI:
                             attack_time: int, attack_cooldown: int,
                             collision_rect: pygame.Rect, offset: pygame.math.Vector2) -> None:
         """
-        Display the cooldown bar for management attacks on the given surface.
+        Display the cooldown bar for player attacks on the given surface.
 
         Args:
             surface: The surface to display the cooldown bar on.
@@ -110,7 +110,7 @@ class UI:
     def show_active_equipment(self, surface: pygame.surface.Surface,
                               active_equipment: dict) -> None:
         """
-        Display the management's active equipment on the given surface.
+        Display the player's active equipment on the given surface.
 
         Args:
             surface: The surface to display equipment on.
@@ -178,7 +178,7 @@ class UI:
 
     def add_experience(self, current: int, amount: int) -> None:
         """
-        Add experience points to the management's current experience.
+        Add experience points to the player's current experience.
 
         Args:
             current: The current experience points.
@@ -227,7 +227,7 @@ class UI:
         )
 
         # Sword cooldown:
-        #if not management.fighting.attack['attacking']:
+        #if not player.fighting.attack['attacking']:
         if 0 < now() - player.fighting.attack['end'] < player.fighting.attack['cooldown']:
             self.show_attack_cooldown(
                 screen,

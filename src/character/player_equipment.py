@@ -1,8 +1,8 @@
-import pygame
+from pygame import Surface
 from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZE, EQUIPMENT_FRAME_SPACE, EQUIPMENT_ROWS, \
     EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
     EQUIPMENT_ACTIVE_FRAME_SPACE
-from tools.support import draw_text, puts, create_header, cursor
+from tools.support import draw_text, puts, create_header, cursor, now
 from management.lootwindow import LootWindow
 from management.frame import Frame
 from management.item_info import ItemInfo
@@ -13,7 +13,7 @@ class PlayerEquipment:
     def __init__(self, player, items_images) -> None:
         self.player = player
         self.show = False
-        self.show_cooldown = pygame.time.get_ticks()
+        self.show_cooldown = now()
         self.header = create_header()
         self.frames = []
         self.items = []
@@ -136,11 +136,11 @@ class PlayerEquipment:
             else:
                 puts('There was problem with transferring item.')
                 return
-            if item.owner[1] != 'management' and frame.id < 100:  # Transfer from loot window to equipment
+            if item.owner[1] != 'player' and frame.id < 100:  # Transfer from loot window to equipment
                 item.owner[0].equipment.delete_item(item)
-                item.owner = [self.player, 'management']
+                item.owner = [self.player, 'player']
                 item.owner[0].equipment.add_item(item)
-            elif item.owner[1] == 'management' and frame.id >= 100:  # Transfer from equipment to loot window
+            elif item.owner[1] == 'player' and frame.id >= 100:  # Transfer from equipment to loot window
                 item.owner[0].equipment.delete_item(item)
                 item.owner = [self.loot_window.container, self.loot_window.container.kind]
                 item.owner[0].equipment.add_item(item)
@@ -165,7 +165,7 @@ class PlayerEquipment:
         (x, y) = EQUIPMENT_ACTIVE_POSITION
         size = (width, height) = EQUIPMENT_ACTIVE_FRAME_SIZE
         space = EQUIPMENT_ACTIVE_FRAME_SPACE
-        frame = pygame.Surface(size)
+        frame = Surface(size)
         frame.fill(BLACK)
         frame.set_alpha(EQUIPMENT_ALPHA)
 
@@ -177,7 +177,7 @@ class PlayerEquipment:
             count += 1
             self.frames.append(frame)
 
-    def show_equipment(self, display_surface: pygame.surface.Surface) -> None:
+    def show_equipment(self, display_surface: Surface) -> None:
         # Show items frames:
         info_frame = None
         for frame in self.frames:

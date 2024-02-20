@@ -150,8 +150,8 @@ class EnemyProperties:
 
     def reset_properties(self, multiplier):
         self.health = {
-            'current': int(ENEMY_HEALTH[self.enemy.status.type] + ENEMY_BONUS_BASE * multiplier),
-            'max': int(ENEMY_HEALTH[self.enemy.status.type] + ENEMY_BONUS_BASE * multiplier)
+            'current': int(ENEMY_HEALTH[self.enemy.status.type] + 10*ENEMY_BONUS_BASE * multiplier),
+            'max': int(ENEMY_HEALTH[self.enemy.status.type] + 10*ENEMY_BONUS_BASE * multiplier)
         }
         self.experience = {
             'current': int(ENEMY_EXPERIENCE[self.enemy.status.type] + ENEMY_BONUS_BASE * multiplier)
@@ -421,7 +421,7 @@ class EnemyFighting:
         is_close = dx < self.combat['range'] and dy < height
         is_close_to_attack = dx < self.attack['range'] and dy < height
 
-        # --- Enemy will run towards management --
+        # --- Enemy will run towards player --
         if is_close and not is_close_to_attack and not self.attack['attacking'] and not player_dead:
             self.combat['trigger'] = True
             temp_dir = self.enemy.movement.direction
@@ -435,7 +435,7 @@ class EnemyFighting:
         else:
             self.combat['trigger'] = False
 
-        # --- Enemy will attack management --
+        # --- Enemy will attack player --
         if is_close_to_attack and not self.combat['on'] and not player_dead:
             self.combat['on'] = True
             self.combat['start'] = now()

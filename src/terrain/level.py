@@ -5,7 +5,7 @@ enemies, and various game elements.
 
 The Level class manages the creation and behavior of game levels,
 including loading level data, creating terrain and game elements,
-handling management actions and movements, and managing enemy interactions.
+handling player actions and movements, and managing enemy interactions.
 It provides essential functions for running the game loop
 and updating the game state during gameplay.
 """
@@ -34,7 +34,7 @@ from terrain.animations import SoulAnimation
 class Level:
     """
     Represents a game level and manages its components,
-    including terrain, management, enemies, and more.
+    including terrain, player, enemies, and more.
     """
     def __init__(self, level, surface, game):
         """
@@ -80,7 +80,7 @@ class Level:
     def clear_groups(self, player: bool = False):
         clean_items(Item.items)
         if not player:
-            puts('There has been a reset of the management')
+            puts('There has been a reset of the player')
             pygame.sprite.GroupSingle.empty(self.player)
         self.animations = []
 
@@ -108,7 +108,7 @@ class Level:
         if not player:
             self.current_level = 1
             puts('Skonfigurowano gracza')
-            player_layout = import_csv_file(level_data['management'])
+            player_layout = import_csv_file(level_data['player'])
             self.player_setup(player_layout)
         self.get_player().movement.set_position(PLAYER_SPAWN_POSITION)
 
@@ -220,10 +220,10 @@ class Level:
 
     def player_setup(self, layout):
         """
-        Set up the management based on a layout.
+        Set up the player based on a layout.
 
         Args:
-            layout (list): The layout specifying the management's position.
+            layout (list): The layout specifying the player's position.
         """
         for row_index, row in enumerate(layout):
             for col_index, val in enumerate(row):
@@ -238,10 +238,10 @@ class Level:
 
     def get_player(self):
         """
-        Get the management sprite.
+        Get the player sprite.
 
         Returns:
-           Player: The management sprite.
+           Player: The player sprite.
         """
         for player in self.player:
             return player
@@ -291,7 +291,7 @@ class Level:
                 del animation
                 self.animations.pop(index)
 
-        # Draw management -----------------------------------------------------------
+        # Draw player -----------------------------------------------------------
         if not self.game_over:
             self.player.update(self.display_surface)
             horizontal_movement_collision(player.movement, self.col_near_sprites)

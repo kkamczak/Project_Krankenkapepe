@@ -142,7 +142,7 @@ ITEM_BASE_DMG = {
     'sword': 60,
     'bow': 90,
     'shield': 50,
-    'item': 120
+    'item': 250
 }
 ITEM_BASE_PRICE = {
     'sword': 99,
@@ -193,7 +193,7 @@ KEY_DELAY = 400
 
 SHOW_IMAGE_RECTANGLES = False
 SHOW_COLLISION_RECTANGLES = False
-SHOW_HIT_RECTANGLES = False
+SHOW_HIT_RECTANGLES = True
 
 SHOW_PLAYER_STATUS = False
 SHOW_ENEMY_STATUS = True
