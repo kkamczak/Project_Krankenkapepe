@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Callable
 from pygame.math import Vector2
 from character.player_animations import PlayerAnimations
 
@@ -8,6 +8,7 @@ class PlayerStatus:
         self.player = player
         self.type = 'player'
         self.id = 999
+        self.previous_status = 'idle'
         self.status = 'idle'
         self.facing_right = True
         self.just_jumped = False
@@ -35,36 +36,33 @@ class PlayerStatus:
         self.can_use_object = [False, None]
         self.usable_priority = 0
 
-    def get_status(self, direction: Vector2, animations: PlayerAnimations) -> None:
-        if direction.y < 0 and self.get_action() == 'nothing':
-            if self.status != 'jump':
-                animations.set_frame_index(0)
-            self.status = 'jump'
-        elif direction.y > 1 and self.get_action() == 'nothing':
-            if self.status != 'fall':
-                animations.set_frame_index(0)
-            self.status = 'fall'
-        elif self.get_action() == 'sword':
-            if self.status != 'attack':
-                animations.set_frame_index(0)
-            self.status = 'attack'
-        elif self.get_action() == 'arch':
-            if self.status != 'arch':
-                animations.set_frame_index(0)
-            self.status = 'arch'
-        elif self.get_action() == 'shield':
-            if self.status != 'shield':
-                animations.set_frame_index(0)
-            self.status = 'shield'
+    def get_status(self, direction: Vector2, set_frame: Callable[[int], None]) -> None:
+        """
+        There, the method checks the player's current activity.
+
+        :param direction: movement direction of player
+        :param set_frame: player animations method that change frame index
+        :return: none
+        """
+        action = self.get_action()
+        if direction.y < 0 and action == 'nothing':
+            new_status = 'jump'
+        elif direction.y > 1 and action == 'nothing':
+            new_status = 'fall'
+        elif action == 'sword':
+            new_status = 'attack'
+        elif action == 'arch':
+            new_status = 'arch'
+        elif action == 'shield':
+            new_status = 'shield'
         else:
             if direction.x != 0:
-                if self.status != 'run':
-                    animations.set_frame_index(0)
-                self.status = 'run'
+                new_status = 'run'
             else:
-                if self.status != 'idle':
-                    animations.set_frame_index(0)
-                self.status = 'idle'
+                new_status = 'idle'
+        if self.status != new_status:
+            set_frame(0)
+        self.status = new_status
 
     def get_action(self):
         if not self.player.fighting.attack['attacking'] and \

@@ -44,6 +44,6 @@ class Player(Sprite):
             self.defense.check_shield_cooldown()
             self.movement.get_input()
             self.equipment.update()
-            self.status.get_status(self.movement.direction, self.animations)
+            self.status.get_status(self.movement.direction, self.animations.set_frame_index)
             self.defense.check_if_hurt()
         self.animations.animate(self.status, self.fighting, self.defense, self.movement)
