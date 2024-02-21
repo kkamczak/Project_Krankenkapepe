@@ -29,31 +29,25 @@ class PlayerAnimations:
     def set_animation_speed(self, new_speed: float) -> None:
         self.animation_speed = new_speed
 
-    def load_animations(self, position):
+    def set_position(self, position: tuple) -> None:
+        self.rect.midbottom = position
+
+    def load_animations(self, position: tuple[int, int]) -> None:
         self.animations = import_character_assets(self.animations_names.copy(), PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE / 32)
         self.flip_animations = import_character_assets(self.animations_names.copy(), PLAYER_ANIMATIONS_PATH, scale=TILE_SIZE / 32, flip=True)
         self.set_image(self.animations['idle'][self.frame_index])
-        self.set_rect(self.image.get_rect(topleft=position))
+        self.set_rect(self.image.get_rect(midbottom=position))
 
     def animate(self, player_status, player_attack, player_defence, player_movement):  # Animate method
-        animation = self.flip_character(player_status)[player_status.status]
+        status = player_status.status
+        animation = self.flip_character(player_status)[status]
 
-        if player_status.status == 'dead':
+        if status == 'dead':
             animation_speed = PLAYER_DEATH_ANIMATION_SPEED
-        elif player_status.status == 'attack':
-            animation_speed = calculate_animation_speed(
-                FPS,
-                len(animation),
-                player_attack.attack['speed']
-            )
-        elif player_status.status == 'arch':
-            animation_speed = calculate_animation_speed(
-                FPS,
-                len(animation),
-                player_attack.arch['speed']
-            )
-        elif player_status.status == 'shield':
-            animation_speed = self.animation_speed
+        elif status in ('attack', 'arch)'):
+            attack_type = 'attack' if status == 'attack' else 'arch'
+            speeds = {'attack': player_attack.attack['speed'], 'arch': player_attack.arch['speed'] }
+            animation_speed = calculate_animation_speed(FPS, len(animation), speeds[attack_type])
         else:
             animation_speed = self.animation_speed
         # Loop over frame index
@@ -63,8 +57,7 @@ class PlayerAnimations:
             self.set_frame_index(self.frame_index + animation_speed)
 
         self.set_image(animation[int(self.frame_index)])
-        temp_rect = self.image.get_rect()
-        temp_rect.midbottom = player_movement.collision_rect.midbottom
+        temp_rect = self.image.get_rect(midbottom=player_movement.collision_rect.midbottom)
         self.set_rect(temp_rect)
 
     def change_status(self, new_index, player_status, player_defence):

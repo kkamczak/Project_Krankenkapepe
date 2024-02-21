@@ -110,7 +110,7 @@ class Level:
             puts('Skonfigurowano gracza')
             player_layout = import_csv_file(level_data['player'])
             self.player_setup(player_layout)
-        self.get_player().movement.set_position(PLAYER_SPAWN_POSITION)
+        self.get_player().reset_position(PLAYER_SPAWN_POSITION)
 
         # Terrain import
         terrain_layout, terrain_elements_layout = generate_map()

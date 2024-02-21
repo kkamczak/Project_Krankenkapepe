@@ -18,7 +18,7 @@ class Player(Sprite):
         self.next_level = level.next_level
 
         self.animations = PlayerAnimations(self)
-        self.movement = PlayerMovement(self)
+        self.movement = PlayerMovement(self, pos)
         self.status = PlayerStatus()
         self.fighting = PlayerAttack(self, level.fight_manager.sword_attack, level.fight_manager.arch_attack)
         self.equipment = PlayerEquipment(self, level.images.items)
@@ -26,8 +26,7 @@ class Player(Sprite):
         self.properties = PlayerProperties(self)
         self.ui = UI()
 
-        self.animations.load_animations(pos)
-        self.movement.init_movement()
+        self.animations.load_animations(self.movement.collision_rect.topleft)
         self.status.reset_status()
         self.fighting.reset_attack_properties()
         self.properties.reset_properties()
@@ -35,6 +34,11 @@ class Player(Sprite):
     def collect_items(self, items):
         for item in items:
             self.equipment.add_item(item)
+
+    def reset_position(self, position: tuple[int, int]) -> None:
+        self.movement.set_position(position)
+        self.animations.set_position(position)
+        self.status.set_facing(True)
 
     def update(self, screen):
         if not self.properties.dead['status']:

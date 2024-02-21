@@ -5,10 +5,10 @@ from terrain.tiles import change_loot_priority
 
 
 class PlayerMovement:
-    def __init__(self, player):
+    def __init__(self, player, pos):
         self.player = player
         self.direction = None
-        self.collision_rect = None
+        self.collision_rect = self.init_movement(pos)
         self.speed = PLAYER_SPEED
         self.gravity = PLAYER_GRAVITY
         self.jump_speed = PLAYER_JUMP_SPEED
@@ -21,9 +21,7 @@ class PlayerMovement:
         }
 
     def set_position(self, position) -> None:
-        self.player.animations.rect.midbottom = position
         self.collision_rect.midbottom = position
-        self.player.status.set_facing(True)
 
     def set_direction(self, new_direction: pygame.math.Vector2) -> None:
         self.direction = new_direction
@@ -49,14 +47,11 @@ class PlayerMovement:
     def set_on_right(self, new_value: bool) -> None:
         self.on_right = new_value
 
-    def init_movement(self):
+    def init_movement(self, pos: tuple) -> pygame.Rect:
         self.set_direction(pygame.math.Vector2(0, 0))
-        self.set_collision_rect(
-            pygame.Rect(
-            (self.player.animations.rect.centerx, self.player.animations.rect.top - PLAYER_SIZE[0] / 2),
-            PLAYER_SIZE
-            )
-        )
+        col_rect = pygame.rect.Rect(pos, PLAYER_SIZE)
+        col_rect.midbottom = pos
+        return col_rect
 
     def get_input(self):
         keys = pygame.key.get_pressed()
