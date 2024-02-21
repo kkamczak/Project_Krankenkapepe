@@ -383,6 +383,7 @@ class EnemyMovement:
 class EnemyFighting:
     def __init__(self, enemy):
         self.enemy = enemy
+        self.target = None
         # Attacking:
         self.attack = {
             'speed': ENEMY_ATTACK_SPEED[self.enemy.status.type],
@@ -457,6 +458,7 @@ class EnemyFighting:
         if self.combat['on'] and attack_loaded and not self.attack['attacking']:
             self.attack['able'] = True
             self.do_attack(player.movement.collision_rect)
+        self.target = player_rect.center
 
     def combat_reset(self):
         self.attack['attacking'] = False
@@ -525,7 +527,7 @@ class Ninja(Enemy):
 
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
-            self.arch_attack('arrow', self)
+            self.arch_attack('arrow', self, target=self.fighting.target)
             self.fighting.change_attack_status('able', False)
             self.fighting.change_attack_status('finish', False)
 
@@ -556,7 +558,7 @@ class Wizard(Enemy):
 
     def check_attack_finish(self):
         if self.fighting.attack['finish']:
-            self.arch_attack('death_bullet', self)
+            self.arch_attack('death_bullet', self, target=self.fighting.target)
             self.fighting.change_attack_status('able', False)
             self.fighting.change_attack_status('finish', False)
 

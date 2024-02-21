@@ -100,7 +100,7 @@ class Bullet(pygame.sprite.Sprite):
             on the provided surface with the given offset.
 
     """
-    def __init__(self, kind, position, source):
+    def __init__(self, kind, position, source, target):
         """
         Initialize a ranged attack projectile.
         """
@@ -115,11 +115,21 @@ class Bullet(pygame.sprite.Sprite):
         self.collision_rect = pygame.Rect((position), (5, 5))
 
         self.facing_right = source.status.facing_right
+        if target is None:
+            x_dir = 1
+            y_dir = 0
+        else:
+            a = target[0] - self.collision_rect.centerx
+            b = target[1] - self.collision_rect.centery
+            c = (a*a + b*b)**(1/2)
+            x_dir = a / c
+            y_dir = b / c
+            puts('Olaboga')
 
         if not self.facing_right:
-            self.direction = pygame.math.Vector2(-1, 0)
+            self.direction = pygame.math.Vector2(x_dir, y_dir)
         else:
-            self.direction = pygame.math.Vector2(1, 0)
+            self.direction = pygame.math.Vector2(x_dir, y_dir)
             flipped_image = pygame.transform.flip(self.image, True, False)
             self.image = flipped_image
 
@@ -141,6 +151,7 @@ class Bullet(pygame.sprite.Sprite):
 
         """
         self.collision_rect.x += self.direction.x * self.speed
+        self.collision_rect.y += self.direction.y * self.speed
         if self.facing_right:
             self.rect.topright = self.collision_rect.topright
             self.rect = self.image.get_rect(topright=self.rect.topright)
@@ -306,13 +317,14 @@ class FightManager():
             hit = Hit(position, attack['damage'], character.status.type, character.status.id)
             self.sword_hits.add(hit)
 
-    def arch_attack(self, kind, character):
+    def arch_attack(self, kind, character, target = None):
         """
         Perform an archery attack (e.g., arrows).
 
         Args:
             kind (str): The type of archery attack (e.g., 'arrow').
             character: The character performing the archery attack.
+            target: position of enemy character
 
         This method creates and manages an archery attack based on the character's parameters,
         including position, direction, and damage.
@@ -329,7 +341,7 @@ class FightManager():
                 position = (rect.left + 20, rect.top + rect.height / 3)
 
             bullet = Bullet(
-                kind, position, character
+                kind, position, character, target
             )
             self.bullet_hits.add(bullet)
 
