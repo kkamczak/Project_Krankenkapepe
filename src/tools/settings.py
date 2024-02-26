@@ -2,19 +2,21 @@ import pygame.font
 from tools.game_data import SWORD_NAMES, BOW_NAMES, ARMOR_NAMES
 pygame.font.init()
 
-# Sounds:
+# --- Sounds --------------------------------------------------------------------------------
 SOUND_PLAY_MUSIC = False
-MUSIC_VOLUME = 0.03
+SOUND_MUSIC_VOLUME = 0.03
+SOUND_SPAWN_PATH = 'content/sounds/enemies/spawn.mp3'
+SOUND_SPAWN_VOLUME = 0.03
 
-# Fonts:
-BIG_FONT = pygame.font.SysFont('content/fonts/arial.ttf', 72)
-NORMAL_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
-SMALL_STATUS_FONT = pygame.font.SysFont('arial', 15)
-UI_FRAME_FONT = pygame.font.SysFont('arial', 11)
-UI_EQUIPMENT_ACTIVE_FONT = pygame.font.SysFont('arial', 15)
-DEATH_FONT = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 70)
-FPS_FONT = pygame.font.SysFont('arial', 30)
-BUTTON_FONT = pygame.font.SysFont('arial', 25)
+# --- Fonts ---------------------------------------------------------------------------------
+FONT_BIG = pygame.font.SysFont('content/fonts/arial.ttf', 72)
+FONT_NORMAL = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 30)
+FONT_SMALL = pygame.font.SysFont('arial', 15)
+FONT_UI_FRAME = pygame.font.SysFont('arial', 11)
+FONT_UI_EQUIPMENT_ACTIVE = pygame.font.SysFont('arial', 15)
+FONT_DEATH = pygame.font.SysFont('content/fonts/ARCADEPI.ttf', 70)
+FONT_FPS = pygame.font.SysFont('arial', 30)
+FONT_BUTTON = pygame.font.SysFont('arial', 25)
 
 # Colors:
 WHITE = (255, 255, 255)

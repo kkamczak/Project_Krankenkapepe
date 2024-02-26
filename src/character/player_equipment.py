@@ -1,6 +1,6 @@
 from pygame import Surface
 from tools.settings import BLACK, WHITE, EQUIPMENT_POSITION, EQUIPMENT_FRAME_SIZE, EQUIPMENT_FRAME_SPACE, EQUIPMENT_ROWS, \
-    EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, BUTTON_FONT, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
+    EQUIPMENT_COLUMNS, EQUIPMENT_ALPHA, FONT_BUTTON, EQUIPMENT_ACTIVE_POSITION, EQUIPMENT_ACTIVE_FRAME_SIZE, \
     EQUIPMENT_ACTIVE_FRAME_SPACE
 from tools.support import draw_text, puts, create_header, cursor, now
 from management.lootwindow import LootWindow
@@ -191,7 +191,7 @@ class PlayerEquipment:
         # Show header:
         rect = self.header.get_rect(topleft=(EQUIPMENT_POSITION[0], EQUIPMENT_POSITION[1] - EQUIPMENT_FRAME_SIZE[1]))
         display_surface.blit(self.header, rect.topleft)
-        draw_text(display_surface, 'Equipment', BUTTON_FONT, WHITE, rect.centerx, rect.centery)
+        draw_text(display_surface, 'Equipment', FONT_BUTTON, WHITE, rect.centerx, rect.centery)
 
         if self.loot_window.show:
             self.loot_window.show_window(display_surface, self.info_window.show_window)

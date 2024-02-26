@@ -1,5 +1,5 @@
 from tools.settings import LOOT_WIN_SIZE, LOOT_WIN_POS, LOOT_FRAME_SIZE, LOOT_INDEX, LOOT_KIND, LOOT_SPACE, \
-    LOOT_HEADER_POS, BUTTON_FONT, WHITE
+    LOOT_HEADER_POS, FONT_BUTTON, WHITE
 from tools.support import create_header, draw_text, puts, cursor
 from management.frame import Frame
 
@@ -54,7 +54,7 @@ class LootWindow:
             # Show header:
             rect = self.header.get_rect(topleft=(LOOT_HEADER_POS[0], LOOT_HEADER_POS[1]))
             surface.blit(self.header, rect.topleft)
-            draw_text(surface, 'Loot', BUTTON_FONT, WHITE, rect.centerx, rect.centery)
+            draw_text(surface, 'Loot', FONT_BUTTON, WHITE, rect.centerx, rect.centery)
 
             # Show frames:
             info_frame = None

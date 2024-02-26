@@ -49,9 +49,7 @@ class PlayerDefense:
         self.player.properties.set_dead('status', True)
         self.player.properties.set_dead('time', pygame.time.get_ticks())
         self.player.animations.set_frame_index(0)
-        temp_direction = self.player.movement.direction
-        temp_direction.x = 0
-        self.player.movement.set_direction(temp_direction)
+        self.player.movement.set_direction(x=0.0)
         self.player.status.set_status('dead')
 
     def hurt(self, damage) -> bool:

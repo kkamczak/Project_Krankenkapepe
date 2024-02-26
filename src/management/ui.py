@@ -6,8 +6,8 @@ It provides methods to display and update these UI elements during gameplay.
 """
 import pygame
 from tools.support import create_bar, draw_text, import_image, scale_image, now
-from tools.settings import GREY, RED, YELLOW, BLACK, NORMAL_FONT, UI_ACTIVE_EQUIPMENT_POSITION, \
-    UI_FRAME_SIZE, UI_FRAME_FONT, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION, UI_SKELETON_POINTS_SPACE
+from tools.settings import GREY, RED, YELLOW, BLACK, FONT_NORMAL, UI_ACTIVE_EQUIPMENT_POSITION, \
+    UI_FRAME_SIZE, FONT_UI_FRAME, UI_ITEM_IMAGE_SIZE, UI_HP_BAR_POSITION, UI_SKELETON_POINTS_SPACE
 
 
 class UI:
@@ -105,7 +105,7 @@ class UI:
         background.set_alpha(180)
         surface.blit(background, (x_pos, y_pos - 5))
         surface.blit(self.skeletons_image, (x_pos, y_pos))
-        draw_text(surface, str(int(self.exp_visible)), NORMAL_FONT, GREY, x_pos + 80, y_pos + 20)
+        draw_text(surface, str(int(self.exp_visible)), FONT_NORMAL, GREY, x_pos + 80, y_pos + 20)
 
     def show_active_equipment(self, surface: pygame.surface.Surface,
                               active_equipment: dict) -> None:
@@ -140,7 +140,7 @@ class UI:
 
         def show_item_name(key, name):
             draw_text(surface, name,
-                      UI_FRAME_FONT, BLACK, active_items_frames_positions[key][0] + width / 3.3,
+                      FONT_UI_FRAME, BLACK, active_items_frames_positions[key][0] + width / 3.3,
                       active_items_frames_positions[key][1] + height - 11)
 
         def get_active_item_position(position: tuple[int, int]) -> list[int]:

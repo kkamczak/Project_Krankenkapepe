@@ -1,6 +1,7 @@
 from typing import Any
 from random import choice
 from tools.settings import ENEMY_HEALTH, ENEMY_EXPERIENCE, ENEMY_BONUS_BASE
+from tools.support import now
 
 
 class EnemyProperties:
@@ -25,8 +26,9 @@ class EnemyProperties:
     def set_experience(self, key: str, value: Any) -> None:
         self.experience[key] = value
 
-    def set_dead(self, key: str, value: Any):
-        self.dead[key] = value
+    def defeated(self):
+        self.dead['status'] = True
+        self.dead['time'] = now()
 
     def reset_properties(self, multiplier):
         self.health = {

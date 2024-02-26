@@ -1,6 +1,6 @@
 import pygame
 from tools.settings import BLACK, WHITE, GREEN, EQUIPMENT_ALPHA, EQUIPMENT_INFO_SIZE, EQUIPMENT_INFO_ALPHA, \
-    UI_FRAME_FONT, EQUIPMENT_SHOW_IDS, UI_EQUIPMENT_ACTIVE_FONT
+    FONT_UI_FRAME, EQUIPMENT_SHOW_IDS, FONT_UI_EQUIPMENT_ACTIVE
 from tools.support import draw_text, scale_image
 
 
@@ -94,7 +94,7 @@ class Frame(pygame.sprite.Sprite):
         screen.blit(self.image, self.position)
         # Draw frame id:
         if EQUIPMENT_SHOW_IDS:
-            draw_text(screen, str(self.id), UI_EQUIPMENT_ACTIVE_FONT, WHITE, self.position[0], self.position[1])
+            draw_text(screen, str(self.id), FONT_UI_EQUIPMENT_ACTIVE, WHITE, self.position[0], self.position[1])
         # Draw frame item:
         if self.item is not None:
             screen.blit(scale_image(self.item.image, self.size), self.position)
@@ -111,4 +111,4 @@ class Frame(pygame.sprite.Sprite):
 
 
 def show_item_name(surface: pygame.Surface, name: str, position: tuple[int, int]) -> None:
-    draw_text(surface, name, UI_EQUIPMENT_ACTIVE_FONT, WHITE, position[0], position[1])
+    draw_text(surface, name, FONT_UI_EQUIPMENT_ACTIVE, WHITE, position[0], position[1])

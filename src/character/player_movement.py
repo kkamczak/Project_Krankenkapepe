@@ -23,8 +23,11 @@ class PlayerMovement:
     def set_position(self, position) -> None:
         self.collision_rect.midbottom = position
 
-    def set_direction(self, new_direction: pygame.math.Vector2) -> None:
-        self.direction = new_direction
+    def set_direction(self, x: float = None, y: float = None) -> None:
+        if x is not None:
+            self.direction.update(x=x)
+        if y is not None:
+            self.direction.update(y=y)
 
     def set_collision_rect(self, new_rect: pygame.Rect) -> None:
         self.collision_rect = new_rect
@@ -48,7 +51,7 @@ class PlayerMovement:
         self.on_right = new_value
 
     def init_movement(self, pos: tuple) -> pygame.Rect:
-        self.set_direction(pygame.math.Vector2(0, 0))
+        self.direction = pygame.math.Vector2(0.0, 0.0)
         col_rect = pygame.rect.Rect(pos, PLAYER_SIZE)
         col_rect.midbottom = pos
         return col_rect

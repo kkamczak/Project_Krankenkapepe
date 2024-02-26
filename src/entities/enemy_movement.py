@@ -23,9 +23,6 @@ class EnemyMovement:
     def set_position(self, key: str, value: int) -> None:
         self.position[key] = value
 
-    def set_jump_speed(self, new_speed: float) -> None:
-        self.jump_speed = new_speed
-
     def set_on_right(self, new_value: bool) -> None:
         self.on_right = new_value
 
@@ -35,8 +32,11 @@ class EnemyMovement:
     def set_on_ground(self, new_value: bool) -> None:
         self.on_ground = new_value
 
-    def set_direction(self, new_direction: Vector2) -> None:
-        self.direction = new_direction
+    def set_direction(self, x: float = None, y: float = None) -> None:
+        if x is not None:
+            self.direction.update(x=x)
+        if y is not None:
+            self.direction.update(y=y)
 
     def set_speed(self, new_speed: int) -> None:
         self.speed = new_speed

@@ -1,17 +1,17 @@
 from pygame.mixer import Sound
 from random import choice
+from tools.settings import SOUND_SPAWN_VOLUME, SOUND_SPAWN_PATH
 
 
 class EnemyStatus:
-    def __init__(self, enemy, kind, enemy_id):
-        self.enemy = enemy
+    def __init__(self, kind: str, enemy_id: int) -> None:
         self.type = kind
         self.id = enemy_id
         self.status = 'idle'
         self.facing_right = True
         self.spawned = False
-        self.spawn_sound = Sound('content/sounds/enemies/spawn.mp3')
-        self.spawn_sound.set_volume(0.05)
+        self.spawn_sound = Sound(SOUND_SPAWN_PATH)
+        self.spawn_sound.set_volume(SOUND_SPAWN_VOLUME)
 
     def set_status(self, new_status: str) -> None:
         self.status = new_status
@@ -23,7 +23,7 @@ class EnemyStatus:
         self.spawn_sound.play()
         self.spawned = True
 
-    def reset_status(self):
+    def reset_status(self) -> None:
         self.status = 'run'
         self.facing_right = choice([True, False])
         self.spawned = False

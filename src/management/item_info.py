@@ -1,5 +1,5 @@
 from pygame import Surface
-from tools.settings import EQUIPMENT_INFO_SIZE, BLACK, WHITE, UI_FRAME_FONT
+from tools.settings import EQUIPMENT_INFO_SIZE, BLACK, WHITE, FONT_UI_FRAME
 from tools.support import draw_text
 from terrain.items import Item
 
@@ -47,7 +47,7 @@ class ItemInfo:
             draw_text(
                 screen,
                 info,
-                UI_FRAME_FONT,
+                FONT_UI_FRAME,
                 WHITE,
                 pos[0] + self.size[0] * 1 / 20,
                 pos[1] + self.size[1] * (index + 1) * space / divider,

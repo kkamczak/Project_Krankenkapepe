@@ -12,7 +12,7 @@ from entities.enemy_fighting import EnemyFighting, EnemyFightingThunder
 class Enemy(pygame.sprite.Sprite):
     def __init__(self, enemy_lvl, enemy_id, pos, kind, frames):
         super().__init__()
-        self.status = EnemyStatus(self, kind, enemy_id)
+        self.status = EnemyStatus(kind, enemy_id)
         self.defense = EnemyDefense(self)
         self.animations = EnemyAnimations(self)
         self.properties = EnemyProperties(self, enemy_lvl)

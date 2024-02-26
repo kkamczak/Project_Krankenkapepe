@@ -2,8 +2,8 @@ import pygame
 import sys
 import tracemalloc
 from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, GREY, BLACK, \
-    WHITE, SKY, FPS, FPS_FONT, FPS_SHOW_POS, SOUND_PLAY_MUSIC, \
-    BIG_FONT, MASK_ALPHA, MUSIC_VOLUME
+    WHITE, SKY, FPS, FONT_FPS, FPS_SHOW_POS, SOUND_PLAY_MUSIC, \
+    FONT_BIG, MASK_ALPHA, SOUND_MUSIC_VOLUME
 from tools.support import draw_text
 from terrain.level import Level
 from terrain.images_manager import ImagesManager
@@ -27,11 +27,11 @@ class Game:
 
         # Sounds:
         self.level_bg_music = pygame.mixer.Sound('content/sounds/background.mp3')
-        self.level_bg_music.set_volume(MUSIC_VOLUME)
+        self.level_bg_music.set_volume(SOUND_MUSIC_VOLUME)
 
     def create_level(self, respawn: bool = False) -> None:
         self.screen.blit(self.loading_screen, (0, 0))
-        draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        draw_text(self.screen, 'Loading...', FONT_BIG, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         pygame.display.update()
         if respawn:
             print('DUPA')
@@ -48,7 +48,7 @@ class Game:
 
     def next_level(self) -> None:
         self.screen.blit(self.loading_screen, (0, 0))
-        draw_text(self.screen, 'Loading...', BIG_FONT, WHITE, SCREEN_WIDTH/2, SCREEN_HEIGHT/2)
+        draw_text(self.screen, 'Loading...', FONT_BIG, WHITE, SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2)
         pygame.display.update()
         self.level.current_level += 1
         self.level.clear_groups(player=True)
@@ -84,7 +84,7 @@ class Game:
             self.death_scene.run()
 
     def show_fps(self) -> None:
-        draw_text(self.screen, f'FPS: {str(int(self.clock.get_fps()))}', FPS_FONT, GREY, FPS_SHOW_POS[0], FPS_SHOW_POS[1])
+        draw_text(self.screen, f'FPS: {str(int(self.clock.get_fps()))}', FONT_FPS, GREY, FPS_SHOW_POS[0], FPS_SHOW_POS[1])
 
     @staticmethod
     def exit_game() -> None:

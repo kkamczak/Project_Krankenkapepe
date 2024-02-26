@@ -1,6 +1,6 @@
 import pygame
 from tools.settings import GREY, RED, SHOW_IMAGE_RECTANGLES, SHOW_COLLISION_RECTANGLES, \
-    SHOW_ENEMY_STATUS, WHITE, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, ENEMY_ANIMATION_SPEED
+    SHOW_ENEMY_STATUS, WHITE, FONT_SMALL, SHOW_STATUS_SPACE, ENEMY_ANIMATION_SPEED
 from tools.support import draw_text
 
 
@@ -77,7 +77,7 @@ class EnemyAnimations:
 
     def animate_dead(self):
         if self.enemy.status.status == 'dead' and self.enemy.properties.dead['status']:
-            self.enemy.movement.set_direction(pygame.math.Vector2(0, 0))
+            self.enemy.movement.set_direction(x=0, y=0)
             animation_speed = 0.15
 
             animation = self.check_for_flip()['dead']
@@ -119,13 +119,13 @@ class EnemyAnimations:
         if SHOW_ENEMY_STATUS:
             # Show information for developer
             draw_text(surface, self.enemy.status.type,
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
+                      FONT_SMALL, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE * 1 - offset[1])
 
             draw_text(surface, f'Damage: {str(self.enemy.fighting.attack["damage"])}  HP: {self.enemy.properties.health["current"]}',
-            SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+                      FONT_SMALL, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE * 3 - offset[1])
 
             draw_text(surface, 'Level: ' + str(int(self.enemy.properties.level)),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*5 - offset[1])
+                      FONT_SMALL, WHITE, self.rect.centerx + 5 - offset[0], self.rect.bottom + SHOW_STATUS_SPACE * 5 - offset[1])
 
     def draw_health_bar(self, screen, offset):
         if not self.enemy.properties.dead['status']:

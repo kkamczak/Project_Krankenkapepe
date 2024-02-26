@@ -16,7 +16,7 @@ from terrain.map_generator import generate_map, generate_enemies, create_tile_gr
 from tools.support import import_csv_file, now, draw_text, puts
 from tools.game_data import levels
 from tools.settings import TILE_SIZE, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY, GREY, \
-    SMALL_STATUS_FONT, PLAYER_SPAWN_POSITION
+    FONT_SMALL, PLAYER_SPAWN_POSITION
 from terrain.tiles import check_for_usable_elements
 from terrain.chest import Chest
 from terrain.corpse import create_corpse
@@ -259,4 +259,4 @@ class Level:
 
 
 def show_info(screen, info, place) -> None:
-    draw_text(screen, f'{info}', SMALL_STATUS_FONT, GREY, 750, 800+20*place, left=True)
+    draw_text(screen, f'{info}', FONT_SMALL, GREY, 750, 800 + 20 * place, left=True)

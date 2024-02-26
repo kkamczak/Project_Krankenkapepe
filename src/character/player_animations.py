@@ -1,6 +1,6 @@
 import pygame
 from tools.settings import PLAYER_SIZE, SHOW_COLLISION_RECTANGLES, SHOW_IMAGE_RECTANGLES, \
-    SHOW_PLAYER_STATUS, WHITE, YELLOW, SMALL_STATUS_FONT, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
+    SHOW_PLAYER_STATUS, WHITE, YELLOW, FONT_SMALL, SHOW_STATUS_SPACE, PLAYER_ANIMATIONS_PATH, \
     PLAYER_DEATH_ANIMATION_SPEED, TILE_SIZE, FPS
 from tools.support import import_character_assets, calculate_animation_speed, draw_text
 
@@ -100,12 +100,12 @@ class PlayerAnimations:
         if SHOW_PLAYER_STATUS:
             # Show information for developer
             draw_text(surface, 'Pos: ' + str(self.rect.center),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*1 - offset[1])
+                      FONT_SMALL, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE * 1 - offset[1])
             draw_text(surface, 'Frame index: ' + str(int(self.frame_index)),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE*3 - offset[1])
+                      FONT_SMALL, WHITE, self.rect.centerx - offset[0], self.rect.bottom + SHOW_STATUS_SPACE * 3 - offset[1])
             draw_text(surface, 'sword_attacking= ' + str(self.player.fighting.attack['attacking']),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
+                      FONT_SMALL, WHITE, self.rect.centerx - offset[0],
                       self.rect.bottom + SHOW_STATUS_SPACE * 5 - offset[1])
             draw_text(surface, 'sword_able= ' + str(self.player.fighting.attack['able']),
-                      SMALL_STATUS_FONT, WHITE, self.rect.centerx - offset[0],
+                      FONT_SMALL, WHITE, self.rect.centerx - offset[0],
                       self.rect.bottom + SHOW_STATUS_SPACE * 7 - offset[1])

@@ -1,5 +1,5 @@
 from menu.buttons import *
-from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED, BUTTON_FONT, DEATH_FONT
+from tools.settings import SCREEN_WIDTH, SCREEN_HEIGHT, BUTTON_SIZE, BUTTONS_SPACE, RED, FONT_BUTTON, FONT_DEATH
 from tools.support import draw_text, scale_image
 
 
@@ -35,19 +35,19 @@ class Overworld:
         for button_id, button in enumerate(buttons_list):
             if button == 'Start':
                 button_sprite = Start_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                             button, BUTTON_FONT)
+                                             button, FONT_BUTTON)
             if button == 'Return':
                 button_sprite = Return_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                              button, BUTTON_FONT)
+                                              button, FONT_BUTTON)
             if button == 'Main Menu':
                 button_sprite = Menu_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                            button, BUTTON_FONT)
+                                            button, FONT_BUTTON)
             if button == 'Respawn':
                 button_sprite = Respawn(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                        button, BUTTON_FONT)
+                                        button, FONT_BUTTON)
             if button == 'Exit':
                 button_sprite = Exit_Button(BUTTON_SIZE, x_pos, y_pos + BUTTONS_SPACE * button_id * 2 + space,
-                                            button, BUTTON_FONT)
+                                            button, FONT_BUTTON)
 
             sprite_group.add(button_sprite)
 
@@ -135,7 +135,7 @@ class DeathScene(Overworld):
 
     def run(self):
 
-        draw_text(self.image, self.text, DEATH_FONT, RED, self.image.get_width() / 2,
+        draw_text(self.image, self.text, FONT_DEATH, RED, self.image.get_width() / 2,
                   self.image.get_height() / 2 - 100)
 
         self.image.set_alpha(self.alpha)

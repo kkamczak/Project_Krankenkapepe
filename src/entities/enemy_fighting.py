@@ -49,14 +49,12 @@ class EnemyFighting:
         # --- Enemy will run towards player --
         if is_close and not is_close_to_attack and not self.attack['attacking'] and not player_dead:
             self.combat['trigger'] = True
-            temp_dir = self.enemy.movement.direction
             if rect.centerx > player_rect.centerx:
                 self.enemy.status.set_facing(False)
-                temp_dir.x = -1
+                self.enemy.movement.set_direction(x=-1.0)
             else:
                 self.enemy.status.set_facing(True)
-                temp_dir.x = 1
-            self.enemy.movement.set_direction(temp_dir)
+                self.enemy.movement.set_direction(x=1.0)
         else:
             self.combat['trigger'] = False
 
