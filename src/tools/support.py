@@ -33,6 +33,7 @@ from csv import reader
 from os import walk
 from datetime import datetime
 import pygame
+from pygame.math import Vector2
 from tools.settings import SCALE, BUTTON_SIZE
 
 
@@ -228,6 +229,22 @@ def create_header():
     image = import_image(path)
     image = scale_image(image, BUTTON_SIZE)
     return image
+
+
+def make_vector(point_1: tuple[int, int], point_2: tuple[int, int]) -> Vector2:
+    """
+    Calculate vector between two points.
+
+    :param point_1: first position
+    :param point_2: second position
+    :return: vector between positions
+    """
+    a = point_1[0] - point_2[0]
+    b = point_1[1] - point_2[1]
+    c = (a*a + b*b)**(1/2)
+    x_dir = a / c
+    y_dir = b / c
+    return Vector2(x_dir, y_dir)
 
 
 def cursor() -> tuple[int, int]:

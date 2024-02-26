@@ -12,21 +12,19 @@ and updating the game state during gameplay.
 import pygame
 import tracemalloc
 from terrain.images_manager import ImagesManager
-from terrain.map_generator import generate_map, generate_enemies, generate_enemy_kind
+from terrain.map_generator import generate_map, generate_enemies, create_tile_group
 from tools.support import import_csv_file, now, draw_text, puts
 from tools.game_data import levels
 from tools.settings import TILE_SIZE, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY, GREY, \
-    SMALL_STATUS_FONT, LEVEL_SPAWN_HEIGHT, PLAYER_SPAWN_POSITION
-from terrain.tiles import StaticTile, Bonfire, check_for_usable_elements
+    SMALL_STATUS_FONT, PLAYER_SPAWN_POSITION
+from terrain.tiles import check_for_usable_elements
 from terrain.chest import Chest
 from terrain.corpse import create_corpse
-from terrain.portal import Portal
-from terrain.collisions import vertical_movement_collision, horizontal_movement_collision
+from terrain.collisions import vertical_movement_collision, horizontal_movement_collision, check_collisions
 from terrain.items import Item
 from terrain.items_generator import clean_items
 from character.player import Player
-from entities.enemies import Sceleton, Ninja, Wizard, DarkKnight
-from entities.fighting import FightManager
+from combat.fighting import FightManager
 from terrain.camera import Camera
 from terrain.animations import SoulAnimation
 
@@ -114,109 +112,18 @@ class Level:
 
         # Terrain import
         terrain_layout, terrain_elements_layout = generate_map()
-        self.terrain_sprite = self.create_tile_group(terrain_layout, 'terrain')
-        self.collideable_sprites = self.create_tile_group(terrain_layout, 'collideable')
+        self.terrain_sprite = create_tile_group(terrain_layout, 'terrain', self.images, self, self.fight_manager)
+        self.collideable_sprites = create_tile_group(terrain_layout, 'collideable', self.images, self, self.fight_manager)
 
         # Terrain elements import
-        self.terrain_elements_sprite = self.create_tile_group(terrain_elements_layout, 'terrain_elements')
+        self.terrain_elements_sprite = create_tile_group(terrain_elements_layout, 'terrain_elements', self.images, self, self.fight_manager)
 
         # Enemy
         enemy_layout = generate_enemies(len(terrain_layout[0]) * TILE_SIZE)
-        self.enemy_sprites = self.create_tile_group(enemy_layout, 'enemies')
+        self.enemy_sprites = create_tile_group(enemy_layout, 'enemies', self.images, self, self.fight_manager)
 
         # Map camera configuration:
         self.camera = Camera(len(terrain_layout[0]) * TILE_SIZE, len(terrain_layout) * TILE_SIZE)
-
-    def create_tile_group(self, layout, kind):
-        """
-        Create a group of tiles from a layout.
-
-        Args:
-            layout (list): The layout specifying the arrangement of tiles.
-            kind (str): The kind of tiles to create.
-
-        Returns:
-            pygame.sprite.Group: A group of sprite objects representing the tiles.
-        """
-        sprite_group = pygame.sprite.Group()
-        enemy_id: int = 0
-        tile_id: int = 0
-        sprite: object = None
-
-        for row_index, row in enumerate(layout):
-            for col_index, val in enumerate(row):
-                if val != str(-1):
-                    x = col_index * TILE_SIZE
-                    y = row_index * TILE_SIZE
-
-                    if kind == 'terrain':
-                        if int(val) == 11:
-                            tile_surface = self.images.terrain_tiles[int(val)]
-                            sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
-                            tile_id += 1
-
-                    elif kind == 'collideable':
-                        if int(val) != 11:
-                            tile_surface = self.images.terrain_tiles[int(val)]
-                            sprite = StaticTile(tile_id, TILE_SIZE, x, y, tile_surface)
-                            tile_id += 1
-                    elif kind == 'terrain_elements':
-                        if val == '0':
-                            sprite = Chest(tile_id, TILE_SIZE, x, y, self.images.terrain_elements['chest'], self)
-                            tile_id += 1
-                        elif val == '1':
-                            sprite = Bonfire(tile_id, TILE_SIZE, x, y, self.images.terrain_elements['bonfire'])
-                            tile_id += 1
-                        elif val == '2':
-                            sprite = Portal(tile_id, TILE_SIZE, (x, y), self.images.terrain_elements['portal'])
-                            tile_id += 1
-
-                    elif kind == 'enemies':
-                        pos = (int(val), LEVEL_SPAWN_HEIGHT)
-                        if col_index < len(layout[0]) - 1:
-                            value = generate_enemy_kind()
-                        else:
-                            value = generate_enemy_kind(boss=True)
-                        if value == '0':
-                            sprite = Sceleton(
-                                self.current_level,
-                                enemy_id,
-                                pos,
-                                (self.images.enemies[0]['sceleton'], self.images.enemies[1]['sceleton']),
-                                self.fight_manager.sword_attack
-                            )
-                            enemy_id += 1
-                        elif value == '1':
-                            sprite = Ninja(
-                                self.current_level,
-                                enemy_id,
-                                pos,
-                                (self.images.enemies[0]['ninja'], self.images.enemies[1]['ninja']),
-                                self.fight_manager.arch_attack
-                            )
-                            enemy_id += 1
-                        elif value == '2':
-                            sprite = Wizard(
-                                self.current_level,
-                                enemy_id,
-                                pos,
-                                (self.images.enemies[0]['wizard'], self.images.enemies[1]['wizard']),
-                                self.fight_manager.arch_attack,
-                                self.fight_manager.thunder_attack
-                            )
-                            enemy_id += 1
-                        elif value == '3':
-                            sprite = DarkKnight(
-                                self.current_level,
-                                enemy_id,
-                                pos,
-                                (self.images.enemies[0]['dark_knight'], self.images.enemies[1]['dark_knight']),
-                                self.fight_manager.sword_attack
-                            )
-                            enemy_id += 1
-                    if sprite is not None:
-                        sprite_group.add(sprite)
-        return sprite_group
 
     def player_setup(self, layout):
         """
@@ -316,8 +223,7 @@ class Level:
             if self.camera.view[0] < enemy.animations.rect.centerx - player_pos < self.camera.view[1]:
                 enemy_counter += 1
                 enemy.update()
-                horizontal_movement_collision(enemy.movement, self.col_near_sprites)
-                vertical_movement_collision(enemy.movement, self.col_near_sprites)
+                check_collisions(enemy.movement, self.col_near_sprites)
                 if not enemy.properties.dead['status']:
                     enemy.animations.draw_health_bar(self.display_surface, self.camera.offset)
                     enemy.fighting.check_for_combat(self.get_player())

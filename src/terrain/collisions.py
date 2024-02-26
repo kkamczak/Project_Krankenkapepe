@@ -1,10 +1,13 @@
+def check_collisions(character, sprites):
+    horizontal_movement_collision(character, sprites)
+    vertical_movement_collision(character, sprites)
+
+
 def horizontal_movement_collision(character, sprites):
     character.collision_rect.x += character.direction.x * character.speed
     collidable_sprites = sprites.sprites()
 
     for sprite in collidable_sprites:
-        # if -300 > sprite.rect.centerx - character.collision_rect.centerx > 300:
-        #     continue
         if sprite.rect.colliderect(character.collision_rect):
             if sprite.rect.centerx < character.collision_rect.centerx:
                 character.collision_rect.left = sprite.rect.right

@@ -12,9 +12,11 @@ Classes:
 
 """
 import pygame
+from math import atan, degrees
 from tools.settings import YELLOW, RED, PLAYER_ATTACK_SIZE, SHOW_HIT_RECTANGLES, BULLET_DEFAULT_SPEED, \
     SCREEN_HEIGHT, ENEMY_ATTACK_SIZE
-from tools.support import now, puts
+from tools.support import now, puts, make_vector
+
 
 class Hit(pygame.sprite.Sprite):
     """
@@ -100,6 +102,7 @@ class Bullet(pygame.sprite.Sprite):
             on the provided surface with the given offset.
 
     """
+
     def __init__(self, kind, position, source, target):
         """
         Initialize a ranged attack projectile.
@@ -112,27 +115,16 @@ class Bullet(pygame.sprite.Sprite):
         self.image = pygame.image.load(f'content/graphics/weapons/{self.kind}.png').convert_alpha()
         self.rect = self.image.get_rect(topleft=position)
         self.start_rect = self.rect
-        self.collision_rect = pygame.Rect((position), (5, 5))
+        self.collision_rect = pygame.Rect(position, (5, 5))
 
         self.facing_right = source.status.facing_right
         if target is None:
-            x_dir = 1
-            y_dir = 0
+            self.direction = pygame.math.Vector2(1, 0)
         else:
-            a = target[0] - self.collision_rect.centerx
-            b = target[1] - self.collision_rect.centery
-            c = (a*a + b*b)**(1/2)
-            x_dir = a / c
-            y_dir = b / c
-            puts('Olaboga')
+            self.direction = make_vector(target, self.collision_rect.center)
 
-        if not self.facing_right:
-            self.direction = pygame.math.Vector2(x_dir, y_dir)
-        else:
-            self.direction = pygame.math.Vector2(x_dir, y_dir)
-            flipped_image = pygame.transform.flip(self.image, True, False)
-            self.image = flipped_image
-
+        if self.facing_right:
+            self.image = pygame.transform.flip(self.image, True, False)
 
         self.speed = BULLET_DEFAULT_SPEED[self.kind]
         if self.source == 'player':
@@ -158,7 +150,6 @@ class Bullet(pygame.sprite.Sprite):
         else:
             self.rect.topleft = self.collision_rect.topleft
             self.rect = self.image.get_rect(topleft=self.rect.topleft)
-
 
     def draw(self, surface, offset):
         """
