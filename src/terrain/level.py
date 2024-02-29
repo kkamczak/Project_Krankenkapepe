@@ -20,13 +20,14 @@ from tools.settings import TILE_SIZE, PLAYER_DEATH_LATENCY, ENEMY_DEATH_LATENCY,
 from terrain.tiles import check_for_usable_elements
 from terrain.chest import Chest
 from terrain.corpse import create_corpse
-from terrain.collisions import vertical_movement_collision, horizontal_movement_collision, check_collisions
+from terrain.collisions import check_collisions
 from terrain.items import Item
 from terrain.items_generator import clean_items
 from character.player import Player
 from combat.fighting import FightManager
 from terrain.camera import Camera
 from terrain.animations import SoulAnimation
+from management.multiple_enemies import show_multiple_enemies
 
 
 class Level:
@@ -201,34 +202,33 @@ class Level:
         # Draw player -----------------------------------------------------------
         if not self.game_over:
             self.player.update(self.display_surface)
-            horizontal_movement_collision(player.movement, self.col_near_sprites)
-            vertical_movement_collision(player.movement, self.col_near_sprites)
+            check_collisions(player.movement, self.col_near_sprites)
             self.camera.scroll_camera(self.display_surface.get_size(), player.movement)
 
             player.status.can_use_object = check_for_usable_elements(
                 player,
                 self.terrain_elements_sprite
             )
-            if player.status.can_use_object[1] is not None and len(player.status.can_use_object[1]) > 0:
-                player.status.can_use_object[1][0].pickable = True
+            player.status.check_for_pickable()
 
             player.animations.draw(self.display_surface, self.camera.offset, player.status, player.movement)
             if player.properties.dead['status'] and \
-                    pygame.time.get_ticks() - player.properties.dead['time'] > PLAYER_DEATH_LATENCY:
+                    now() - player.properties.dead['time'] > PLAYER_DEATH_LATENCY:
                 self.create_death_scene()
                 self.game_over = True
         # Draw enemies -----------------------------------------------------------
         enemy_counter = 0
+        near_enemy = []
         for enemy in self.enemy_sprites:
             if self.camera.view[0] < enemy.animations.rect.centerx - player_pos < self.camera.view[1]:
+                near_enemy.append(enemy)
                 enemy_counter += 1
                 enemy.update()
                 check_collisions(enemy.movement, self.col_near_sprites)
                 if not enemy.properties.dead['status']:
                     enemy.animations.draw_health_bar(self.display_surface, self.camera.offset)
                     enemy.fighting.check_for_combat(self.get_player())
-                enemy.animations.draw(self.display_surface, self.camera.offset)
-                if enemy.properties.dead['status'] and \
+                elif enemy.properties.dead['status'] and \
                         now() - enemy.properties.dead['time'] > ENEMY_DEATH_LATENCY:
                     soul_animation = SoulAnimation(
                         enemy.animations.rect.center,
@@ -238,10 +238,13 @@ class Level:
                     self.animations.append(soul_animation)
                     create_corpse(self, enemy, self.terrain_elements_sprite)
                     enemy.kill()
+                enemy.animations.draw(self.display_surface, self.camera.offset)
         # Show UI -----------------------------------------------------------
         if not player.properties.dead['status']:
             player.ui.show_ui(self.display_surface, self.camera.offset, player)
         player.equipment.update_show(self.display_surface)
+
+        show_multiple_enemies(near_enemy, self.display_surface, 500)
 
         # Developing
         memory_stats = tracemalloc.get_traced_memory()
@@ -252,11 +255,6 @@ class Level:
         show_info(self.display_surface, f'Klocków: {len(self.col_near_sprites) + len(self.ter_near_sprites)}, enemies: {enemy_counter}/{len(self.enemy_sprites)}', 1)
         show_info(self.display_surface, f'Memory use [MB]: {used_memory}, loop time: {all_time} s.', 2)
         show_info(self.display_surface, f'Damage: {player.fighting.attack["damage"]}, skrzynie: {len(Chest.chests)}', 3)
-        info = []
-        for item in Item.items:
-            info.append((item.name, item.owner[1]))
-        #puts(info)
-
 
 def show_info(screen, info, place) -> None:
     draw_text(screen, f'{info}', FONT_SMALL, GREY, 750, 800 + 20 * place, left=True)

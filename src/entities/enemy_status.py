@@ -27,3 +27,4 @@ class EnemyStatus:
         self.status = 'run'
         self.facing_right = choice([True, False])
         self.spawned = False
+

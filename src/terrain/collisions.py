@@ -1,9 +1,23 @@
-def check_collisions(character, sprites):
-    horizontal_movement_collision(character, sprites)
-    vertical_movement_collision(character, sprites)
+def check_collisions(character_movement, sprites):
+    """
+    This function checks horizontal and vertical collisions of character with terrain sprites
+
+    :param character_movement: movement object of character
+    :param sprites: the nearest character sprites
+    :return: none
+    """
+    horizontal_movement_collision(character_movement, sprites)
+    vertical_movement_collision(character_movement, sprites)
 
 
 def horizontal_movement_collision(character, sprites):
+    """
+    This function checks horizontal collisions of character with terrain sprites
+
+    :param character: movement object of character
+    :param sprites: the nearest character sprites
+    :return: none
+    """
     character.collision_rect.x += character.direction.x * character.speed
     collidable_sprites = sprites.sprites()
 
@@ -21,12 +35,17 @@ def horizontal_movement_collision(character, sprites):
 
 
 def vertical_movement_collision(character, sprites):
+    """
+    This function checks vertical collisions of character with terrain sprites
+
+    :param character: movement object of character
+    :param sprites: the nearest character sprites
+    :return: none
+    """
     character.apply_gravity()
     collidable_sprites = sprites.sprites()
 
     for sprite in collidable_sprites:
-        # if -300 > sprite.rect.centery - character.collision_rect.centery > 300:
-        #     continue
         if sprite.rect.colliderect(character.collision_rect):
             if character.direction.y > 0 and sprite.rect.centery > character.collision_rect.centery:  # Falling
                 character.collision_rect.bottom = sprite.rect.top

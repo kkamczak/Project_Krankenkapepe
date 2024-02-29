@@ -1,8 +1,10 @@
-from typing import Any, Callable
+from typing import Any, Callable, List
 from pygame.math import Vector2
 
 
 class PlayerStatus:
+    can_use_object: list[bool | None]
+
     def __init__(self):
         self.type = 'player'
         self.id = 999
@@ -83,3 +85,15 @@ class PlayerStatus:
             return 'arch'
         if not sword and not arch and shield:
             return 'shield'
+
+    def check_for_pickable(self) -> None:
+        """
+        This function checks if there is an item to be lifted nearby
+
+        :return: none
+        """
+        pickable_objects = self.can_use_object[1]
+        if pickable_objects is None:
+            return
+        if isinstance(pickable_objects, list) and len(pickable_objects) > 0:
+            pickable_objects[0].pickable = True
