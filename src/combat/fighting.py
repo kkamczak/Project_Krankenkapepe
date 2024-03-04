@@ -290,7 +290,6 @@ class FightManager():
         This method creates and manages a sword attack based on the character's parameters,
         including position, direction, and damage.
         """
-        puts(f'{character.status.type} atakuje')
         attack = character.fighting.attack
         rect = character.movement.collision_rect
         if attack['able'] or (character.status.type == 'player' and attack['attacking']):

@@ -244,7 +244,7 @@ class Level:
             player.ui.show_ui(self.display_surface, self.camera.offset, player)
         player.equipment.update_show(self.display_surface)
 
-        show_multiple_enemies(near_enemy, self.display_surface, 500)
+        show_multiple_enemies(near_enemy, self.display_surface, 30, self.camera.offset)
 
         # Developing
         memory_stats = tracemalloc.get_traced_memory()
